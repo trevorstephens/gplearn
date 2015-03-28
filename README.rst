@@ -4,12 +4,12 @@
 .. image:: https://img.shields.io/pypi/v/gplearn.svg
     :target: https://pypi.python.org/pypi/gplearn/
     :alt: Version
-.. image:: https://img.shields.io/pypi/l/gplearn.svg
-    :target: https://pypi.python.org/pypi/gplearn/
-    :alt: License
 .. image:: https://pypip.in/status/gplearn/badge.svg
     :target: https://pypi.python.org/pypi/gplearn/
     :alt: Development Status
+.. image:: https://img.shields.io/pypi/l/gplearn.svg
+    :target: https://pypi.python.org/pypi/gplearn/
+    :alt: License
 .. image:: https://travis-ci.org/trevorstephens/gplearn.svg?branch=master
     :target: https://travis-ci.org/trevorstephens/gplearn
     :alt: Test Status

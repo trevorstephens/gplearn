@@ -1,11 +1,18 @@
+#! /usr/bin/env python
+
+"""Genetic Programming in Python, with a scikit-learn inspired API"""
+
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
+import gplearn
 
+DESCRIPTION = __doc__
+VERSION = gplearn.__version__
 
-setup(
+setup_options = dict(
     name='gplearn',
-    version='0.0.1',
-    description='Genetic Programming in Python, with a scikit-learn inspired API',
+    version=VERSION,
+    description=DESCRIPTION,
     long_description=open("README.rst").read(),
     classifiers=['Development Status :: 3 - Alpha',
                  'Intended Audience :: Science/Research',
@@ -27,9 +34,20 @@ setup(
     author='Trevor Stephens',
     author_email='trev.stephens@gmail.com',
     license='new BSD',
-    packages=['gplearn'],
+    packages=find_packages(),
     test_suite='nose.collector',
+    zip_safe=False,
     install_requires=['scikit-learn>=0.15'],
-    tests_require=['nose'],
-    zip_safe=False
+    extras_require={'testing': ['nose'],
+                    'docs': ['Sphinx']}
 )
+
+# For these actions, NumPy is not required. We want them to succeed without,
+# for example when pip is used to install seqlearn without NumPy present.
+NO_NUMPY_ACTIONS = ('--help-commands', 'egg_info', '--version', 'clean')
+if not ('--help' in sys.argv[1:]
+        or len(sys.argv) > 1 and sys.argv[1] in NO_NUMPY_ACTIONS):
+    import numpy as np
+    setup_options['include_dirs'] = [np.get_include()]
+
+setup(**setup_options)

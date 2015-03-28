@@ -13,12 +13,13 @@ import itertools
 from copy import deepcopy
 
 from sklearn.base import BaseEstimator, RegressorMixin
-from ._utils import _partition_estimators
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.metrics import mean_absolute_error
-from sklearn.utils import check_random_state
-from sklearn.utils.validation import check_X_y, check_array
+
+from skutils import _partition_estimators
+from skutils.validation import check_random_state, check_X_y, check_array
+from skutils.validation import NotFittedError
 
 __all__ = ['SymbolicRegressor']
 
@@ -691,7 +692,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         """
 
         if not hasattr(self, "program_"):
-            raise ValueError("SymbolicRegressor not fitted.")
+            raise NotFittedError("SymbolicRegressor not fitted.")
 
         X = check_array(X)
 
