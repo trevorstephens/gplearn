@@ -17,9 +17,9 @@ from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.metrics import mean_absolute_error
 
-from skutils import _partition_estimators
-from skutils.validation import check_random_state, check_X_y, check_array
-from skutils.validation import NotFittedError
+from .skutils import _partition_estimators
+from .skutils.validation import check_random_state, check_X_y, check_array
+from .skutils.validation import NotFittedError
 
 __all__ = ['SymbolicRegressor']
 
