@@ -398,7 +398,7 @@ class _Program(object):
         mutate = np.where([True if (random_state.uniform() <
                                     self.p_point_replace)
                            else False
-                           for _ in xrange(len(program))])[0]
+                           for _ in range(len(program))])[0]
 
         for node in mutate:
             if isinstance(program[node], six.string_types):
