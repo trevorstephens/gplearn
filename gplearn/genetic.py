@@ -1,4 +1,5 @@
-"""
+"""Genetic Programming in Python, with a scikit-learn inspired API
+
 The :mod:`sklearn.genetic` module implements Genetic Programming. These
 are supervised learning methods based on applying evolutionary operations on
 computer programs.
@@ -27,7 +28,7 @@ MAX_INT = np.iinfo(np.int32).max
 
 
 def protected_devision(x1, x2):
-    """Closure of division for zero denominator"""
+    """Closure of division (x1/x2) for zero denominator"""
     return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
 
 
@@ -55,7 +56,6 @@ FUNCTIONS = {'add2': np.add,
 
 def _parallel_evolve(n_programs, parents, X, y, seeds, params):
     """Private function used to build a batch of programs within a job."""
-
     def _tournament():
         contenders = random_state.randint(0, len(parents), tournament_size)
         fitness = [parents[p].fitness_ for p in contenders]
@@ -137,7 +137,86 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
 
 
 class _Program(object):
-    """A program-like representation of the evolved program"""
+
+    """A program-like representation of the evolved program
+
+    This is the underlying data-structure used by the public classes in this
+    module. It should not be used directly by the user.
+
+    Parameters
+    ----------
+    function_set : list
+        A list of valid functions to use in the program, must match keys from
+        the FUNCTIONS dict global variable.
+
+    arities : dict
+        A dictionary of the form `{arity: [function names]}`. The arity is the
+        number of arguments that the function takes, the function names must
+        match those in the `function_set` parameter.
+
+    init_depth : tuple of two ints
+        The range of tree depths for the initial population of naive formulas.
+        Individual trees will randomly choose a maximum depth from this range.
+        When combined with `init_method='half and half'` this yields the well-
+        known 'ramped half and half' initialization method.
+
+    init_method : str
+        - 'grow' : Nodes are chosen at random from both functions and
+          terminals, allowing for smaller trees than `init_depth` allows. Tends
+          to grow asymmetrical trees.
+        - 'full' : Functions are chosen until the `init_depth` is reached, and
+          then terminals are selected. Tends to grow 'bushy' trees.
+        - 'half and half' : Trees are grown through a 50/50 mix of 'full' and
+          'grow', making for a mix of tree shapes in the initial population.
+
+    n_features : int
+        The number of features in `X`
+
+    const_range : tuple of two floats
+        The range of constants to include in the formulas.
+
+    p_point_replace : float
+        The probability that any given node will be mutated during point
+        mutation.
+
+    parsimony_coefficient : float
+        This constant penalizes large programs by adjusting their fitness to
+        be less favorable for selection. Larger values penalize the program
+        more which can control the phenomenon known as 'bloat'. Bloat is when
+        evolution is increasing the size of programs without a significant
+        increase in fitness, which is costly for computation time and makes for
+        a less understandable final result. This parameter may need to be tuned
+        over successive runs.
+
+    random_state : RandomState instance
+        The random number generator. Note that ints, or None are not allowed.
+        The reason for this being passed is that during parallel evolution the
+        same program object may be accessed by multiple parallel processes.
+
+    program : list, optional (default=None)
+        The flattened tree representation of the program. If None, a new naive
+        random tree will be grown. If provided, it will be validated.
+
+    Attributes
+    ----------
+    program : list
+        The flattened tree representation of the program.
+
+    fitness_ : float
+        The fitness of the fittest individual in the final generation.
+
+    parents : dict, or None
+        If None, this is a naive random program from the initial population.
+        Otherwise it includes meta-data about the program's parent(s) as well
+        as the genetic operations performed to yield the current program. This
+        is set outside this class by the controlling evolution loops.
+
+    depth_ : int
+        The maximum depth of the program tree.
+
+    length_ : int
+        The number of functions and terminals in the program.
+    """
 
     def __init__(self,
                  function_set,
@@ -172,6 +251,18 @@ class _Program(object):
         self.parents = None
 
     def build_program(self, random_state):
+        """Build a naive random program
+
+        Parameters
+        ----------
+        random_state : RandomState instance
+            The random number generator.
+
+        Returns
+        -------
+        program : list
+            The flattened tree representation of the program.
+        """
         if self.init_method == 'half and half':
             method = ['grow', 'full'][random_state.randint(2)]
         else:
@@ -212,6 +303,7 @@ class _Program(object):
         return None
 
     def validate_program(self):
+        """Rough check that the embedded program in the object is valid"""
         terminals = [0]
         for node in self.program:
             if isinstance(node, six.string_types):
@@ -224,6 +316,7 @@ class _Program(object):
         return terminals == [-1]
 
     def __str__(self):
+        """Overrides `print` output of the object to resemble a LISP tree"""
         terminals = [0]
         output = ''
         for i, node in enumerate(self.program):
@@ -245,6 +338,7 @@ class _Program(object):
         return output
 
     def export_graphviz(self):
+        """Returns a string, Graphviz script for visualizing the program"""
         terminals = []
         output = "digraph program {\nnode [style=filled]"
         for i, node in enumerate(self.program):
@@ -280,6 +374,7 @@ class _Program(object):
         return None
 
     def _depth(self):
+        """Calculates the maximum depth of the program tree."""
         terminals = [0]
         depth = 1
         for node in self.program:
@@ -294,10 +389,23 @@ class _Program(object):
         return depth - 1
 
     def _length(self):
+        """Calculates the number of functions and terminals in the program."""
         return len(self.program)
 
     def execute(self, X):
+        """Execute the program according to X
 
+        Parameters
+        ----------
+        X : {array-like}, shape = [n_samples, n_features]
+            Training vectors, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        Returns
+        -------
+        y_hats : array-like, shape = [n_samples]
+            The result of executing the program on X
+        """
         # Stop warnings being raised for protected division, etc
         old_settings = np.seterr(divide='ignore', invalid='ignore')
 
@@ -336,12 +444,46 @@ class _Program(object):
         np.seterr(**old_settings)
         return None
 
-    def fitness(self, metric, X, y):
+    def fitness(self, metric, X, y, sample_weight=None):
+        """Evaluate the fitness of the program according to X, y
+
+        Parameters
+        ----------
+        X : {array-like}, shape = [n_samples, n_features]
+            Training vectors, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples]
+            Target values.
+
+        sample_weight : array-like, shape = [n_samples], optional
+            Weights applied to individual samples.
+
+        Returns
+        -------
+        fitness : float
+            The penalized fitness of the program
+        """
         return (metric(y, self.execute(X)) +
                 (self.parsimony_coefficient * len(self.program)))
 
     def get_subtree(self, random_state, program=None):
+        """Get a random subtree from the program
 
+        Parameters
+        ----------
+        random_state : RandomState instance
+            The random number generator.
+
+        program : list, optional (default=None)
+            The flattened tree representation of the program. If None, the
+            embedded tree in the object will be used.
+
+        Returns
+        -------
+        start, end : tuple of two ints
+            The indices of the start and end of the random subtree.
+        """
         if program is None:
             program = self.program
         probs = np.array([0.9 if isinstance(node, six.string_types) else 0.1
@@ -360,10 +502,29 @@ class _Program(object):
         return start, end
 
     def reproduce(self):
+        """Return a copy of the embedded program"""
         return deepcopy(self.program)
 
     def crossover(self, donor, random_state):
-        """donor is a program-like list"""
+        """Perform the crossover genetic operation on the program
+
+        Crossover selects a random subtree from the embedded program to be
+        replaced. A donor also has a subtree selected at random and this is
+        inserted into the original parent to form an offspring.
+
+        Parameters
+        ----------
+        donor : list
+            The flattened tree representation of the donor program.
+
+        random_state : RandomState instance
+            The random number generator.
+
+        Returns
+        -------
+        program : list
+            The flattened tree representation of the program.
+        """
         # Get a subtree to replace
         start, end = self.get_subtree(random_state)
         # Get a subtree to donate
@@ -374,13 +535,48 @@ class _Program(object):
                 self.program[end:])
 
     def subtree_mutation(self, random_state):
+        """Perform the subtree mutation operation on the program
+
+        Subtree mutation selects a random subtree from the embedded program to
+        be replaced. A donor subtree is generated at random and this is
+        inserted into the original parent to form an offspring. This
+        implementation uses the "headless chicken" method where the donor
+        subtree is grown using the initialization methods and a subtree of it
+        is selected to be donated to the parent.
+
+        Parameters
+        ----------
+        random_state : RandomState instance
+            The random number generator.
+
+        Returns
+        -------
+        program : list
+            The flattened tree representation of the program.
+        """
         # Build a new naive program
         chicken = self.build_program(random_state)
         # Do subtree mutation via the headless chicken method!
         return self.crossover(chicken, random_state)
 
     def hoist_mutation(self, random_state):
+        """Perform the hoist mutation operation on the program
 
+        Hoist mutation selects a random subtree from the embedded program to
+        be replaced. A random subtree of that subtree is then selected and this
+        is 'hoisted' into the original subtrees location to form an offspring.
+        This method helps to control bloat.
+
+        Parameters
+        ----------
+        random_state : RandomState instance
+            The random number generator.
+
+        Returns
+        -------
+        program : list
+            The flattened tree representation of the program.
+        """
         # Get a subtree to replace
         start, end = self.get_subtree(random_state)
         subtree = self.program[start:end]
@@ -391,7 +587,23 @@ class _Program(object):
         return self.program[:start] + hoist + self.program[end:]
 
     def point_mutation(self, random_state):
+        """Perform the point mutation operation on the program
 
+        Point mutation selects random nodes from the embedded program to be
+        replaced. Terminals are replaced by other terminals and functions are
+        replaced by other functions that require the same number of arguments
+        as the original node. The resulting tree forms an offspring.
+
+        Parameters
+        ----------
+        random_state : RandomState instance
+            The random number generator.
+
+        Returns
+        -------
+        program : list
+            The flattened tree representation of the program.
+        """
         program = deepcopy(self.program)
 
         # Get the nodes to modify
@@ -422,6 +634,7 @@ class _Program(object):
 
 
 class SymbolicRegressor(BaseEstimator, RegressorMixin):
+
     """A Genetic Programming symbolic regressor.
 
     A symbolic regressor is an estimator that begins by building a population
@@ -609,7 +822,6 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self : object
             Returns self.
         """
-
         X, y = check_X_y(X, y)
         y = np.ascontiguousarray(y, dtype=np.float64)
 
@@ -690,7 +902,6 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         y : array, shape = [n_samples]
             Predicted target values for X.
         """
-
         if not hasattr(self, "program_"):
             raise NotFittedError("SymbolicRegressor not fitted.")
 
