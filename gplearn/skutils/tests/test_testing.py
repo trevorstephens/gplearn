@@ -4,7 +4,7 @@ import sys
 
 from nose.tools import assert_raises
 
-from sklearn.utils.testing import (
+from gplearn.skutils.testing import (
     _assert_less,
     _assert_greater,
     assert_less_equal,
