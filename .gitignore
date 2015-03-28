@@ -45,6 +45,9 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+/.idea/
+.idea/*
+.idea/workspace.xml
 
 # Translations
 *.mo

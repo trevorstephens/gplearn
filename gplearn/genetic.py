@@ -644,8 +644,8 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         for gen in range(self.generations):
 
             if self.verbose:
-                print 'Evolving generation %d of %d.' % (gen + 1,
-                                                         self.generations)
+                print('Evolving generation %d of %d.' % (gen + 1,
+                                                         self.generations))
 
             if gen == 0:
                 parents = None
