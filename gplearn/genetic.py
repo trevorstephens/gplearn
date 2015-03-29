@@ -11,7 +11,9 @@ computer programs.
 
 import numpy as np
 import itertools
+
 from copy import deepcopy
+from time import time
 
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.externals import six
@@ -865,11 +867,15 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
         self._programs = []
 
-        for gen in range(self.generations):
+        if self.verbose:
+            # header fields and line format str
+            header_fields = ['Gen', 'AveFit', 'BestFit', 'AveLen', 'BestLen',
+                             'OOBFit', 'TimeLeft']
+            print(('%10s ' + '%16s ' * (len(header_fields) - 1)) %
+                  tuple(header_fields))
+            start_time = time()
 
-            if self.verbose:
-                print('Evolving generation %d of %d.' % (gen + 1,
-                                                         self.generations))
+        for gen in range(self.generations):
 
             if gen == 0:
                 parents = None
@@ -881,7 +887,12 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                 self.population_size, self.n_jobs)
             seeds = random_state.randint(MAX_INT, size=self.population_size)
 
-            population = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            if self.verbose > 1:
+                verbose = 1
+            else:
+                verbose = 0
+
+            population = Parallel(n_jobs=n_jobs, verbose=verbose)(
                 delayed(_parallel_evolve)(n_programs[i],
                                           parents,
                                           X,
@@ -893,6 +904,28 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
             # Reduce, maintaining order across different n_jobs
             population = list(itertools.chain.from_iterable(population))
             self._programs.append(population)
+
+            if self.verbose:
+
+                remaining_time = ((self.generations - gen - 1) *
+                                  (time() - start_time) / float(gen + 1))
+                if remaining_time > 60:
+                    remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
+                else:
+                    remaining_time = '{0:.2f}s'.format(remaining_time)
+
+                fitness = [program.fitness_ for program in population]
+                length = [program.length_ for program in population]
+                best_program = population[np.argmin(fitness)]
+
+                print(('%10s ' + '%16s ' * (len(header_fields) - 1)) %
+                      (gen,
+                       np.mean(fitness),
+                       best_program.fitness_,
+                       np.mean(length),
+                       best_program.length_,
+                       1.0,
+                       remaining_time))
 
         # Find the best individual in the final generation
         self.fitness_ = [program.fitness_ for program in self._programs[-1]]
