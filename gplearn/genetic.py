@@ -28,17 +28,17 @@ MAX_INT = np.iinfo(np.int32).max
 
 
 def protected_devision(x1, x2):
-    """Closure of division (x1/x2) for zero denominator"""
+    """Closure of division (x1/x2) for zero denominator."""
     return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
 
 
 def protected_sqrt(x1):
-    """Closure of square root for negative arguments"""
+    """Closure of square root for negative arguments."""
     return np.sqrt(np.abs(x1))
 
 
 def protected_log(x1):
-    """Closure of log for zero arguments"""
+    """Closure of log for zero arguments."""
     return np.where(np.abs(x1) > 0.001, np.log(np.abs(x1)), 0.)
 
 
@@ -57,6 +57,7 @@ FUNCTIONS = {'add2': np.add,
 def _parallel_evolve(n_programs, parents, X, y, seeds, params):
     """Private function used to build a batch of programs within a job."""
     def _tournament():
+        """Find the fittest individual from a sub-population."""
         contenders = random_state.randint(0, len(parents), tournament_size)
         fitness = [parents[p].fitness_ for p in contenders]
         parent_index = contenders[np.argmin(fitness)]
@@ -91,30 +92,37 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
             if method < method_probs[0]:
                 # crossover
                 donor, donor_index = _tournament()
-                program = parent.crossover(donor.program, random_state)
+                program, removed, remains = parent.crossover(donor.program,
+                                                             random_state)
                 genome = {'method': 'Crossover',
                           'parent_idx': parent_index,
-                          'donor_idx': donor_index}
+                          'parent_nodes': removed,
+                          'donor_idx': donor_index,
+                          'donor_nodes': remains}
             elif method < method_probs[1]:
                 # subtree_mutation
-                program = parent.subtree_mutation(random_state)
+                program, removed, _ = parent.subtree_mutation(random_state)
                 genome = {'method': 'Subtree Mutation',
-                          'parent_idx': parent_index}
+                          'parent_idx': parent_index,
+                          'parent_nodes': removed}
             elif method < method_probs[2]:
                 # hoist_mutation
-                program = parent.hoist_mutation(random_state)
+                program, removed = parent.hoist_mutation(random_state)
                 genome = {'method': 'Hoist Mutation',
-                          'parent_idx': parent_index}
+                          'parent_idx': parent_index,
+                          'parent_nodes': removed}
             elif method < method_probs[3]:
                 # point_mutation
-                program = parent.point_mutation(random_state)
+                program, mutated = parent.point_mutation(random_state)
                 genome = {'method': 'Point Mutation',
-                          'parent_idx': parent_index}
+                          'parent_idx': parent_index,
+                          'parent_nodes': []}
             else:
                 # reproduction
                 program = parent.reproduce()
                 genome = {'method': 'Reproduction',
-                          'parent_idx': parent_index}
+                          'parent_idx': parent_index,
+                          'parent_nodes': []}
 
         program = _Program(function_set=function_set,
                            arities=arities,
@@ -127,7 +135,6 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
                            random_state=random_state,
                            program=program)
 
-        # TODO: parent mutated nodes need to be serialized
         program.parents = genome
         program.fitness_ = program.fitness(mean_absolute_error, X, y)
 
@@ -138,7 +145,7 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
 
 class _Program(object):
 
-    """A program-like representation of the evolved program
+    """A program-like representation of the evolved program.
 
     This is the underlying data-structure used by the public classes in this
     module. It should not be used directly by the user.
@@ -170,7 +177,7 @@ class _Program(object):
           'grow', making for a mix of tree shapes in the initial population.
 
     n_features : int
-        The number of features in `X`
+        The number of features in `X`.
 
     const_range : tuple of two floats
         The range of constants to include in the formulas.
@@ -251,7 +258,7 @@ class _Program(object):
         self.parents = None
 
     def build_program(self, random_state):
-        """Build a naive random program
+        """Build a naive random program.
 
         Parameters
         ----------
@@ -303,7 +310,7 @@ class _Program(object):
         return None
 
     def validate_program(self):
-        """Rough check that the embedded program in the object is valid"""
+        """Rough check that the embedded program in the object is valid."""
         terminals = [0]
         for node in self.program:
             if isinstance(node, six.string_types):
@@ -316,7 +323,7 @@ class _Program(object):
         return terminals == [-1]
 
     def __str__(self):
-        """Overrides `print` output of the object to resemble a LISP tree"""
+        """Overloads `print` output of the object to resemble a LISP tree."""
         terminals = [0]
         output = ''
         for i, node in enumerate(self.program):
@@ -338,7 +345,7 @@ class _Program(object):
         return output
 
     def export_graphviz(self):
-        """Returns a string, Graphviz script for visualizing the program"""
+        """Returns a string, Graphviz script for visualizing the program."""
         terminals = []
         output = "digraph program {\nnode [style=filled]"
         for i, node in enumerate(self.program):
@@ -393,7 +400,7 @@ class _Program(object):
         return len(self.program)
 
     def execute(self, X):
-        """Execute the program according to X
+        """Execute the program according to X.
 
         Parameters
         ----------
@@ -404,7 +411,7 @@ class _Program(object):
         Returns
         -------
         y_hats : array-like, shape = [n_samples]
-            The result of executing the program on X
+            The result of executing the program on X.
         """
         # Stop warnings being raised for protected division, etc
         old_settings = np.seterr(divide='ignore', invalid='ignore')
@@ -445,7 +452,7 @@ class _Program(object):
         return None
 
     def fitness(self, metric, X, y, sample_weight=None):
-        """Evaluate the fitness of the program according to X, y
+        """Evaluate the fitness of the program according to X, y.
 
         Parameters
         ----------
@@ -462,13 +469,13 @@ class _Program(object):
         Returns
         -------
         fitness : float
-            The penalized fitness of the program
+            The penalized fitness of the program.
         """
         return (metric(y, self.execute(X)) +
                 (self.parsimony_coefficient * len(self.program)))
 
     def get_subtree(self, random_state, program=None):
-        """Get a random subtree from the program
+        """Get a random subtree from the program.
 
         Parameters
         ----------
@@ -502,11 +509,11 @@ class _Program(object):
         return start, end
 
     def reproduce(self):
-        """Return a copy of the embedded program"""
+        """Return a copy of the embedded program."""
         return deepcopy(self.program)
 
     def crossover(self, donor, random_state):
-        """Perform the crossover genetic operation on the program
+        """Perform the crossover genetic operation on the program.
 
         Crossover selects a random subtree from the embedded program to be
         replaced. A donor also has a subtree selected at random and this is
@@ -527,15 +534,18 @@ class _Program(object):
         """
         # Get a subtree to replace
         start, end = self.get_subtree(random_state)
+        removed = range(start, end)
         # Get a subtree to donate
         donor_start, donor_end = self.get_subtree(random_state, donor)
+        donor_removed = list(set(range(len(donor))) -
+                             set(range(donor_start, donor_end)))
         # Insert genetic material from donor
         return (self.program[:start] +
                 donor[donor_start:donor_end] +
-                self.program[end:])
+                self.program[end:]), removed, donor_removed
 
     def subtree_mutation(self, random_state):
-        """Perform the subtree mutation operation on the program
+        """Perform the subtree mutation operation on the program.
 
         Subtree mutation selects a random subtree from the embedded program to
         be replaced. A donor subtree is generated at random and this is
@@ -560,7 +570,7 @@ class _Program(object):
         return self.crossover(chicken, random_state)
 
     def hoist_mutation(self, random_state):
-        """Perform the hoist mutation operation on the program
+        """Perform the hoist mutation operation on the program.
 
         Hoist mutation selects a random subtree from the embedded program to
         be replaced. A random subtree of that subtree is then selected and this
@@ -583,11 +593,13 @@ class _Program(object):
         # Get a subtree of the subtree to hoist
         sub_start, sub_end = self.get_subtree(random_state, subtree)
         hoist = subtree[sub_start:sub_end]
-
-        return self.program[:start] + hoist + self.program[end:]
+        # Determine which nodes were removed for plotting
+        removed = list(set(range(start, end)) -
+                       set(range(start + sub_start, start + sub_end)))
+        return self.program[:start] + hoist + self.program[end:], removed
 
     def point_mutation(self, random_state):
-        """Perform the point mutation operation on the program
+        """Perform the point mutation operation on the program.
 
         Point mutation selects random nodes from the embedded program to be
         replaced. Terminals are replaced by other terminals and functions are
@@ -627,7 +639,7 @@ class _Program(object):
                     terminal = random_state.uniform(*self.const_range)
                 program[node] = terminal
 
-        return program
+        return program, list(mutate)
 
     depth_ = property(_depth)
     length_ = property(_length)
@@ -803,7 +815,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self.random_state = random_state
 
     def fit(self, X, y, sample_weight=None):
-        """Fit Symbolic Regressor according to X, y
+        """Fit Symbolic Regressor according to X, y.
 
         Parameters
         ----------
