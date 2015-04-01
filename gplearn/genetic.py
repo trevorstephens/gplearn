@@ -21,7 +21,7 @@ from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.random import sample_without_replacement
 
 from .skutils import _partition_estimators
-from skutils.fixes import bincount
+from .skutils.fixes import bincount
 from .skutils.validation import check_random_state, NotFittedError
 from .skutils.validation import check_X_y, check_array, column_or_1d
 
@@ -915,6 +915,24 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                                        self.p_hoist_mutation,
                                        self.p_point_mutation])
         self._method_probs = np.cumsum(self._method_probs)
+
+        if self._method_probs[-1] > 1:
+            raise ValueError('The sum of p_crossover, p_subtree_mutation, '
+                             'p_hoist_mutation and p_point_mutation should '
+                             'total to 1.0 or less.')
+
+        if self.init_method not in ('half and half', 'grow', 'full'):
+            raise ValueError('Valid program initializations methods include '
+                             '"grow", "full" and "half and half". Given %s.'
+                             % self.init_method)
+
+        if (not isinstance(self.const_range, tuple) or
+                len(self.const_range) != 2):
+            raise ValueError('const_range should be a tuple with length two.')
+
+        if (not isinstance(self.init_depth, tuple) or
+                len(self.init_depth) != 2):
+            raise ValueError('init_depth should be a tuple with length two.')
 
         params = self.get_params()
         params['function_set'] = self._function_set
