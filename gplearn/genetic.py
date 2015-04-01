@@ -18,11 +18,12 @@ from time import time
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
-from sklearn.metrics import mean_absolute_error
+from sklearn.utils.random import sample_without_replacement
 
 from .skutils import _partition_estimators
-from .skutils.validation import check_random_state, check_X_y, check_array
-from .skutils.validation import NotFittedError
+from skutils.fixes import bincount
+from .skutils.validation import check_random_state, NotFittedError
+from .skutils.validation import check_X_y, check_array, column_or_1d
 
 __all__ = ['SymbolicRegressor']
 
@@ -56,7 +57,7 @@ FUNCTIONS = {'add2': np.add,
              'min2': np.minimum}
 
 
-def _parallel_evolve(n_programs, parents, X, y, seeds, params):
+def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     """Private function used to build a batch of programs within a job."""
     def _tournament():
         """Find the fittest individual from a sub-population."""
@@ -73,9 +74,14 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
     init_depth = params['init_depth']
     init_method = params['init_method']
     const_range = params['const_range']
+    metric = params['metric']
     parsimony_coefficient = params['parsimony_coefficient']
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
+    bootstrap = params['bootstrap']
+    max_samples = params['max_samples']
+
+    max_samples = int(max_samples * n_samples)
 
     # Build programs
     programs = []
@@ -118,7 +124,7 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
                 program, mutated = parent.point_mutation(random_state)
                 genome = {'method': 'Point Mutation',
                           'parent_idx': parent_index,
-                          'parent_nodes': []}
+                          'parent_nodes': mutated}
             else:
                 # reproduction
                 program = parent.reproduce()
@@ -138,7 +144,25 @@ def _parallel_evolve(n_programs, parents, X, y, seeds, params):
                            program=program)
 
         program.parents = genome
-        program.fitness_ = program.fitness(mean_absolute_error, X, y)
+
+        # Draw samples, using sample weights, and then fit
+        if sample_weight is None:
+            curr_sample_weight = np.ones((n_samples,))
+        else:
+            curr_sample_weight = sample_weight.copy()
+
+        if bootstrap:
+            indices = random_state.randint(0, n_samples, max_samples)
+            sample_counts = bincount(indices, minlength=n_samples)
+            curr_sample_weight *= sample_counts
+        else:
+            not_indices = sample_without_replacement(
+                n_samples,
+                n_samples - max_samples,
+                random_state=random_state)
+            curr_sample_weight[not_indices] = 0
+
+        program.fitness_ = program.fitness(metric, X, y, curr_sample_weight)
 
         programs.append(program)
 
@@ -458,6 +482,10 @@ class _Program(object):
 
         Parameters
         ----------
+        metric : str
+            The name of the raw fitness metric. Available options include
+            'mean absolute error', 'mean squared error' and 'rmse'.
+
         X : {array-like}, shape = [n_samples, n_features]
             Training vectors, where n_samples is the number of samples and
             n_features is the number of features.
@@ -473,8 +501,24 @@ class _Program(object):
         fitness : float
             The penalized fitness of the program.
         """
-        return (metric(y, self.execute(X)) +
-                (self.parsimony_coefficient * len(self.program)))
+        y_pred = self.execute(X)
+
+        if metric == 'mean absolute error':
+            raw_fitness = np.average(np.abs(y_pred - y),
+                                     weights=sample_weight)
+
+        elif metric == 'mean squared error':
+            raw_fitness = np.average(((y_pred - y) ** 2),
+                                     weights=sample_weight)
+
+        elif metric == 'rmse':
+            raw_fitness = np.sqrt(np.average(((y_pred - y) ** 2),
+                                             weights=sample_weight))
+
+        else:
+            raise ValueError('Unsupported metric: %s' % metric)
+
+        return raw_fitness + (self.parsimony_coefficient * len(self.program))
 
     def get_subtree(self, random_state, program=None):
         """Get a random subtree from the program.
@@ -671,10 +715,6 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         The number of programs that will compete to become part of the next
         generation.
 
-    tournament_size : integer, optional (default=20)
-        The number of programs that will compete to become part of the next
-        generation.
-
     const_range : tuple of two floats, optional (default=(-1., 1.))
         The range of constants to include in the formulas.
 
@@ -699,6 +739,10 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
     comparison : bool, optional (default=True)
         Whether to include maximum and minimum functions in the function set.
+
+    metric : str, optional (default='mean absolute error')
+        The name of the raw fitness metric. Available options include
+        'mean absolute error', 'mean squared error' and 'rmse'.
 
     parsimony_coefficient : float, optional (default=0.001)
         This constant penalizes large programs by adjusting their fitness to
@@ -747,6 +791,12 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         For point mutation only, the probability that any given node will be
         mutated.
 
+    bootstrap : boolean, optional (default=True)
+        Whether samples are drawn with replacement.
+
+    max_samples : float, optional (default=1.0)
+        The fraction of samples to draw from X to evaluate each program on.
+
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
         of jobs is set to the number of cores.
@@ -788,12 +838,15 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                  init_method='half and half',
                  transformer=True,
                  comparison=True,
+                 metric='mean absolute error',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
                  p_subtree_mutation=0.01,
                  p_hoist_mutation=0.01,
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
+                 bootstrap=True,
+                 max_samples=1.0,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -806,12 +859,15 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self.init_method = init_method
         self.transformer = transformer
         self.comparison = comparison
+        self.metric = metric
         self.parsimony_coefficient = parsimony_coefficient
         self.p_crossover = p_crossover
         self.p_subtree_mutation = p_subtree_mutation
         self.p_hoist_mutation = p_hoist_mutation
         self.p_point_mutation = p_point_mutation
         self.p_point_replace = p_point_replace
+        self.bootstrap = bootstrap
+        self.max_samples = max_samples
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
@@ -836,10 +892,10 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self : object
             Returns self.
         """
-        X, y = check_X_y(X, y)
-        y = np.ascontiguousarray(y, dtype=np.float64)
-
         random_state = check_random_state(self.random_state)
+
+        # Check arrays
+        X, y = check_X_y(X, y, y_numeric=True)
 
         self._function_set = ['add2', 'sub2', 'mul2', 'div2']
         if self.transformer:
@@ -897,6 +953,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                                           parents,
                                           X,
                                           y,
+                                          sample_weight,
                                           seeds[starts[i]:starts[i + 1]],
                                           params)
                 for i in range(n_jobs))
