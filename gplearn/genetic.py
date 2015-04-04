@@ -137,6 +137,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            init_depth=init_depth,
                            init_method=init_method,
                            n_features=n_features,
+                           metric=metric,
                            const_range=const_range,
                            p_point_replace=p_point_replace,
                            parsimony_coefficient=parsimony_coefficient,
@@ -162,7 +163,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                 random_state=random_state)
             curr_sample_weight[not_indices] = 0
 
-        program.fitness_ = program.fitness(metric, X, y, curr_sample_weight)
+        program.fitness_ = program.fitness(X, y, curr_sample_weight)
 
         programs.append(program)
 
@@ -207,6 +208,10 @@ class _Program(object):
 
     const_range : tuple of two floats
         The range of constants to include in the formulas.
+
+    metric : str
+        The name of the raw fitness metric. Available options include
+        'mean absolute error', 'mse', 'rmse' and 'rmsle'.
 
     p_point_replace : float
         The probability that any given node will be mutated during point
@@ -258,6 +263,7 @@ class _Program(object):
                  init_method,
                  n_features,
                  const_range,
+                 metric,
                  p_point_replace,
                  parsimony_coefficient,
                  random_state,
@@ -269,6 +275,7 @@ class _Program(object):
         self.init_method = init_method
         self.n_features = n_features
         self.const_range = const_range
+        self.metric = metric
         self.p_point_replace = p_point_replace
         self.parsimony_coefficient = parsimony_coefficient
         self.program = program
@@ -477,15 +484,11 @@ class _Program(object):
         np.seterr(**old_settings)
         return None
 
-    def fitness(self, metric, X, y, sample_weight=None):
+    def fitness(self, X, y, sample_weight=None):
         """Evaluate the fitness of the program according to X, y.
 
         Parameters
         ----------
-        metric : str
-            The name of the raw fitness metric. Available options include
-            'mean absolute error', 'mean squared error' and 'rmse'.
-
         X : {array-like}, shape = [n_samples, n_features]
             Training vectors, where n_samples is the number of samples and
             n_features is the number of features.
@@ -503,20 +506,25 @@ class _Program(object):
         """
         y_pred = self.execute(X)
 
-        if metric == 'mean absolute error':
+        if self.metric == 'mean absolute error':
             raw_fitness = np.average(np.abs(y_pred - y),
                                      weights=sample_weight)
 
-        elif metric == 'mean squared error':
+        elif self.metric == 'mse':
             raw_fitness = np.average(((y_pred - y) ** 2),
                                      weights=sample_weight)
 
-        elif metric == 'rmse':
+        elif self.metric == 'rmse':
             raw_fitness = np.sqrt(np.average(((y_pred - y) ** 2),
                                              weights=sample_weight))
 
+        elif self.metric == 'rmsle':
+            raw_fitness = np.sqrt(np.average((np.log(y_pred + 1) -
+                                              np.log(y + 1)) ** 2,
+                                             weights=sample_weight))
+
         else:
-            raise ValueError('Unsupported metric: %s' % metric)
+            raise ValueError('Unsupported metric: %s' % self.metric)
 
         return raw_fitness + (self.parsimony_coefficient * len(self.program))
 
@@ -741,8 +749,11 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         Whether to include maximum and minimum functions in the function set.
 
     metric : str, optional (default='mean absolute error')
-        The name of the raw fitness metric. Available options include
-        'mean absolute error', 'mean squared error' and 'rmse'.
+        The name of the raw fitness metric. Available options include:
+        - 'mean absolute error',
+        - 'mse' for mean squared error,
+        - 'rmse' for root mean squared error, and
+        - 'rmsle' for root mean squared logarithmic error.
 
     parsimony_coefficient : float, optional (default=0.001)
         This constant penalizes large programs by adjusting their fitness to
