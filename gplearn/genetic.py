@@ -944,6 +944,9 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         if (not isinstance(self.init_depth, tuple) or
                 len(self.init_depth) != 2):
             raise ValueError('init_depth should be a tuple with length two.')
+        if self.init_depth[0] > self.init_depth[1]:
+            raise ValueError('init_depth should be in increasing numerical '
+                             'order: (min_depth, max_depth).')
 
         params = self.get_params()
         params['function_set'] = self._function_set
