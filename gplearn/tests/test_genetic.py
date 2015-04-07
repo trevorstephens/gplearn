@@ -10,7 +10,7 @@ import os
 import warnings
 import sys
 
-from gplearn.genetic import _Program
+from gplearn.genetic import _Program, SymbolicRegressor
 
 from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston
@@ -257,6 +257,9 @@ def test_all_metrics():
         gp.metric = m
         result.append(gp.fitness(X, y))
     assert_array_almost_equal(result, expected)
+    # And check a fake one
+    gp.metric = 'the larch'
+    assert_raises(ValueError, gp.fitness, X, y)
 
 
 def test_get_subtree():
@@ -318,6 +321,58 @@ def test_genetic_operations():
     assert_equal(gp.point_mutation(random_state)[0],
                  ['mul2', 'div2', 8, 1, 'sub2', 9, 0.5])
     assert_equal(gp.program, test_gp)
+
+
+def test_program_input_validation():
+    """Check that guarded input validation raises errors"""
+
+    # Check too much proba
+    est = SymbolicRegressor(p_point_mutation=.5)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+    # Check invalid init_method
+    est = SymbolicRegressor(init_method='ni')
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+    # Check invalid const_ranges
+    est = SymbolicRegressor(const_range=2)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(const_range=[2, 2])
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(const_range=(2, 2, 2))
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(const_range='ni')
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    # And check acceptable, but strange, representations of init_depth
+    est = SymbolicRegressor(const_range=(2, 2))
+    est.fit(boston.data, boston.target)
+    est = SymbolicRegressor(const_range=(4, 2))
+    est.fit(boston.data, boston.target)
+
+    # Check invalid init_depth
+    est = SymbolicRegressor(init_depth=2)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(init_depth=2)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(init_depth=[2, 2])
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(init_depth=(2, 2, 2))
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(init_depth='ni')
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicRegressor(init_depth=(4, 2))
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    # And check acceptable, but strange, representations of init_depth
+    est = SymbolicRegressor(init_depth=(2, 2))
+    est.fit(boston.data, boston.target)
+
+    # Check metric
+    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
+        est = SymbolicRegressor(generations=2, metric=m)
+        est.fit(boston.data, boston.target)
+    # And check a fake one
+    est = SymbolicRegressor(metric='the larch')
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
 
 
 if __name__ == "__main__":
