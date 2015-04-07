@@ -9,7 +9,6 @@ import numpy as np
 import os
 import warnings
 import sys
-import pkgutil
 
 from gplearn.genetic import _Program
 
@@ -19,7 +18,6 @@ from sklearn.datasets import load_boston
 from gplearn.skutils.testing import assert_false, assert_true
 from gplearn.skutils.testing import assert_greater
 from gplearn.skutils.testing import assert_equal, assert_array_almost_equal
-from gplearn.skutils.testing import assert_in
 from gplearn.skutils.testing import assert_raises
 from gplearn.skutils.validation import check_random_state
 
@@ -139,12 +137,13 @@ def test_validate_program():
                   p_point_replace, parsimony_coefficient, random_state,
                   test_gp + [1])
 
+
 def test_print_overloading():
     """Check that printing a program object results in 'pretty' output"""
 
     params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
               'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
-              'init_depth': (2, 2),
+              'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
               'const_range': (-1.0, 1.0),
@@ -153,7 +152,7 @@ def test_print_overloading():
               'parsimony_coefficient': 0.1}
     random_state = check_random_state(415)
 
-    test_gp = ['mul2', 'div2', 8, 8, 'sub2', 9, 5]
+    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
 
     gp = _Program(random_state=random_state, program=test_gp, **params)
 
@@ -167,16 +166,16 @@ def test_print_overloading():
         sys.stdout = orig_stdout
 
     print(gp)
-    lisp = "mul(div(X8, X8), sub(X9, X5))"
+    lisp = "mul(div(X8, X1), sub(X9, 0.500))"
     assert_true(output == lisp)
 
 
 def test_export_graphviz():
-    """Check output of a simple program to Grpahviz"""
+    """Check output of a simple program to Graphviz"""
 
     params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
               'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
-              'init_depth': (2, 2),
+              'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
               'const_range': (-1.0, 1.0),
@@ -185,23 +184,140 @@ def test_export_graphviz():
               'parsimony_coefficient': 0.1}
     random_state = check_random_state(415)
 
-    test_gp = ['mul2', 'div2', 8, 8, 'sub2', 9, 5]
-
+    # Test for a small program
+    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
-
     tree = 'digraph program {\n' \
            'node [style=filled]0 [label="mul", fillcolor="#3499cd"] ;\n' \
            '1 [label="div", fillcolor="#3499cd"] ;\n' \
            '2 [label="X8", fillcolor="#f89939"] ;\n' \
-           '3 [label="X8", fillcolor="#f89939"] ;\n' \
+           '3 [label="X1", fillcolor="#f89939"] ;\n' \
            '1 -> 3 ;\n1 -> 2 ;\n' \
            '4 [label="sub", fillcolor="#3499cd"] ;\n' \
            '5 [label="X9", fillcolor="#f89939"] ;\n' \
-           '6 [label="X5", fillcolor="#f89939"] ;\n' \
+           '6 [label="0.500", fillcolor="#f89939"] ;\n' \
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
-
     assert_true(output == tree)
+
+    # Test a degenerative single-node program
+    test_gp = [1]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    output = gp.export_graphviz()
+    tree = 'digraph program {\n' \
+           'node [style=filled]0 [label="X1", fillcolor="#f89939"] ;\n}'
+    assert_true(output == tree)
+
+
+def test_execute():
+    """Check executing the program works"""
+
+    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
+              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+              'init_depth': (2, 6),
+              'init_method': 'half and half',
+              'n_features': 10,
+              'const_range': (-1.0, 1.0),
+              'metric': 'mean absolute error',
+              'p_point_replace': 0.05,
+              'parsimony_coefficient': 0.1}
+    random_state = check_random_state(415)
+
+    # Test for a small program
+    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    result = gp.execute(X)
+    expected = [-0.19656208, 0.78197782, -1.70123845, -0.60175969, -0.01082618]
+    assert_array_almost_equal(result, expected)
+
+
+def test_all_metrics():
+    """Check all supported metrics work"""
+
+    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
+              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+              'init_depth': (2, 6),
+              'init_method': 'half and half',
+              'n_features': 10,
+              'const_range': (-1.0, 1.0),
+              'metric': 'mean absolute error',
+              'p_point_replace': 0.05,
+              'parsimony_coefficient': 0.1}
+    random_state = check_random_state(415)
+
+    # Test for a small program
+    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    y = random_state.uniform(size=5)
+    expected = [1.48719809776, 1.82389179833, 1.76013763179, 0.98663772258]
+    result = []
+    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
+        gp.metric = m
+        result.append(gp.fitness(X, y))
+    assert_array_almost_equal(result, expected)
+
+
+def test_get_subtree():
+    """Check that get subtree does the same thing for self and new programs"""
+
+    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
+              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+              'init_depth': (2, 6),
+              'init_method': 'half and half',
+              'n_features': 10,
+              'const_range': (-1.0, 1.0),
+              'metric': 'mean absolute error',
+              'p_point_replace': 0.05,
+              'parsimony_coefficient': 0.1}
+    random_state = check_random_state(415)
+
+    # Test for a small program
+    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+
+    self_test = gp.get_subtree(check_random_state(0))
+    external_test = gp.get_subtree(check_random_state(0), test_gp)
+
+    assert_equal(self_test, external_test)
+
+
+def test_genetic_operations():
+    """Check all genetic operations are stable and don't change programs"""
+
+    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
+              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+              'init_depth': (2, 6),
+              'init_method': 'half and half',
+              'n_features': 10,
+              'const_range': (-1.0, 1.0),
+              'metric': 'mean absolute error',
+              'p_point_replace': 0.05,
+              'parsimony_coefficient': 0.1}
+    random_state = check_random_state(415)
+
+    # Test for a small program
+    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    donor = ['add2', 0.1, 'sub2', 2, 7]
+
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+
+    assert_equal(gp.reproduce(),
+                 ['mul2', 'div2', 8, 1, 'sub2', 9, 0.5])
+    assert_equal(gp.program, test_gp)
+    assert_equal(gp.crossover(donor, random_state)[0],
+                 ['sub2', 2, 7])
+    assert_equal(gp.program, test_gp)
+    assert_equal(gp.subtree_mutation(random_state)[0],
+                 ['mul2', 'div2', 8, 1, 'sub2', 'sub2', 3, 5, 'add2', 6, 3])
+    assert_equal(gp.program, test_gp)
+    assert_equal(gp.hoist_mutation(random_state)[0],
+                 ['div2', 8, 1])
+    assert_equal(gp.program, test_gp)
+    assert_equal(gp.point_mutation(random_state)[0],
+                 ['mul2', 'div2', 8, 1, 'sub2', 9, 0.5])
+    assert_equal(gp.program, test_gp)
 
 
 if __name__ == "__main__":

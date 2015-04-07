@@ -478,6 +478,9 @@ class _Program(object):
                     apply_stack[-1].append(intermediate_result)
                 else:
                     np.seterr(**old_settings)
+                    # Protect for rmsle:
+                    if self.metric == 'rmsle':
+                        intermediate_result[intermediate_result <= 1e-16] = 0
                     return intermediate_result
 
         # We should never get here
