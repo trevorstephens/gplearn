@@ -6,18 +6,18 @@
 # License: BSD 3 clause
 
 import numpy as np
-import os
-import warnings
 import sys
 
 from gplearn.genetic import _Program, SymbolicRegressor
 
 from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston
+from sklearn.metrics import mean_absolute_error
 
 from gplearn.skutils.testing import assert_false, assert_true
 from gplearn.skutils.testing import assert_greater
-from gplearn.skutils.testing import assert_equal, assert_array_almost_equal
+from gplearn.skutils.testing import assert_equal, assert_almost_equal
+from gplearn.skutils.testing import assert_array_almost_equal
 from gplearn.skutils.testing import assert_raises
 from gplearn.skutils.validation import check_random_state
 
@@ -373,6 +373,94 @@ def test_program_input_validation():
     # And check a fake one
     est = SymbolicRegressor(metric='the larch')
     assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_sample_weight():
+    """Check sample_weight param works"""
+
+    # Check constant sample_weight has no effect
+    sample_weight = np.ones(boston.target.shape[0])
+    est1 = SymbolicRegressor(generations=2, random_state=0)
+    est1.fit(boston.data, boston.target)
+    est2 = SymbolicRegressor(generations=2, random_state=0)
+    est2.fit(boston.data, boston.target, sample_weight=sample_weight)
+    # And again with a scaled sample_weight
+    est3 = SymbolicRegressor(generations=2, random_state=0)
+    est3.fit(boston.data, boston.target, sample_weight=sample_weight * 1.1)
+
+    assert_almost_equal(est1.fitness_, est2.fitness_)
+    assert_almost_equal(est1.fitness_, est3.fitness_)
+
+
+def test_bootstrap_and_subsample():
+    """Check that bootstrap and subsample work and that results differ"""
+
+    est1 = SymbolicRegressor(bootstrap=False, max_samples=1.0, random_state=0)
+    est1.fit(boston.data[:400, :], boston.target[:400])
+    est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    est2 = SymbolicRegressor(bootstrap=True, max_samples=1.0, random_state=0)
+    est2.fit(boston.data[:400, :], boston.target[:400])
+    est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    est3 = SymbolicRegressor(bootstrap=False, max_samples=0.7, random_state=0)
+    est3.fit(boston.data[:400, :], boston.target[:400])
+    est3 = mean_absolute_error(est3.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    est4 = SymbolicRegressor(bootstrap=True, max_samples=0.7, random_state=0)
+    est4.fit(boston.data[:400, :], boston.target[:400])
+    est4 = mean_absolute_error(est4.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    for e1 in [est1, est2, est3, est4]:
+        for e2 in [est1, est2, est3, est4]:
+            if e1 is not e2:
+                assert_true(abs(e1 - e2) > 0.01)
+
+
+def test_verbose_output():
+    """Check verbose=1 does not cause error"""
+
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+    est = SymbolicRegressor(random_state=0, verbose=1)
+    est.fit(boston.data, boston.target)
+    verbose_output = sys.stdout
+    sys.stdout = old_stdout
+
+    # check output
+    verbose_output.seek(0)
+    header = verbose_output.readline().rstrip()
+
+    header_fields = ['Gen', 'AveFit', 'BestFit', 'AveLen', 'BestLen', 'OOBFit',
+                     'TimeLeft']
+    true_header = (' '.join(['%10s'] + ['%16s'] * (len(header_fields) - 1)) %
+                   tuple(header_fields))
+    assert_equal(true_header, header)
+
+    n_lines = sum(1 for l in verbose_output.readlines())
+    assert_equal(10, n_lines)
+
+
+def test_more_verbose_output():
+    """Check verbose=2 does not cause error"""
+
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+    clf = SymbolicRegressor(random_state=0, verbose=2)
+    clf.fit(boston.data, boston.target)
+    verbose_output = sys.stdout
+    sys.stdout = old_stdout
+
+    # check output
+    verbose_output.seek(0)
+    header = verbose_output.readline().rstrip()
+
+    n_lines = sum(1 for l in verbose_output.readlines())
+    assert_equal(10, n_lines)
 
 
 if __name__ == "__main__":

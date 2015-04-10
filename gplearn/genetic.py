@@ -859,7 +859,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                  p_hoist_mutation=0.01,
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
-                 bootstrap=True,
+                 bootstrap=False,
                  max_samples=1.0,
                  n_jobs=1,
                  verbose=0,
