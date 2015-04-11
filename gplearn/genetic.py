@@ -45,6 +45,11 @@ def protected_log(x1):
     return np.where(np.abs(x1) > 0.001, np.log(np.abs(x1)), 0.)
 
 
+def protected_inverse(x1):
+    """Closure of log for zero arguments."""
+    return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
+
+
 # Format is '<name><arity>': function
 FUNCTIONS = {'add2': np.add,
              'sub2': np.subtract,
@@ -52,9 +57,14 @@ FUNCTIONS = {'add2': np.add,
              'div2': protected_devision,
              'sqrt1': protected_sqrt,
              'log1': protected_log,
+             'neg1': np.negative,
+             'inv1': protected_inverse,
              'abs1': np.abs,
              'max2': np.maximum,
-             'min2': np.minimum}
+             'min2': np.minimum,
+             'sin1': np.sin,
+             'cos1': np.cos,
+             'tan1': np.tan}
 
 
 def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
@@ -745,11 +755,16 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
           'grow', making for a mix of tree shapes in the initial population.
 
     transformer : bool, optional (default=True)
-        Whether to include protected square root, protected log, and absolute
-        value functions in the function set.
+        Whether to include protected square root, protected log, absolute
+        value, negative, and inverse functions in the function set.
 
     comparison : bool, optional (default=True)
         Whether to include maximum and minimum functions in the function set.
+
+    trigonometric : bool, optional (default=False)
+        Whether to include sin, cos and tan functions in the function set. Note
+        that these functions work on radian angles, if your data is presented
+        as degrees, you may wish to covert using, for example, `np.radians`.
 
     metric : str, optional (default='mean absolute error')
         The name of the raw fitness metric. Available options include:
@@ -852,6 +867,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                  init_method='half and half',
                  transformer=True,
                  comparison=True,
+                 trigonometric=False,
                  metric='mean absolute error',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
@@ -873,6 +889,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self.init_method = init_method
         self.transformer = transformer
         self.comparison = comparison
+        self.trigonometric = trigonometric
         self.metric = metric
         self.parsimony_coefficient = parsimony_coefficient
         self.p_crossover = p_crossover
@@ -913,9 +930,12 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
         self._function_set = ['add2', 'sub2', 'mul2', 'div2']
         if self.transformer:
-            self._function_set.extend(['sqrt1', 'log1', 'abs1'])
+            self._function_set.extend(['sqrt1', 'log1', 'abs1', 'neg1',
+                                       'inv1'])
         if self.comparison:
             self._function_set.extend(['max2', 'min2'])
+        if self.trigonometric:
+            self._function_set.extend(['sin1', 'cos1', 'tan1'])
 
         # For point-mutation to find a compatible replacement node
         self._arities = {}

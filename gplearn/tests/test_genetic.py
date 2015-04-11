@@ -392,6 +392,22 @@ def test_sample_weight():
     assert_almost_equal(est1.fitness_, est3.fitness_)
 
 
+def test_trigonometric():
+    """Check that using trig functions work and that results differ"""
+
+    est1 = SymbolicRegressor(random_state=0)
+    est1.fit(boston.data[:400, :], boston.target[:400])
+    est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    est2 = SymbolicRegressor(trigonometric=True, random_state=0)
+    est2.fit(boston.data[:400, :], boston.target[:400])
+    est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    assert_true(abs(est1 - est2) > 0.01)
+
+
 def test_bootstrap_and_subsample():
     """Check that bootstrap and subsample work and that results differ"""
 
