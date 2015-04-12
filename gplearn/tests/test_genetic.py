@@ -492,31 +492,43 @@ def test_verbose_output():
 
     # check output
     verbose_output.seek(0)
-    header = verbose_output.readline().rstrip()
+    header1 = verbose_output.readline().rstrip()
+    true_header = '%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
+                                        'Best Individual'.center(59))
+    assert_equal(true_header, header1)
 
-    header_fields = ['Gen', 'AveFit', 'BestFit', 'AveLen', 'BestLen', 'OOBFit',
-                     'TimeLeft']
-    true_header = (' '.join(['%10s'] + ['%16s'] * (len(header_fields) - 1)) %
-                   tuple(header_fields))
-    assert_equal(true_header, header)
+    header2 = verbose_output.readline().rstrip()
+    true_header = '-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10
+    assert_equal(true_header, header2)
+
+    header3 = verbose_output.readline().rstrip()
+    header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
+                     'Raw Fitness', 'OOB Fitness', 'Time Left')
+    true_header = '%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields
+
+    # true_header = (' '.join(['%10s'] + ['%16s'] * (len(header_fields) - 1)) %
+    #                tuple(header_fields))
+    assert_equal(true_header, header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
     assert_equal(10, n_lines)
 
 
 def test_more_verbose_output():
-    """Check verbose=2 does not cause error"""
+    """Check verbose=2 and OOB scoring do not cause error"""
 
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    clf = SymbolicRegressor(random_state=0, verbose=2)
+    clf = SymbolicRegressor(max_samples=0.9, random_state=0, verbose=2)
     clf.fit(boston.data, boston.target)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
 
     # check output
     verbose_output.seek(0)
-    header = verbose_output.readline().rstrip()
+    header1 = verbose_output.readline().rstrip()
+    header2 = verbose_output.readline().rstrip()
+    header3 = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
     assert_equal(10, n_lines)

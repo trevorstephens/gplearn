@@ -180,9 +180,12 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                 n_samples,
                 n_samples - max_samples,
                 random_state=random_state)
+            sample_counts = np.bincount(not_indices, minlength=n_samples)
+            indices = np.where(sample_counts == 0)[0]
             curr_sample_weight[not_indices] = 0
 
         program.raw_fitness_ = program.raw_fitness(X, y, curr_sample_weight)
+        program.indices_ = indices
 
         programs.append(program)
 
@@ -309,6 +312,7 @@ class _Program(object):
             # Create a naive random program
             self.program = self.build_program(random_state)
 
+        self.indices_ = None
         self.raw_fitness_ = None
         self.fitness_ = None
         self.parents = None
@@ -1016,10 +1020,12 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
         if self.verbose:
             # header fields and line format str
-            header_fields = ['Gen', 'AveFit', 'BestFit', 'AveLen', 'BestLen',
-                             'OOBFit', 'TimeLeft']
-            print(('%10s ' + '%16s ' * (len(header_fields) - 1)) %
-                  tuple(header_fields))
+            print('%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
+                                        'Best Individual'.center(59)))
+            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10)
+            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
+                             'Raw Fitness', 'OOB Fitness', 'Time Left')
+            print('%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields)
             start_time = time()
 
         for gen in range(self.generations):
@@ -1065,6 +1071,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
             if self.verbose:
 
+                # Estimate remaining time for run
                 remaining_time = ((self.generations - gen - 1) *
                                   (time() - start_time) / float(gen + 1))
                 if remaining_time > 60:
@@ -1072,18 +1079,31 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                 else:
                     remaining_time = '{0:.2f}s'.format(remaining_time)
 
+                # Find the current generation's best individual
                 if self.parsimony_coefficient != 'auto':
                     fitness = [program.fitness_ for program in population]
                     length = [program.length_ for program in population]
                 best_program = population[np.argmin(fitness)]
 
-                print(('%10s ' + '%16s ' * (len(header_fields) - 1)) %
+                oob_fitness = 'N/A'
+                if self.bootstrap or self.max_samples < 1.0:
+                    # Calculate OOB fitness
+                    if sample_weight is None:
+                        curr_sample_weight = np.ones(y.shape)
+                    else:
+                        curr_sample_weight = sample_weight.copy()
+                    curr_sample_weight[best_program.indices_] = 0
+                    oob_fitness = best_program.raw_fitness(X, y,
+                                                           curr_sample_weight)
+
+                print('%4s %8s %16s %8s %16s %16s %16s %10s' %
                       (gen,
+                       np.round(np.mean(length), 2),
                        np.mean(fitness),
-                       best_program.fitness_,
-                       np.mean(length),
                        best_program.length_,
-                       1.0,
+                       best_program.fitness_,
+                       best_program.raw_fitness_,
+                       oob_fitness,
                        remaining_time))
 
         # Find the best individual in the final generation
