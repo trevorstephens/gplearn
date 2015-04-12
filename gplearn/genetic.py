@@ -23,7 +23,7 @@ from sklearn.utils.random import sample_without_replacement
 from .skutils import _partition_estimators
 from .skutils.fixes import bincount
 from .skutils.validation import check_random_state, NotFittedError
-from .skutils.validation import check_X_y, check_array, column_or_1d
+from .skutils.validation import check_X_y, check_array
 
 __all__ = ['SymbolicRegressor']
 
@@ -65,6 +65,15 @@ FUNCTIONS = {'add2': np.add,
              'sin1': np.sin,
              'cos1': np.cos,
              'tan1': np.tan}
+
+
+def weighted_pearson(x1, x2, w):
+    """Calculate the weighted Pearson correlation coefficient."""
+    x1_demean = x1 - np.average(x1, weights=w)
+    x2_demean = x2 - np.average(x2, weights=w)
+    return ((np.sum(w * x1_demean * x2_demean) / np.sum(w)) /
+            np.sqrt((np.sum(w * x1_demean ** 2) * np.sum(w * x2_demean ** 2)) /
+                    (np.sum(w) ** 2)))
 
 
 def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
