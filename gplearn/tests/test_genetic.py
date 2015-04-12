@@ -505,21 +505,19 @@ def test_verbose_output():
     header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
                      'Raw Fitness', 'OOB Fitness', 'Time Left')
     true_header = '%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields
-
-    # true_header = (' '.join(['%10s'] + ['%16s'] * (len(header_fields) - 1)) %
-    #                tuple(header_fields))
     assert_equal(true_header, header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
     assert_equal(10, n_lines)
 
 
-def test_more_verbose_output():
-    """Check verbose=2 and OOB scoring do not cause error"""
+def test_verbose_with_oob():
+    """Check oob scoring for bootstrap or subsample does not cause error"""
 
+    # Check subsample
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    clf = SymbolicRegressor(max_samples=0.9, random_state=0, verbose=2)
+    clf = SymbolicRegressor(max_samples=0.9, random_state=0, verbose=1)
     clf.fit(boston.data, boston.target)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
@@ -532,6 +530,52 @@ def test_more_verbose_output():
 
     n_lines = sum(1 for l in verbose_output.readlines())
     assert_equal(10, n_lines)
+
+    # Check bootstrap
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+    clf = SymbolicRegressor(bootstrap=True, random_state=0, verbose=1)
+    clf.fit(boston.data, boston.target,
+            sample_weight=np.ones(boston.target.shape) * 1.1)
+    verbose_output = sys.stdout
+    sys.stdout = old_stdout
+
+    # check output
+    verbose_output.seek(0)
+    header1 = verbose_output.readline().rstrip()
+    header2 = verbose_output.readline().rstrip()
+    header3 = verbose_output.readline().rstrip()
+
+    n_lines = sum(1 for l in verbose_output.readlines())
+    assert_equal(10, n_lines)
+
+
+def test_more_verbose_output():
+    """Check verbose=2 does not cause error"""
+
+    old_stdout = sys.stdout
+    old_stderr = sys.stderr
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+    clf = SymbolicRegressor(random_state=0, verbose=2)
+    clf.fit(boston.data, boston.target)
+    verbose_output = sys.stdout
+    joblib_output = sys.stderr
+    sys.stdout = old_stdout
+    sys.stderr = old_stderr
+
+    # check output
+    verbose_output.seek(0)
+    header1 = verbose_output.readline().rstrip()
+    header2 = verbose_output.readline().rstrip()
+    header3 = verbose_output.readline().rstrip()
+
+    n_lines = sum(1 for l in verbose_output.readlines())
+    assert_equal(10, n_lines)
+
+    joblib_output.seek(0)
+    n_lines = sum(1 for l in joblib_output.readlines())
+    assert_equal(20, n_lines)
 
 
 if __name__ == "__main__":
