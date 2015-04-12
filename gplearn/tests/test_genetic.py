@@ -255,11 +255,12 @@ def test_all_metrics():
     result = []
     for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
         gp.metric = m
-        result.append(gp.fitness(X, y))
+        gp.raw_fitness_ = gp.raw_fitness(X, y)
+        result.append(gp.fitness())
     assert_array_almost_equal(result, expected)
     # And check a fake one
     gp.metric = 'the larch'
-    assert_raises(ValueError, gp.fitness, X, y)
+    assert_raises(ValueError, gp.raw_fitness, X, y)
 
 
 def test_get_subtree():
@@ -435,6 +436,29 @@ def test_bootstrap_and_subsample():
         for e2 in [est1, est2, est3, est4]:
             if e1 is not e2:
                 assert_true(abs(e1 - e2) > 0.01)
+
+
+def test_parsimony_coefficient():
+    """Check that parsimony coefficients work and that results differ"""
+
+    est1 = SymbolicRegressor(parsimony_coefficient=0.001, random_state=0)
+    est1.fit(boston.data[:400, :], boston.target[:400])
+    est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    est2 = SymbolicRegressor(parsimony_coefficient=0.1, random_state=0)
+    est2.fit(boston.data[:400, :], boston.target[:400])
+    est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    est3 = SymbolicRegressor(parsimony_coefficient='auto', random_state=0)
+    est3.fit(boston.data[:400, :], boston.target[:400])
+    est3 = mean_absolute_error(est3.predict(boston.data[400:, :]),
+                               boston.target[400:])
+
+    assert_true(abs(est1 - est2) > 0.01)
+    assert_true(abs(est1 - est3) > 0.01)
+    assert_true(abs(est2 - est3) > 0.01)
 
 
 def test_verbose_output():

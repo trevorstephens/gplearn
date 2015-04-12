@@ -173,7 +173,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                 random_state=random_state)
             curr_sample_weight[not_indices] = 0
 
-        program.fitness_ = program.fitness(X, y, curr_sample_weight)
+        program.raw_fitness_ = program.raw_fitness(X, y, curr_sample_weight)
 
         programs.append(program)
 
@@ -250,8 +250,11 @@ class _Program(object):
     program : list
         The flattened tree representation of the program.
 
+    raw_fitness_ : float
+        The raw fitness of the individual program.
+
     fitness_ : float
-        The fitness of the fittest individual in the final generation.
+        The penalized fitness of the individual program.
 
     parents : dict, or None
         If None, this is a naive random program from the initial population.
@@ -297,6 +300,7 @@ class _Program(object):
             # Create a naive random program
             self.program = self.build_program(random_state)
 
+        self.raw_fitness_ = None
         self.fitness_ = None
         self.parents = None
 
@@ -497,8 +501,8 @@ class _Program(object):
         np.seterr(**old_settings)
         return None
 
-    def fitness(self, X, y, sample_weight=None):
-        """Evaluate the fitness of the program according to X, y.
+    def raw_fitness(self, X, y, sample_weight=None):
+        """Evaluate the raw fitness of the program according to X, y.
 
         Parameters
         ----------
@@ -514,8 +518,8 @@ class _Program(object):
 
         Returns
         -------
-        fitness : float
-            The penalized fitness of the program.
+        raw_fitness : float
+            The raw fitness of the program.
         """
         y_pred = self.execute(X)
 
@@ -539,7 +543,25 @@ class _Program(object):
         else:
             raise ValueError('Unsupported metric: %s' % self.metric)
 
-        return raw_fitness + (self.parsimony_coefficient * len(self.program))
+        return raw_fitness
+
+    def fitness(self, parsimony_coefficient=None):
+        """Evaluate the penalized fitness of the program according to X, y.
+
+        Parameters
+        ----------
+        parsimony_coefficient : float, optional
+            If automatic parsimony is being used, the computed value according
+            to the population. Otherwise the initialized value is used.
+
+        Returns
+        -------
+        fitness : float
+            The penalized fitness of the program.
+        """
+        if parsimony_coefficient is None:
+            parsimony_coefficient = self.parsimony_coefficient
+        return self.raw_fitness_ + (parsimony_coefficient * len(self.program))
 
     def get_subtree(self, random_state, program=None):
         """Get a random subtree from the program.
@@ -773,7 +795,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         - 'rmse' for root mean squared error, and
         - 'rmsle' for root mean squared logarithmic error.
 
-    parsimony_coefficient : float, optional (default=0.001)
+    parsimony_coefficient : float or "auto", optional (default=0.001)
         This constant penalizes large programs by adjusting their fitness to
         be less favorable for selection. Larger values penalize the program
         more which can control the phenomenon known as 'bloat'. Bloat is when
@@ -781,6 +803,11 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         increase in fitness, which is costly for computation time and makes for
         a less understandable final result. This parameter may need to be tuned
         over successive runs.
+
+        If "auto" the parsimony coefficient is recalculated for each generation
+        using c = Cov(l,f)/Var( l), where Cov(l,f) is the covariance between
+        program size l and program fitness f in the population, and Var(l) is
+        the variance of program sizes.
 
     p_crossover : float, optional (default=0.9)
         The probability of performing crossover on a tournament winner.
@@ -1015,6 +1042,16 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
             # Reduce, maintaining order across different n_jobs
             population = list(itertools.chain.from_iterable(population))
+
+            parsimony_coefficient = None
+            if self.parsimony_coefficient == 'auto':
+                fitness = [program.raw_fitness_ for program in population]
+                length = [program.length_ for program in population]
+                parsimony_coefficient = (np.cov(length, fitness)[1, 0] /
+                                         np.var(length))
+            for program in population:
+                program.fitness_ = program.fitness(parsimony_coefficient)
+
             self._programs.append(population)
 
             if self.verbose:
@@ -1026,8 +1063,9 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                 else:
                     remaining_time = '{0:.2f}s'.format(remaining_time)
 
-                fitness = [program.fitness_ for program in population]
-                length = [program.length_ for program in population]
+                if self.parsimony_coefficient != 'auto':
+                    fitness = [program.fitness_ for program in population]
+                    length = [program.length_ for program in population]
                 best_program = population[np.argmin(fitness)]
 
                 print(('%10s ' + '%16s ' * (len(header_fields) - 1)) %
