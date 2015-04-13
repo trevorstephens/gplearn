@@ -3,6 +3,7 @@
 """Genetic Programming in Python, with a scikit-learn inspired API"""
 
 import sys
+from sklearn.externals import joblib
 from setuptools import setup, find_packages
 import gplearn
 

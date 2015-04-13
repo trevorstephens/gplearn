@@ -6,6 +6,7 @@
 # License: BSD 3 clause
 
 import numpy as np
+import pickle
 import sys
 
 from gplearn.genetic import _Program, SymbolicRegressor
@@ -529,8 +530,8 @@ def test_verbose_with_oob():
     # Check subsample
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    clf = SymbolicRegressor(max_samples=0.9, random_state=0, verbose=1)
-    clf.fit(boston.data, boston.target)
+    est = SymbolicRegressor(max_samples=0.9, random_state=0, verbose=1)
+    est.fit(boston.data, boston.target)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
 
@@ -546,8 +547,8 @@ def test_verbose_with_oob():
     # Check bootstrap
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    clf = SymbolicRegressor(bootstrap=True, random_state=0, verbose=1)
-    clf.fit(boston.data, boston.target,
+    est = SymbolicRegressor(bootstrap=True, random_state=0, verbose=1)
+    est.fit(boston.data, boston.target,
             sample_weight=np.ones(boston.target.shape) * 1.1)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
@@ -569,8 +570,8 @@ def test_more_verbose_output():
     old_stderr = sys.stderr
     sys.stdout = StringIO()
     sys.stderr = StringIO()
-    clf = SymbolicRegressor(random_state=0, verbose=2)
-    clf.fit(boston.data, boston.target)
+    est = SymbolicRegressor(random_state=0, verbose=2)
+    est.fit(boston.data, boston.target)
     verbose_output = sys.stdout
     joblib_output = sys.stderr
     sys.stdout = old_stdout
@@ -588,6 +589,67 @@ def test_more_verbose_output():
     joblib_output.seek(0)
     n_lines = sum(1 for l in joblib_output.readlines())
     assert_equal(20, n_lines)
+
+
+def test_parallel_train():
+    """Check predictions are the same for different n_jobs"""
+
+    ests = [
+        SymbolicRegressor(generations=4, n_jobs=n_jobs,
+                          random_state=0).fit(boston.data[:100, :],
+                                              boston.target[:100])
+        for n_jobs in [1, 2, 3, 8, 16, 32]
+    ]
+
+    preds = [est.predict(boston.data[500:, :]) for est in ests]
+    for pred1, pred2 in zip(preds, preds[1:]):
+        assert_array_almost_equal(pred1, pred2)
+
+
+def test_pickle():
+    """Check pickability"""
+
+    est = SymbolicRegressor(generations=2, random_state=0)
+    est.fit(boston.data[:100, :], boston.target[:100])
+    score = est.score(boston.data[500:, :], boston.target[500:])
+    pickle_object = pickle.dumps(est)
+
+    est2 = pickle.loads(pickle_object)
+    assert_equal(type(est2), est.__class__)
+    score2 = est2.score(boston.data[500:, :], boston.target[500:])
+    assert_equal(score, score2)
+
+
+def test_memory_layout():
+    """Check that it works no matter the memory layout"""
+
+    for dtype in [np.float64, np.float32]:
+        est = SymbolicRegressor(generations=2, random_state=0)
+
+        # Nothing
+        X = np.asarray(boston.data, dtype=dtype)
+        y = boston.target
+        est.fit(X, y)
+
+        # C-order
+        X = np.asarray(boston.data, order="C", dtype=dtype)
+        y = boston.target
+        est.fit(X, y)
+
+        # F-order
+        X = np.asarray(boston.data, order="F", dtype=dtype)
+        y = boston.target
+        est.fit(X, y)
+
+        # Contiguous
+        X = np.ascontiguousarray(boston.data, dtype=dtype)
+        y = boston.target
+        est.fit(X, y)
+
+        # Strided
+        X = np.asarray(boston.data[::3], dtype=dtype)
+        y = boston.target[::3]
+        est.fit(X, y)
 
 
 if __name__ == "__main__":

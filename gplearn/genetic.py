@@ -1120,6 +1120,8 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self.program_ = self._programs[-1][np.argmin(self.fitness_)]
         self.fitness_ = self.program_.fitness_
 
+        return self
+
     def predict(self, X):
         """
         Perform classification on test vectors X.
