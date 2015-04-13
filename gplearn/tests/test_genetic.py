@@ -8,9 +8,10 @@
 import numpy as np
 import sys
 
-from gplearn.genetic import _Program, SymbolicRegressor, weighted_pearson
+from gplearn.genetic import _Program, SymbolicRegressor
+from gplearn.genetic import weighted_pearson, weighted_spearman
 
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 
 from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston
@@ -31,7 +32,7 @@ boston.data = boston.data[perm]
 boston.target = boston.target[perm]
 
 
-def test_weighted_pearson():
+def test_weighted_correlations():
     """Check weighted Pearson correlation coefficient matches scipy"""
 
     random_state = check_random_state(415)
@@ -39,6 +40,8 @@ def test_weighted_pearson():
     x2 = random_state.uniform(size=500)
     w1 = np.ones(500)
     w2 = random_state.uniform(size=500)
+
+    # Pearson's correlation coefficient
     scipy_pearson = pearsonr(x1, x2)[0]
     # Check with constant weights (should be equal)
     gplearn_pearson = weighted_pearson(x1, x2, w1)
@@ -46,6 +49,15 @@ def test_weighted_pearson():
     # Check with irregular weights (should be different)
     gplearn_pearson = weighted_pearson(x1, x2, w2)
     assert_true(abs(scipy_pearson - gplearn_pearson) > 0.01)
+
+    # Spearman's correlation coefficient
+    scipy_spearman = spearmanr(x1, x2)[0]
+    # Check with constant weights (should be equal)
+    gplearn_spearman = weighted_spearman(x1, x2, w1)
+    assert_almost_equal(scipy_spearman, gplearn_spearman)
+    # Check with irregular weights (should be different)
+    gplearn_spearman = weighted_pearson(x1, x2, w2)
+    assert_true(abs(scipy_spearman - gplearn_spearman) > 0.01)
 
 
 def test_program_init_method():

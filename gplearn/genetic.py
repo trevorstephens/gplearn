@@ -15,6 +15,8 @@ import itertools
 from copy import deepcopy
 from time import time
 
+from scipy.stats import rankdata
+
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
@@ -74,6 +76,13 @@ def weighted_pearson(x1, x2, w):
     return ((np.sum(w * x1_demean * x2_demean) / np.sum(w)) /
             np.sqrt((np.sum(w * x1_demean ** 2) * np.sum(w * x2_demean ** 2)) /
                     (np.sum(w) ** 2)))
+
+
+def weighted_spearman(x1, x2, w):
+    """Calculate the weighted Spearman correlation coefficient."""
+    x1_ranked = np.apply_along_axis(rankdata, 0, x1)
+    x2_ranked = np.apply_along_axis(rankdata, 0, x2)
+    return weighted_pearson(x1_ranked, x2_ranked, w)
 
 
 def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
