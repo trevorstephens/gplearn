@@ -27,8 +27,15 @@ conda update --yes conda
 
 # Configure the conda environment and put it in the path using the
 # provided versions
-conda create -n testenv --yes python=$PYTHON_VERSION pip nose \
-    scikit-learn cython
+if [[ "$LATEST" == "true" ]]; then
+    conda create -n testenv --yes python=$PYTHON_VERSION pip nose \
+        scikit-learn cython
+else
+    conda create -n testenv --yes python=$PYTHON_VERSION pip nose \
+        numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION \
+        scikit-learn=$SKLEARN_VERSION cython
+fi
+
 source activate testenv
 
 if [[ "$COVERAGE" == "true" ]]; then

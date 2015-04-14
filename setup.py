@@ -38,7 +38,7 @@ setup_options = dict(
     packages=find_packages(),
     test_suite='nose.collector',
     zip_safe=False,
-    install_requires=['scikit-learn>=0.15'],
+    install_requires=['scikit-learn>=0.15.2'],
     extras_require={'testing': ['nose'],
                     'docs': ['Sphinx']}
 )
