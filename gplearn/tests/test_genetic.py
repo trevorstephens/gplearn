@@ -16,7 +16,10 @@ from scipy.stats import pearsonr, spearmanr
 
 from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston
+from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import mean_absolute_error
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from gplearn.skutils.testing import assert_false, assert_true
 from gplearn.skutils.testing import assert_greater
@@ -650,6 +653,30 @@ def test_memory_layout():
         X = np.asarray(boston.data[::3], dtype=dtype)
         y = boston.target[::3]
         est.fit(X, y)
+
+
+def test_gridsearch():
+    """Check that SymbolicRegressor can be grid-searched"""
+
+    # Grid search parsimony_coefficient
+    parameters = {'parsimony_coefficient': [0.001, 0.1, 'auto']}
+    clf = SymbolicRegressor(population_size=50, generations=5,
+                            tournament_size=5, random_state=0)
+    grid = GridSearchCV(clf, parameters, scoring='mean_absolute_error')
+    grid.fit(boston.data, boston.target)
+    expected = {'parsimony_coefficient': 0.001}
+    assert_equal(grid.best_params_, expected)
+
+
+def test_pipeline():
+    """Check that SymbolicRegressor can work in a pipeline"""
+
+    est = make_pipeline(StandardScaler(), SymbolicRegressor(population_size=50,
+                                                            generations=5,
+                                                            tournament_size=5,
+                                                            random_state=0))
+    est.fit(boston.data, boston.target)
+    assert_almost_equal(est.score(boston.data, boston.target), -4.84921978246)
 
 
 if __name__ == "__main__":
