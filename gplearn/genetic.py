@@ -952,6 +952,81 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self.verbose = verbose
         self.random_state = random_state
 
+    def _verbose_reporter(self,
+                          start_time=None,
+                          gen=None,
+                          population=None,
+                          X=None,
+                          y=None,
+                          sample_weight=None):
+        """A report of the progress of the evolution process.
+
+        Parameters
+        ----------
+        headers : bool, optional (default=False)
+            Whether this is the first call to the reporter, prints only the
+            headers.
+
+        start_time : float
+            The start time for the current generation.
+
+        gen : int
+            The current generation (0 is the first naive random population)
+
+        X : {array-like}, shape = [n_samples, n_features]
+            Training vectors, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples]
+            Target values.
+
+        sample_weight : array-like, shape = [n_samples], optional
+            Weights applied to individual samples.
+        """
+        if start_time is None:
+            print('%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
+                                        'Best Individual'.center(59)))
+            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10)
+            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
+                             'Raw Fitness', 'OOB Fitness', 'Time Left')
+            print('%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields)
+
+        else:
+            # Estimate remaining time for run
+            remaining_time = ((self.generations - gen - 1) *
+                              (time() - start_time) / float(gen + 1))
+            if remaining_time > 60:
+                remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
+            else:
+                remaining_time = '{0:.2f}s'.format(remaining_time)
+
+            # Find the current generation's best individual
+            if self.parsimony_coefficient != 'auto':
+                fitness = [program.fitness_ for program in population]
+                length = [program.length_ for program in population]
+            best_program = population[np.argmin(fitness)]
+
+            oob_fitness = 'N/A'
+            if self.bootstrap or self.max_samples < 1.0:
+                # Calculate OOB fitness
+                if sample_weight is None:
+                    curr_sample_weight = np.ones(y.shape)
+                else:
+                    curr_sample_weight = sample_weight.copy()
+                curr_sample_weight[best_program.indices_] = 0
+                oob_fitness = best_program.raw_fitness(X, y,
+                                                       curr_sample_weight)
+
+            print('%4s %8s %16s %8s %16s %16s %16s %10s' %
+                  (gen,
+                   np.round(np.mean(length), 2),
+                   np.mean(fitness),
+                   best_program.length_,
+                   best_program.fitness_,
+                   best_program.raw_fitness_,
+                   oob_fitness,
+                   remaining_time))
+
     def fit(self, X, y, sample_weight=None):
         """Fit Symbolic Regressor according to X, y.
 
@@ -1028,13 +1103,8 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
         self._programs = []
 
         if self.verbose:
-            # header fields and line format str
-            print('%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(59)))
-            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10)
-            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                             'Raw Fitness', 'OOB Fitness', 'Time Left')
-            print('%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields)
+            # Print header fields
+            self._verbose_reporter()
             start_time = time()
 
         for gen in range(self.generations):
@@ -1049,12 +1119,8 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                 self.population_size, self.n_jobs)
             seeds = random_state.randint(MAX_INT, size=self.population_size)
 
-            if self.verbose > 1:
-                verbose = 1
-            else:
-                verbose = 0
-
-            population = Parallel(n_jobs=n_jobs, verbose=verbose)(
+            population = Parallel(n_jobs=n_jobs,
+                                  verbose=int(self.verbose > 1))(
                 delayed(_parallel_evolve)(n_programs[i],
                                           parents,
                                           X,
@@ -1079,41 +1145,8 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
             self._programs.append(population)
 
             if self.verbose:
-
-                # Estimate remaining time for run
-                remaining_time = ((self.generations - gen - 1) *
-                                  (time() - start_time) / float(gen + 1))
-                if remaining_time > 60:
-                    remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
-                else:
-                    remaining_time = '{0:.2f}s'.format(remaining_time)
-
-                # Find the current generation's best individual
-                if self.parsimony_coefficient != 'auto':
-                    fitness = [program.fitness_ for program in population]
-                    length = [program.length_ for program in population]
-                best_program = population[np.argmin(fitness)]
-
-                oob_fitness = 'N/A'
-                if self.bootstrap or self.max_samples < 1.0:
-                    # Calculate OOB fitness
-                    if sample_weight is None:
-                        curr_sample_weight = np.ones(y.shape)
-                    else:
-                        curr_sample_weight = sample_weight.copy()
-                    curr_sample_weight[best_program.indices_] = 0
-                    oob_fitness = best_program.raw_fitness(X, y,
-                                                           curr_sample_weight)
-
-                print('%4s %8s %16s %8s %16s %16s %16s %10s' %
-                      (gen,
-                       np.round(np.mean(length), 2),
-                       np.mean(fitness),
-                       best_program.length_,
-                       best_program.fitness_,
-                       best_program.raw_fitness_,
-                       oob_fitness,
-                       remaining_time))
+                self._verbose_reporter(start_time, gen, population,
+                                       X, y, sample_weight)
 
         # Find the best individual in the final generation
         self.fitness_ = [program.fitness_ for program in self._programs[-1]]
