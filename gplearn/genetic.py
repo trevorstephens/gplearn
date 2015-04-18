@@ -12,6 +12,7 @@ computer programs.
 import numpy as np
 import itertools
 
+from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from time import time
 
@@ -756,7 +757,265 @@ class _Program(object):
     length_ = property(_length)
 
 
-class SymbolicRegressor(BaseEstimator, RegressorMixin):
+class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
+
+    """Base class for symbolic regression / classification estimators.
+
+    Warning: This class should not be used directly.
+    Use derived classes instead.
+    """
+
+    @abstractmethod
+    def __init__(self,
+                 population_size=500,
+                 generations=10,
+                 tournament_size=20,
+                 const_range=(-1., 1.),
+                 init_depth=(2, 6),
+                 init_method='half and half',
+                 transformer=True,
+                 comparison=True,
+                 trigonometric=False,
+                 metric='mean absolute error',
+                 parsimony_coefficient=0.001,
+                 p_crossover=0.9,
+                 p_subtree_mutation=0.01,
+                 p_hoist_mutation=0.01,
+                 p_point_mutation=0.01,
+                 p_point_replace=0.05,
+                 bootstrap=False,
+                 max_samples=1.0,
+                 n_jobs=1,
+                 verbose=0,
+                 random_state=None):
+
+        self.population_size = population_size
+        self.generations = generations
+        self.tournament_size = tournament_size
+        self.const_range = const_range
+        self.init_depth = init_depth
+        self.init_method = init_method
+        self.transformer = transformer
+        self.comparison = comparison
+        self.trigonometric = trigonometric
+        self.metric = metric
+        self.parsimony_coefficient = parsimony_coefficient
+        self.p_crossover = p_crossover
+        self.p_subtree_mutation = p_subtree_mutation
+        self.p_hoist_mutation = p_hoist_mutation
+        self.p_point_mutation = p_point_mutation
+        self.p_point_replace = p_point_replace
+        self.bootstrap = bootstrap
+        self.max_samples = max_samples
+        self.n_jobs = n_jobs
+        self.verbose = verbose
+        self.random_state = random_state
+
+    def _verbose_reporter(self,
+                          start_time=None,
+                          gen=None,
+                          population=None,
+                          X=None,
+                          y=None,
+                          sample_weight=None):
+        """A report of the progress of the evolution process.
+
+        Parameters
+        ----------
+        headers : bool, optional (default=False)
+            Whether this is the first call to the reporter, prints only the
+            headers.
+
+        start_time : float
+            The start time for the current generation.
+
+        gen : int
+            The current generation (0 is the first naive random population)
+
+        X : {array-like}, shape = [n_samples, n_features]
+            Training vectors, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples]
+            Target values.
+
+        sample_weight : array-like, shape = [n_samples], optional
+            Weights applied to individual samples.
+        """
+        if start_time is None:
+            print('%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
+                                        'Best Individual'.center(59)))
+            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10)
+            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
+                             'Raw Fitness', 'OOB Fitness', 'Time Left')
+            print('%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields)
+
+        else:
+            # Estimate remaining time for run
+            remaining_time = ((self.generations - gen - 1) *
+                              (time() - start_time) / float(gen + 1))
+            if remaining_time > 60:
+                remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
+            else:
+                remaining_time = '{0:.2f}s'.format(remaining_time)
+
+            # Find the current generation's best individual
+            if self.parsimony_coefficient != 'auto':
+                fitness = [program.fitness_ for program in population]
+                length = [program.length_ for program in population]
+            best_program = population[np.argmin(fitness)]
+
+            oob_fitness = 'N/A'
+            if self.bootstrap or self.max_samples < 1.0:
+                # Calculate OOB fitness
+                if sample_weight is None:
+                    curr_sample_weight = np.ones(y.shape)
+                else:
+                    curr_sample_weight = sample_weight.copy()
+                curr_sample_weight[best_program.indices_] = 0
+                oob_fitness = best_program.raw_fitness(X, y,
+                                                       curr_sample_weight)
+
+            print('%4s %8s %16s %8s %16s %16s %16s %10s' %
+                  (gen,
+                   np.round(np.mean(length), 2),
+                   np.mean(fitness),
+                   best_program.length_,
+                   best_program.fitness_,
+                   best_program.raw_fitness_,
+                   oob_fitness,
+                   remaining_time))
+
+    def fit(self, X, y, sample_weight=None):
+        """Fit Symbolic Regressor according to X, y.
+
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            Training vectors, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape = [n_samples]
+            Target values.
+
+        sample_weight : array-like, shape = [n_samples], optional
+            Weights applied to individual samples.
+
+        Returns
+        -------
+        self : object
+            Returns self.
+        """
+        random_state = check_random_state(self.random_state)
+
+        # Check arrays
+        X, y = check_X_y(X, y, y_numeric=True)
+
+        self._function_set = ['add2', 'sub2', 'mul2', 'div2']
+        if self.transformer:
+            self._function_set.extend(['sqrt1', 'log1', 'abs1', 'neg1',
+                                       'inv1'])
+        if self.comparison:
+            self._function_set.extend(['max2', 'min2'])
+        if self.trigonometric:
+            self._function_set.extend(['sin1', 'cos1', 'tan1'])
+
+        # For point-mutation to find a compatible replacement node
+        self._arities = {}
+        for function in self._function_set:
+            arity = int(function[-1])
+            self._arities[arity] = self._arities.get(arity, [])
+            self._arities[arity].append(function)
+
+        self._method_probs = np.array([self.p_crossover,
+                                       self.p_subtree_mutation,
+                                       self.p_hoist_mutation,
+                                       self.p_point_mutation])
+        self._method_probs = np.cumsum(self._method_probs)
+
+        if self._method_probs[-1] > 1:
+            raise ValueError('The sum of p_crossover, p_subtree_mutation, '
+                             'p_hoist_mutation and p_point_mutation should '
+                             'total to 1.0 or less.')
+
+        if self.init_method not in ('half and half', 'grow', 'full'):
+            raise ValueError('Valid program initializations methods include '
+                             '"grow", "full" and "half and half". Given %s.'
+                             % self.init_method)
+
+        if (not isinstance(self.const_range, tuple) or
+                len(self.const_range) != 2):
+            raise ValueError('const_range should be a tuple with length two.')
+
+        if (not isinstance(self.init_depth, tuple) or
+                len(self.init_depth) != 2):
+            raise ValueError('init_depth should be a tuple with length two.')
+        if self.init_depth[0] > self.init_depth[1]:
+            raise ValueError('init_depth should be in increasing numerical '
+                             'order: (min_depth, max_depth).')
+
+        params = self.get_params()
+        params['function_set'] = self._function_set
+        params['arities'] = self._arities
+        params['method_probs'] = self._method_probs
+
+        self._programs = []
+
+        if self.verbose:
+            # Print header fields
+            self._verbose_reporter()
+            start_time = time()
+
+        for gen in range(self.generations):
+
+            if gen == 0:
+                parents = None
+            else:
+                parents = self._programs[gen - 1]
+
+            # Parallel loop
+            n_jobs, n_programs, starts = _partition_estimators(
+                self.population_size, self.n_jobs)
+            seeds = random_state.randint(MAX_INT, size=self.population_size)
+
+            population = Parallel(n_jobs=n_jobs,
+                                  verbose=int(self.verbose > 1))(
+                delayed(_parallel_evolve)(n_programs[i],
+                                          parents,
+                                          X,
+                                          y,
+                                          sample_weight,
+                                          seeds[starts[i]:starts[i + 1]],
+                                          params)
+                for i in range(n_jobs))
+
+            # Reduce, maintaining order across different n_jobs
+            population = list(itertools.chain.from_iterable(population))
+
+            parsimony_coefficient = None
+            if self.parsimony_coefficient == 'auto':
+                fitness = [program.raw_fitness_ for program in population]
+                length = [program.length_ for program in population]
+                parsimony_coefficient = (np.cov(length, fitness)[1, 0] /
+                                         np.var(length))
+            for program in population:
+                program.fitness_ = program.fitness(parsimony_coefficient)
+
+            self._programs.append(population)
+
+            if self.verbose:
+                self._verbose_reporter(start_time, gen, population,
+                                       X, y, sample_weight)
+
+        # Find the best individual in the final generation
+        self.fitness_ = [program.fitness_ for program in self._programs[-1]]
+        self.program_ = self._programs[-1][np.argmin(self.fitness_)]
+        self.fitness_ = self.program_.fitness_
+
+        return self
+
+
+class SymbolicRegressor(BaseSymbolic, RegressorMixin):
 
     """A Genetic Programming symbolic regressor.
 
@@ -929,231 +1188,28 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
-
-        self.population_size = population_size
-        self.generations = generations
-        self.tournament_size = tournament_size
-        self.const_range = const_range
-        self.init_depth = init_depth
-        self.init_method = init_method
-        self.transformer = transformer
-        self.comparison = comparison
-        self.trigonometric = trigonometric
-        self.metric = metric
-        self.parsimony_coefficient = parsimony_coefficient
-        self.p_crossover = p_crossover
-        self.p_subtree_mutation = p_subtree_mutation
-        self.p_hoist_mutation = p_hoist_mutation
-        self.p_point_mutation = p_point_mutation
-        self.p_point_replace = p_point_replace
-        self.bootstrap = bootstrap
-        self.max_samples = max_samples
-        self.n_jobs = n_jobs
-        self.verbose = verbose
-        self.random_state = random_state
-
-    def _verbose_reporter(self,
-                          start_time=None,
-                          gen=None,
-                          population=None,
-                          X=None,
-                          y=None,
-                          sample_weight=None):
-        """A report of the progress of the evolution process.
-
-        Parameters
-        ----------
-        headers : bool, optional (default=False)
-            Whether this is the first call to the reporter, prints only the
-            headers.
-
-        start_time : float
-            The start time for the current generation.
-
-        gen : int
-            The current generation (0 is the first naive random population)
-
-        X : {array-like}, shape = [n_samples, n_features]
-            Training vectors, where n_samples is the number of samples and
-            n_features is the number of features.
-
-        y : array-like, shape = [n_samples]
-            Target values.
-
-        sample_weight : array-like, shape = [n_samples], optional
-            Weights applied to individual samples.
-        """
-        if start_time is None:
-            print('%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(59)))
-            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10)
-            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                             'Raw Fitness', 'OOB Fitness', 'Time Left')
-            print('%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields)
-
-        else:
-            # Estimate remaining time for run
-            remaining_time = ((self.generations - gen - 1) *
-                              (time() - start_time) / float(gen + 1))
-            if remaining_time > 60:
-                remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
-            else:
-                remaining_time = '{0:.2f}s'.format(remaining_time)
-
-            # Find the current generation's best individual
-            if self.parsimony_coefficient != 'auto':
-                fitness = [program.fitness_ for program in population]
-                length = [program.length_ for program in population]
-            best_program = population[np.argmin(fitness)]
-
-            oob_fitness = 'N/A'
-            if self.bootstrap or self.max_samples < 1.0:
-                # Calculate OOB fitness
-                if sample_weight is None:
-                    curr_sample_weight = np.ones(y.shape)
-                else:
-                    curr_sample_weight = sample_weight.copy()
-                curr_sample_weight[best_program.indices_] = 0
-                oob_fitness = best_program.raw_fitness(X, y,
-                                                       curr_sample_weight)
-
-            print('%4s %8s %16s %8s %16s %16s %16s %10s' %
-                  (gen,
-                   np.round(np.mean(length), 2),
-                   np.mean(fitness),
-                   best_program.length_,
-                   best_program.fitness_,
-                   best_program.raw_fitness_,
-                   oob_fitness,
-                   remaining_time))
-
-    def fit(self, X, y, sample_weight=None):
-        """Fit Symbolic Regressor according to X, y.
-
-        Parameters
-        ----------
-        X : {array-like}, shape = [n_samples, n_features]
-            Training vectors, where n_samples is the number of samples and
-            n_features is the number of features.
-
-        y : array-like, shape = [n_samples]
-            Target values.
-
-        sample_weight : array-like, shape = [n_samples], optional
-            Weights applied to individual samples.
-
-        Returns
-        -------
-        self : object
-            Returns self.
-        """
-        random_state = check_random_state(self.random_state)
-
-        # Check arrays
-        X, y = check_X_y(X, y, y_numeric=True)
-
-        self._function_set = ['add2', 'sub2', 'mul2', 'div2']
-        if self.transformer:
-            self._function_set.extend(['sqrt1', 'log1', 'abs1', 'neg1',
-                                       'inv1'])
-        if self.comparison:
-            self._function_set.extend(['max2', 'min2'])
-        if self.trigonometric:
-            self._function_set.extend(['sin1', 'cos1', 'tan1'])
-
-        # For point-mutation to find a compatible replacement node
-        self._arities = {}
-        for function in self._function_set:
-            arity = int(function[-1])
-            self._arities[arity] = self._arities.get(arity, [])
-            self._arities[arity].append(function)
-
-        self._method_probs = np.array([self.p_crossover,
-                                       self.p_subtree_mutation,
-                                       self.p_hoist_mutation,
-                                       self.p_point_mutation])
-        self._method_probs = np.cumsum(self._method_probs)
-
-        if self._method_probs[-1] > 1:
-            raise ValueError('The sum of p_crossover, p_subtree_mutation, '
-                             'p_hoist_mutation and p_point_mutation should '
-                             'total to 1.0 or less.')
-
-        if self.init_method not in ('half and half', 'grow', 'full'):
-            raise ValueError('Valid program initializations methods include '
-                             '"grow", "full" and "half and half". Given %s.'
-                             % self.init_method)
-
-        if (not isinstance(self.const_range, tuple) or
-                len(self.const_range) != 2):
-            raise ValueError('const_range should be a tuple with length two.')
-
-        if (not isinstance(self.init_depth, tuple) or
-                len(self.init_depth) != 2):
-            raise ValueError('init_depth should be a tuple with length two.')
-        if self.init_depth[0] > self.init_depth[1]:
-            raise ValueError('init_depth should be in increasing numerical '
-                             'order: (min_depth, max_depth).')
-
-        params = self.get_params()
-        params['function_set'] = self._function_set
-        params['arities'] = self._arities
-        params['method_probs'] = self._method_probs
-
-        self._programs = []
-
-        if self.verbose:
-            # Print header fields
-            self._verbose_reporter()
-            start_time = time()
-
-        for gen in range(self.generations):
-
-            if gen == 0:
-                parents = None
-            else:
-                parents = self._programs[gen - 1]
-
-            # Parallel loop
-            n_jobs, n_programs, starts = _partition_estimators(
-                self.population_size, self.n_jobs)
-            seeds = random_state.randint(MAX_INT, size=self.population_size)
-
-            population = Parallel(n_jobs=n_jobs,
-                                  verbose=int(self.verbose > 1))(
-                delayed(_parallel_evolve)(n_programs[i],
-                                          parents,
-                                          X,
-                                          y,
-                                          sample_weight,
-                                          seeds[starts[i]:starts[i + 1]],
-                                          params)
-                for i in range(n_jobs))
-
-            # Reduce, maintaining order across different n_jobs
-            population = list(itertools.chain.from_iterable(population))
-
-            parsimony_coefficient = None
-            if self.parsimony_coefficient == 'auto':
-                fitness = [program.raw_fitness_ for program in population]
-                length = [program.length_ for program in population]
-                parsimony_coefficient = (np.cov(length, fitness)[1, 0] /
-                                         np.var(length))
-            for program in population:
-                program.fitness_ = program.fitness(parsimony_coefficient)
-
-            self._programs.append(population)
-
-            if self.verbose:
-                self._verbose_reporter(start_time, gen, population,
-                                       X, y, sample_weight)
-
-        # Find the best individual in the final generation
-        self.fitness_ = [program.fitness_ for program in self._programs[-1]]
-        self.program_ = self._programs[-1][np.argmin(self.fitness_)]
-        self.fitness_ = self.program_.fitness_
-
-        return self
+        super(SymbolicRegressor, self).__init__(
+            population_size=population_size,
+            generations=generations,
+            tournament_size=tournament_size,
+            const_range=const_range,
+            init_depth=init_depth,
+            init_method=init_method,
+            transformer=transformer,
+            comparison=comparison,
+            trigonometric=trigonometric,
+            metric=metric,
+            parsimony_coefficient=parsimony_coefficient,
+            p_crossover=p_crossover,
+            p_subtree_mutation=p_subtree_mutation,
+            p_hoist_mutation=p_hoist_mutation,
+            p_point_mutation=p_point_mutation,
+            p_point_replace=p_point_replace,
+            bootstrap=bootstrap,
+            max_samples=max_samples,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            random_state=random_state)
 
     def predict(self, X):
         """
@@ -1161,7 +1217,7 @@ class SymbolicRegressor(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        X : {array-like, sparse matrix}, shape = [n_samples, n_features]
+        X : array-like, shape = [n_samples, n_features]
             Input vectors, where n_samples is the number of samples
             and n_features is the number of features.
 
