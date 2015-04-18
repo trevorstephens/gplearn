@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 import sys
 
-from gplearn.genetic import _Program, SymbolicRegressor
+from gplearn.genetic import _Program, SymbolicRegressor, SymbolicTransformer
 from gplearn.genetic import weighted_pearson, weighted_spearman
 
 from scipy.stats import pearsonr, spearmanr
@@ -20,6 +20,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import mean_absolute_error
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor
 
 from gplearn.skutils.testing import assert_false, assert_true
 from gplearn.skutils.testing import assert_greater
@@ -286,16 +287,19 @@ def test_all_metrics():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
-    expected = [1.48719809776, 1.82389179833, 1.76013763179, 0.98663772258]
+    sample_weight = np.ones(5)
+    expected = [1.48719809776, 1.82389179833, 1.76013763179, 0.98663772258,
+                -0.2928200724, -0.5]
     result = []
-    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
+    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle',
+              'pearson', 'spearman']:
         gp.metric = m
-        gp.raw_fitness_ = gp.raw_fitness(X, y)
+        gp.raw_fitness_ = gp.raw_fitness(X, y, sample_weight)
         result.append(gp.fitness())
     assert_array_almost_equal(result, expected)
     # And check a fake one
     gp.metric = 'the larch'
-    assert_raises(ValueError, gp.raw_fitness, X, y)
+    assert_raises(ValueError, gp.raw_fitness, X, y, sample_weight)
 
 
 def test_get_subtree():
@@ -362,53 +366,69 @@ def test_genetic_operations():
 def test_program_input_validation():
     """Check that guarded input validation raises errors"""
 
-    # Check too much proba
-    est = SymbolicRegressor(p_point_mutation=.5)
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+        # Check too much proba
+        est = Symbolic(p_point_mutation=.5)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+        # Check invalid init_method
+        est = Symbolic(init_method='ni')
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+        # Check invalid const_ranges
+        est = Symbolic(const_range=2)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(const_range=[2, 2])
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(const_range=(2, 2, 2))
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(const_range='ni')
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        # And check acceptable, but strange, representations of init_depth
+        est = Symbolic(const_range=(2, 2))
+        est.fit(boston.data, boston.target)
+        est = Symbolic(const_range=(4, 2))
+        est.fit(boston.data, boston.target)
+
+        # Check invalid init_depth
+        est = Symbolic(init_depth=2)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(init_depth=2)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(init_depth=[2, 2])
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(init_depth=(2, 2, 2))
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(init_depth='ni')
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(init_depth=(4, 2))
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        # And check acceptable, but strange, representations of init_depth
+        est = Symbolic(init_depth=(2, 2))
+        est.fit(boston.data, boston.target)
+
+    # Check hall_of_fame and n_components for transformer
+    est = SymbolicTransformer(hall_of_fame=1000)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicTransformer(n_components=1000)
     assert_raises(ValueError, est.fit, boston.data, boston.target)
 
-    # Check invalid init_method
-    est = SymbolicRegressor(init_method='ni')
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-
-    # Check invalid const_ranges
-    est = SymbolicRegressor(const_range=2)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(const_range=[2, 2])
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(const_range=(2, 2, 2))
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(const_range='ni')
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    # And check acceptable, but strange, representations of init_depth
-    est = SymbolicRegressor(const_range=(2, 2))
-    est.fit(boston.data, boston.target)
-    est = SymbolicRegressor(const_range=(4, 2))
-    est.fit(boston.data, boston.target)
-
-    # Check invalid init_depth
-    est = SymbolicRegressor(init_depth=2)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(init_depth=2)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(init_depth=[2, 2])
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(init_depth=(2, 2, 2))
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(init_depth='ni')
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicRegressor(init_depth=(4, 2))
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
-    # And check acceptable, but strange, representations of init_depth
-    est = SymbolicRegressor(init_depth=(2, 2))
-    est.fit(boston.data, boston.target)
-
-    # Check metric
+    # Check regressor metrics
     for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
         est = SymbolicRegressor(generations=2, metric=m)
         est.fit(boston.data, boston.target)
-    # And check a fake one
-    est = SymbolicRegressor(metric='the larch')
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    # And check the transformer metrics as well as a fake one
+    for m in ['pearson', 'spearman', 'the larch']:
+        est = SymbolicRegressor(generations=2, metric=m)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+    # Check transformer metrics
+    for m in ['pearson', 'spearman']:
+        est = SymbolicTransformer(generations=2, metric=m)
+        est.fit(boston.data, boston.target)
+    # And check the regressor metrics as well as a fake one
+    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle', 'the larch']:
+        est = SymbolicTransformer(generations=2, metric=m)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
 
 
 def test_sample_weight():
@@ -426,6 +446,21 @@ def test_sample_weight():
 
     assert_almost_equal(est1.fitness_, est2.fitness_)
     assert_almost_equal(est1.fitness_, est3.fitness_)
+
+    # And again for the transformer
+    sample_weight = np.ones(boston.target.shape[0])
+    est1 = SymbolicTransformer(generations=2, random_state=0)
+    est1 = est1.fit_transform(boston.data, boston.target)
+    est2 = SymbolicTransformer(generations=2, random_state=0)
+    est2 = est2.fit_transform(boston.data, boston.target,
+                              sample_weight=sample_weight)
+    # And again with a scaled sample_weight
+    est3 = SymbolicTransformer(generations=2, random_state=0)
+    est3 = est3.fit_transform(boston.data, boston.target,
+                              sample_weight=sample_weight * 1.1)
+
+    assert_array_almost_equal(est1, est2)
+    assert_array_almost_equal(est1, est3)
 
 
 def test_trigonometric():
@@ -597,21 +632,42 @@ def test_more_verbose_output():
 def test_parallel_train():
     """Check predictions are the same for different n_jobs"""
 
+    # Check the regressor
     ests = [
-        SymbolicRegressor(generations=4, n_jobs=n_jobs,
+        SymbolicRegressor(population_size=100, generations=4, n_jobs=n_jobs,
                           random_state=0).fit(boston.data[:100, :],
                                               boston.target[:100])
-        for n_jobs in [1, 2, 3, 8, 16, 32]
+        for n_jobs in [1, 2, 3, 8, 16]
     ]
 
-    preds = [est.predict(boston.data[500:, :]) for est in ests]
+    preds = [e.predict(boston.data[500:, :]) for e in ests]
     for pred1, pred2 in zip(preds, preds[1:]):
         assert_array_almost_equal(pred1, pred2)
+    lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
+    for len1, len2 in zip(lengths, lengths[1:]):
+        assert_array_almost_equal(len1, len2)
+
+    # Check the transformer
+    ests = [
+        SymbolicTransformer(population_size=100, hall_of_fame=50,
+                            generations=4, n_jobs=n_jobs,
+                            random_state=0).fit(boston.data[:100, :],
+                                                boston.target[:100])
+        for n_jobs in [1, 2, 3, 8, 16]
+    ]
+
+    preds = [e.transform(boston.data[500:, :]) for e in ests]
+    for pred1, pred2 in zip(preds, preds[1:]):
+        assert_array_almost_equal(pred1, pred2)
+    lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
+    for len1, len2 in zip(lengths, lengths[1:]):
+        assert_array_almost_equal(len1, len2)
 
 
 def test_pickle():
     """Check pickability"""
 
+    # Check the regressor
     est = SymbolicRegressor(generations=2, random_state=0)
     est.fit(boston.data[:100, :], boston.target[:100])
     score = est.score(boston.data[500:, :], boston.target[500:])
@@ -622,37 +678,68 @@ def test_pickle():
     score2 = est2.score(boston.data[500:, :], boston.target[500:])
     assert_equal(score, score2)
 
+    # Check the transformer
+    est = SymbolicTransformer(generations=2, random_state=0)
+    est.fit(boston.data[:100, :], boston.target[:100])
+    X_new = est.transform(boston.data[500:, :])
+    pickle_object = pickle.dumps(est)
+
+    est2 = pickle.loads(pickle_object)
+    assert_equal(type(est2), est.__class__)
+    X_new2 = est2.transform(boston.data[500:, :])
+    assert_array_almost_equal(X_new, X_new2)
+
 
 def test_memory_layout():
     """Check that it works no matter the memory layout"""
 
-    for dtype in [np.float64, np.float32]:
-        est = SymbolicRegressor(generations=2, random_state=0)
+    for Symbolic in [SymbolicTransformer, SymbolicRegressor]:
+        for dtype in [np.float64, np.float32]:
+            est = Symbolic(generations=2, random_state=0)
 
-        # Nothing
-        X = np.asarray(boston.data, dtype=dtype)
-        y = boston.target
-        est.fit(X, y)
+            # Nothing
+            X = np.asarray(boston.data, dtype=dtype)
+            y = boston.target
+            est.fit(X, y)
 
-        # C-order
-        X = np.asarray(boston.data, order="C", dtype=dtype)
-        y = boston.target
-        est.fit(X, y)
+            # C-order
+            X = np.asarray(boston.data, order="C", dtype=dtype)
+            y = boston.target
+            est.fit(X, y)
 
-        # F-order
-        X = np.asarray(boston.data, order="F", dtype=dtype)
-        y = boston.target
-        est.fit(X, y)
+            # F-order
+            X = np.asarray(boston.data, order="F", dtype=dtype)
+            y = boston.target
+            est.fit(X, y)
 
-        # Contiguous
-        X = np.ascontiguousarray(boston.data, dtype=dtype)
-        y = boston.target
-        est.fit(X, y)
+            # Contiguous
+            X = np.ascontiguousarray(boston.data, dtype=dtype)
+            y = boston.target
+            est.fit(X, y)
 
-        # Strided
-        X = np.asarray(boston.data[::3], dtype=dtype)
-        y = boston.target[::3]
-        est.fit(X, y)
+            # Strided
+            X = np.asarray(boston.data[::3], dtype=dtype)
+            y = boston.target[::3]
+            est.fit(X, y)
+
+
+def test_input_shape():
+    """Check changed dimensions cause failure"""
+
+    random_state = check_random_state(415)
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    y = random_state.uniform(size=5)
+    X2 = np.reshape(random_state.uniform(size=45), (5, 9))
+
+    # Check the regressor
+    est = SymbolicRegressor(generations=2, random_state=0)
+    est.fit(X, y)
+    assert_raises(ValueError, est.predict, X2)
+
+    # Check the transformer
+    est = SymbolicTransformer(generations=2, random_state=0)
+    est.fit(X, y)
+    assert_raises(ValueError, est.transform, X2)
 
 
 def test_gridsearch():
@@ -669,14 +756,26 @@ def test_gridsearch():
 
 
 def test_pipeline():
-    """Check that SymbolicRegressor can work in a pipeline"""
+    """Check that SymbolicRegressor/Transformer can work in a pipeline"""
 
-    est = make_pipeline(StandardScaler(), SymbolicRegressor(population_size=50,
-                                                            generations=5,
-                                                            tournament_size=5,
-                                                            random_state=0))
+    # Check the regressor
+    est = make_pipeline(StandardScaler(),
+                        SymbolicRegressor(population_size=50,
+                                          generations=5,
+                                          tournament_size=5,
+                                          random_state=0))
     est.fit(boston.data, boston.target)
     assert_almost_equal(est.score(boston.data, boston.target), -4.84921978246)
+
+    # Check the transformer
+    est = make_pipeline(SymbolicTransformer(population_size=50,
+                                            hall_of_fame=20,
+                                            generations=5,
+                                            tournament_size=5,
+                                            random_state=0),
+                        DecisionTreeRegressor())
+    est.fit(boston.data, boston.target)
+    assert_almost_equal(est.score(boston.data, boston.target), 1.0)
 
 
 if __name__ == "__main__":

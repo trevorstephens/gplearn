@@ -72,11 +72,16 @@ FUNCTIONS = {'add2': np.add,
 
 def weighted_pearson(x1, x2, w):
     """Calculate the weighted Pearson correlation coefficient."""
+    old_settings = np.seterr(divide='ignore', invalid='ignore')
     x1_demean = x1 - np.average(x1, weights=w)
     x2_demean = x2 - np.average(x2, weights=w)
-    return ((np.sum(w * x1_demean * x2_demean) / np.sum(w)) /
+    corr = ((np.sum(w * x1_demean * x2_demean) / np.sum(w)) /
             np.sqrt((np.sum(w * x1_demean ** 2) * np.sum(w * x2_demean ** 2)) /
                     (np.sum(w) ** 2)))
+    np.seterr(**old_settings)
+    if np.isfinite(corr):
+        return np.abs(corr)
+    return 0
 
 
 def weighted_spearman(x1, x2, w):
@@ -88,13 +93,6 @@ def weighted_spearman(x1, x2, w):
 
 def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     """Private function used to build a batch of programs within a job."""
-    def _tournament():
-        """Find the fittest individual from a sub-population."""
-        contenders = random_state.randint(0, len(parents), tournament_size)
-        fitness = [parents[p].fitness_ for p in contenders]
-        parent_index = contenders[np.argmin(fitness)]
-        return parents[parent_index], parent_index
-
     n_samples, n_features = X.shape
     # Unpack parameters
     tournament_size = params['tournament_size']
@@ -111,6 +109,16 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     max_samples = params['max_samples']
 
     max_samples = int(max_samples * n_samples)
+
+    def _tournament():
+        """Find the fittest individual from a sub-population."""
+        contenders = random_state.randint(0, len(parents), tournament_size)
+        fitness = [parents[p].fitness_ for p in contenders]
+        if metric in ('pearson', 'spearman'):
+            parent_index = contenders[np.argmax(fitness)]
+        else:
+            parent_index = contenders[np.argmin(fitness)]
+        return parents[parent_index], parent_index
 
     # Build programs
     programs = []
@@ -524,7 +532,7 @@ class _Program(object):
         np.seterr(**old_settings)
         return None
 
-    def raw_fitness(self, X, y, sample_weight=None):
+    def raw_fitness(self, X, y, sample_weight):
         """Evaluate the raw fitness of the program according to X, y.
 
         Parameters
@@ -536,7 +544,7 @@ class _Program(object):
         y : array-like, shape = [n_samples]
             Target values.
 
-        sample_weight : array-like, shape = [n_samples], optional
+        sample_weight : array-like, shape = [n_samples]
             Weights applied to individual samples.
 
         Returns
@@ -564,10 +572,10 @@ class _Program(object):
                                              weights=sample_weight))
 
         elif self.metric == 'pearson':
-            raw_fitness = np.abs(weighted_pearson(y_pred, y, sample_weight))
+            raw_fitness = weighted_pearson(y_pred, y, sample_weight)
 
         elif self.metric == 'spearman':
-            raw_fitness = np.abs(weighted_spearman(y_pred, y, sample_weight))
+            raw_fitness = weighted_spearman(y_pred, y, sample_weight)
 
         else:
             raise ValueError('Unsupported metric: %s' % self.metric)
@@ -876,7 +884,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             if self.parsimony_coefficient != 'auto':
                 fitness = [program.fitness_ for program in population]
                 length = [program.length_ for program in population]
-            best_program = population[np.argmin(fitness)]
+            if self.metric in ('pearson', 'spearman'):
+                best_program = population[np.argmax(fitness)]
+            else:
+                best_program = population[np.argmin(fitness)]
 
             oob_fitness = 'N/A'
             if self.bootstrap or self.max_samples < 1.0:
@@ -925,6 +936,21 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         X, y = check_X_y(X, y, y_numeric=True)
         _, self.n_features_ = X.shape
 
+        hall_of_fame = self.hall_of_fame
+        if hall_of_fame is None:
+            hall_of_fame = self.population_size
+        if hall_of_fame > self.population_size:
+            raise ValueError('hall_of_fame (%d) must be less than or equal to '
+                             'population_size (%d).' % (self.hall_of_fame,
+                                                        self.population_size))
+        n_components = self.n_components
+        if n_components is None:
+            n_components = hall_of_fame
+        if n_components > hall_of_fame:
+            raise ValueError('n_components (%d) must be less than or equal to '
+                             'hall_of_fame (%d).' % (self.n_components,
+                                                     self.hall_of_fame))
+
         self._function_set = ['add2', 'sub2', 'mul2', 'div2']
         if self.transformer:
             self._function_set.extend(['sqrt1', 'log1', 'abs1', 'neg1',
@@ -940,6 +966,15 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             arity = int(function[-1])
             self._arities[arity] = self._arities.get(arity, [])
             self._arities[arity].append(function)
+
+        if isinstance(self, RegressorMixin):
+            if self.metric not in ('mean absolute error',
+                                   'mse', 'rmse', 'rmsle'):
+                raise ValueError('Unsupported metric: %s' % self.metric)
+
+        if isinstance(self, TransformerMixin):
+            if self.metric not in ('pearson', 'spearman'):
+                raise ValueError('Unsupported metric: %s' % self.metric)
 
         self._method_probs = np.array([self.p_crossover,
                                        self.p_subtree_mutation,
@@ -1040,8 +1075,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             # Iteratively remove the worst individual of the worst pair
             correlations = np.abs(np.corrcoef(evaluation))
             np.fill_diagonal(correlations, 0.)
-            components = range(self.hall_of_fame)
-            indices = range(self.hall_of_fame)
+            components = list(range(self.hall_of_fame))
+            indices = list(range(self.hall_of_fame))
             while len(components) > self.n_components:
                 worst = np.unravel_index(np.argmax(correlations),
                                          correlations.shape)
@@ -1049,7 +1084,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 components.pop(worst)
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]
-                indices = range(len(components))
+                indices = list(range(len(components)))
             self.programs_ = [self._programs[-1][i] for i in
                               hall_of_fame[components]]
 
@@ -1303,11 +1338,13 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     hall_of_fame : integer, or None, optional (default=100)
         The number of fittest programs to compare from when finding the
-        least-correlated individuals for the n_components.
+        least-correlated individuals for the n_components. If `None`, the
+        entire final generation will be used.
 
     n_components : integer, or None, optional (default=10)
         The number of best programs to return after searching the hall_of_fame
-        for the least-correlated individuals.
+        for the least-correlated individuals. If `None`, the entire
+        hall_of_fame will be used.
 
     generations : integer, optional (default=10)
         The number of generations to evolve.
@@ -1519,7 +1556,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
         return X_new
 
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y, sample_weight=None):
         """Fit to data, then transform it.
 
         Parameters
@@ -1531,9 +1568,12 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         y : array-like, shape = [n_samples]
             Target values.
 
+        sample_weight : array-like, shape = [n_samples], optional
+            Weights applied to individual samples.
+
         Returns
         -------
         X_new : array-like, shape = [n_samples, n_components]
             Transformed array.
         """
-        return self.fit(X, y).transform(X)
+        return self.fit(X, y, sample_weight).transform(X)
