@@ -412,6 +412,10 @@ def test_program_input_validation():
     assert_raises(ValueError, est.fit, boston.data, boston.target)
     est = SymbolicTransformer(n_components=1000)
     assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicTransformer(hall_of_fame=0)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    est = SymbolicTransformer(n_components=0)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
 
     # Check regressor metrics
     for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
@@ -740,6 +744,19 @@ def test_input_shape():
     est = SymbolicTransformer(generations=2, random_state=0)
     est.fit(X, y)
     assert_raises(ValueError, est.transform, X2)
+
+
+def test_output_shape():
+    """Check output shape is as expected"""
+
+    random_state = check_random_state(415)
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    y = random_state.uniform(size=5)
+
+    # Check the transformer
+    est = SymbolicTransformer(n_components=5, generations=2, random_state=0)
+    est.fit(X, y)
+    assert_true(est.transform(X).shape == (5, 5))
 
 
 def test_gridsearch():

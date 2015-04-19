@@ -881,9 +881,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
             # Find the current generation's best individual
-            if self.parsimony_coefficient != 'auto':
-                fitness = [program.fitness_ for program in population]
-                length = [program.length_ for program in population]
+            fitness = [program.fitness_ for program in population]
+            length = [program.length_ for program in population]
             if self.metric in ('pearson', 'spearman'):
                 best_program = population[np.argmax(fitness)]
             else:
@@ -939,14 +938,14 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         hall_of_fame = self.hall_of_fame
         if hall_of_fame is None:
             hall_of_fame = self.population_size
-        if hall_of_fame > self.population_size:
+        if hall_of_fame > self.population_size or hall_of_fame < 1:
             raise ValueError('hall_of_fame (%d) must be less than or equal to '
                              'population_size (%d).' % (self.hall_of_fame,
                                                         self.population_size))
         n_components = self.n_components
         if n_components is None:
             n_components = hall_of_fame
-        if n_components > hall_of_fame:
+        if n_components > hall_of_fame or n_components < 1:
             raise ValueError('n_components (%d) must be less than or equal to '
                              'hall_of_fame (%d).' % (self.n_components,
                                                      self.hall_of_fame))
