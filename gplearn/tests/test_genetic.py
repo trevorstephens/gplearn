@@ -483,33 +483,20 @@ def test_trigonometric():
     assert_true(abs(est1 - est2) > 0.01)
 
 
-def test_bootstrap_and_subsample():
-    """Check that bootstrap and subsample work and that results differ"""
+def test_subsample():
+    """Check that subsample work and that results differ"""
 
-    est1 = SymbolicRegressor(bootstrap=False, max_samples=1.0, random_state=0)
+    est1 = SymbolicRegressor(max_samples=1.0, random_state=0)
     est1.fit(boston.data[:400, :], boston.target[:400])
     est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    est2 = SymbolicRegressor(bootstrap=True, max_samples=1.0, random_state=0)
+    est2 = SymbolicRegressor(max_samples=0.7, random_state=0)
     est2.fit(boston.data[:400, :], boston.target[:400])
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    est3 = SymbolicRegressor(bootstrap=False, max_samples=0.7, random_state=0)
-    est3.fit(boston.data[:400, :], boston.target[:400])
-    est3 = mean_absolute_error(est3.predict(boston.data[400:, :]),
-                               boston.target[400:])
-
-    est4 = SymbolicRegressor(bootstrap=True, max_samples=0.7, random_state=0)
-    est4.fit(boston.data[:400, :], boston.target[:400])
-    est4 = mean_absolute_error(est4.predict(boston.data[400:, :]),
-                               boston.target[400:])
-
-    for e1 in [est1, est2, est3, est4]:
-        for e2 in [est1, est2, est3, est4]:
-            if e1 is not e2:
-                assert_true(abs(e1 - e2) > 0.01)
+    assert_true(abs(est1 - est2) > 0.01)
 
 
 def test_parsimony_coefficient():
@@ -567,31 +554,12 @@ def test_verbose_output():
 
 
 def test_verbose_with_oob():
-    """Check oob scoring for bootstrap or subsample does not cause error"""
+    """Check oob scoring for subsample does not cause error"""
 
-    # Check subsample
     old_stdout = sys.stdout
     sys.stdout = StringIO()
     est = SymbolicRegressor(max_samples=0.9, random_state=0, verbose=1)
     est.fit(boston.data, boston.target)
-    verbose_output = sys.stdout
-    sys.stdout = old_stdout
-
-    # check output
-    verbose_output.seek(0)
-    header1 = verbose_output.readline().rstrip()
-    header2 = verbose_output.readline().rstrip()
-    header3 = verbose_output.readline().rstrip()
-
-    n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
-
-    # Check bootstrap
-    old_stdout = sys.stdout
-    sys.stdout = StringIO()
-    est = SymbolicRegressor(bootstrap=True, random_state=0, verbose=1)
-    est.fit(boston.data, boston.target,
-            sample_weight=np.ones(boston.target.shape) * 1.1)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
 

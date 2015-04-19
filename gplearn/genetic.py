@@ -105,7 +105,6 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     parsimony_coefficient = params['parsimony_coefficient']
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
-    bootstrap = params['bootstrap']
     max_samples = params['max_samples']
 
     max_samples = int(max_samples * n_samples)
@@ -189,18 +188,13 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
         else:
             curr_sample_weight = sample_weight.copy()
 
-        if bootstrap:
-            indices = random_state.randint(0, n_samples, max_samples)
-            sample_counts = bincount(indices, minlength=n_samples)
-            curr_sample_weight *= sample_counts
-        else:
-            not_indices = sample_without_replacement(
-                n_samples,
-                n_samples - max_samples,
-                random_state=random_state)
-            sample_counts = np.bincount(not_indices, minlength=n_samples)
-            indices = np.where(sample_counts == 0)[0]
-            curr_sample_weight[not_indices] = 0
+        not_indices = sample_without_replacement(
+            n_samples,
+            n_samples - max_samples,
+            random_state=random_state)
+        sample_counts = np.bincount(not_indices, minlength=n_samples)
+        indices = np.where(sample_counts == 0)[0]
+        curr_sample_weight[not_indices] = 0
 
         program.raw_fitness_ = program.raw_fitness(X, y, curr_sample_weight)
         program.indices_ = indices
@@ -802,7 +796,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  p_hoist_mutation=0.01,
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
-                 bootstrap=False,
                  max_samples=1.0,
                  n_jobs=1,
                  verbose=0,
@@ -826,7 +819,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.p_hoist_mutation = p_hoist_mutation
         self.p_point_mutation = p_point_mutation
         self.p_point_replace = p_point_replace
-        self.bootstrap = bootstrap
         self.max_samples = max_samples
         self.n_jobs = n_jobs
         self.verbose = verbose
@@ -889,7 +881,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 best_program = population[np.argmin(fitness)]
 
             oob_fitness = 'N/A'
-            if self.bootstrap or self.max_samples < 1.0:
+            if self.max_samples < 1.0:
                 # Calculate OOB fitness
                 if sample_weight is None:
                     curr_sample_weight = np.ones(y.shape)
@@ -1203,9 +1195,6 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         For point mutation only, the probability that any given node will be
         mutated.
 
-    bootstrap : boolean, optional (default=True)
-        Whether samples are drawn with replacement.
-
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
@@ -1258,7 +1247,6 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  p_hoist_mutation=0.01,
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
-                 bootstrap=False,
                  max_samples=1.0,
                  n_jobs=1,
                  verbose=0,
@@ -1280,7 +1268,6 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             p_hoist_mutation=p_hoist_mutation,
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
-            bootstrap=bootstrap,
             max_samples=max_samples,
             n_jobs=n_jobs,
             verbose=verbose,
@@ -1439,9 +1426,6 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         For point mutation only, the probability that any given node will be
         mutated.
 
-    bootstrap : boolean, optional (default=True)
-        Whether samples are drawn with replacement.
-
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
@@ -1496,7 +1480,6 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  p_hoist_mutation=0.01,
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
-                 bootstrap=False,
                  max_samples=1.0,
                  n_jobs=1,
                  verbose=0,
@@ -1520,7 +1503,6 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             p_hoist_mutation=p_hoist_mutation,
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
-            bootstrap=bootstrap,
             max_samples=max_samples,
             n_jobs=n_jobs,
             verbose=verbose,
