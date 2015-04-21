@@ -24,7 +24,6 @@ from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.random import sample_without_replacement
 
 from .skutils import _partition_estimators
-from .skutils.fixes import bincount
 from .skutils.validation import check_random_state, NotFittedError
 from .skutils.validation import check_X_y, check_array
 
@@ -856,12 +855,12 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             Weights applied to individual samples.
         """
         if start_time is None:
-            print('%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(59)))
-            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10)
+            print('%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
+                                        'Best Individual'.center(42)))
+            print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 42 + ' ' + '-' * 10)
             header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                             'Raw Fitness', 'OOB Fitness', 'Time Left')
-            print('%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields)
+                             'OOB Fitness', 'Time Left')
+            print('%4s %8s %16s %8s %16s %16s %10s' % header_fields)
 
         else:
             # Estimate remaining time for run
@@ -873,7 +872,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
             # Find the current generation's best individual
-            fitness = [program.fitness_ for program in population]
+            fitness = [program.raw_fitness_ for program in population]
             length = [program.length_ for program in population]
             if self.metric in ('pearson', 'spearman'):
                 best_program = population[np.argmax(fitness)]
@@ -891,18 +890,17 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 oob_fitness = best_program.raw_fitness(X, y,
                                                        curr_sample_weight)
 
-            print('%4s %8s %16s %8s %16s %16s %16s %10s' %
+            print('%4s %8s %16s %8s %16s %16s %10s' %
                   (gen,
                    np.round(np.mean(length), 2),
                    np.mean(fitness),
                    best_program.length_,
-                   best_program.fitness_,
                    best_program.raw_fitness_,
                    oob_fitness,
                    remaining_time))
 
     def fit(self, X, y, sample_weight=None):
-        """Fit Symbolic Regressor according to X, y.
+        """Fit the Genetic Program according to X, y.
 
         Parameters
         ----------
@@ -1049,9 +1047,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         if isinstance(self, RegressorMixin):
             # Find the best individual in the final generation
-            self.fitness_ = [gp.fitness_ for gp in self._programs[-1]]
-            self.program_ = self._programs[-1][np.argmin(self.fitness_)]
-            self.fitness_ = self.program_.fitness_
+            fitness = [gp.raw_fitness_ for gp in self._programs[-1]]
+            self._program = self._programs[-1][np.argmin(fitness)]
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
@@ -1076,8 +1073,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]
                 indices = list(range(len(components)))
-            self.programs_ = [self._programs[-1][i] for i in
-                              hall_of_fame[components]]
+            self._best_programs = [self._programs[-1][i] for i in
+                                   hall_of_fame[components]]
 
         return self
 
@@ -1138,6 +1135,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
 
     metric : str, optional (default='mean absolute error')
         The name of the raw fitness metric. Available options include:
+
         - 'mean absolute error',
         - 'mse' for mean squared error,
         - 'rmse' for root mean squared error, and
@@ -1211,17 +1209,9 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
-    Attributes
-    ----------
-    program_ : _Program object
-        The fittest individual in the final generation.
-
-    fitness_ : float
-        The fitness of the fittest individual in the final generation.
-
     See also
     --------
-    DecisionTreeRegressor
+    SymbolicTransformer
 
     References
     ----------
@@ -1287,7 +1277,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         y : array, shape = [n_samples]
             Predicted values for X.
         """
-        if not hasattr(self, "program_"):
+        if not hasattr(self, "_program"):
             raise NotFittedError("SymbolicRegressor not fitted.")
 
         X = check_array(X)
@@ -1298,7 +1288,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                              "n_features is %s."
                              % (self.n_features_, n_features))
 
-        y = self.program_.execute(X)
+        y = self._program.execute(X)
 
         return y
 
@@ -1371,6 +1361,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     metric : str, optional (default='pearson')
         The name of the raw fitness metric. Available options include:
+
         - 'pearson', for Pearson's product-moment correlation coefficient, and
         - 'spearman' for Spearman's rank-order correlation coefficient.
 
@@ -1441,14 +1432,6 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
-
-    Attributes
-    ----------
-    program_ : _Program object
-        The fittest individual in the final generation.
-
-    fitness_ : float
-        The fitness of the fittest individual in the final generation.
 
     See also
     --------
@@ -1522,7 +1505,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         X_new : array-like, shape = [n_samples, n_components]
             Transformed array.
         """
-        if not hasattr(self, "programs_"):
+        if not hasattr(self, "_best_programs"):
             raise NotFittedError("SymbolicTransformer not fitted.")
 
         X = check_array(X)
@@ -1533,7 +1516,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                              "n_features is %s."
                              % (self.n_features_, n_features))
 
-        X_new = np.array([gp.execute(X) for gp in self.programs_]).T
+        X_new = np.array([gp.execute(X) for gp in self._best_programs]).T
 
         return X_new
 

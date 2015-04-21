@@ -448,8 +448,8 @@ def test_sample_weight():
     est3 = SymbolicRegressor(generations=2, random_state=0)
     est3.fit(boston.data, boston.target, sample_weight=sample_weight * 1.1)
 
-    assert_almost_equal(est1.fitness_, est2.fitness_)
-    assert_almost_equal(est1.fitness_, est3.fitness_)
+    assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
+    assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
 
     # And again for the transformer
     sample_weight = np.ones(boston.target.shape[0])
@@ -535,18 +535,18 @@ def test_verbose_output():
     # check output
     verbose_output.seek(0)
     header1 = verbose_output.readline().rstrip()
-    true_header = '%4s|%-25s|%-59s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(59))
+    true_header = '%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
+                                        'Best Individual'.center(42))
     assert_equal(true_header, header1)
 
     header2 = verbose_output.readline().rstrip()
-    true_header = '-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 59 + ' ' + '-' * 10
+    true_header = '-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 42 + ' ' + '-' * 10
     assert_equal(true_header, header2)
 
     header3 = verbose_output.readline().rstrip()
     header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                     'Raw Fitness', 'OOB Fitness', 'Time Left')
-    true_header = '%4s %8s %16s %8s %16s %16s %16s %10s' % header_fields
+                     'OOB Fitness', 'Time Left')
+    true_header = '%4s %8s %16s %8s %16s %16s %10s' % header_fields
     assert_equal(true_header, header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
@@ -736,7 +736,7 @@ def test_gridsearch():
                             tournament_size=5, random_state=0)
     grid = GridSearchCV(clf, parameters, scoring='mean_absolute_error')
     grid.fit(boston.data, boston.target)
-    expected = {'parsimony_coefficient': 0.001}
+    expected = {'parsimony_coefficient': 'auto'}
     assert_equal(grid.best_params_, expected)
 
 
