@@ -801,6 +801,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  n_components=None,
                  generations=10,
                  tournament_size=20,
+                 stopping_criteria=0.0,
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
@@ -824,6 +825,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.n_components = n_components
         self.generations = generations
         self.tournament_size = tournament_size
+        self.stopping_criteria = stopping_criteria
         self.const_range = const_range
         self.init_depth = init_depth
         self.init_method = init_method
@@ -846,6 +848,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                           start_time=None,
                           gen=None,
                           population=None,
+                          fitness=None,
+                          length=None,
                           X=None,
                           y=None,
                           sample_weight=None):
@@ -853,15 +857,20 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         Parameters
         ----------
-        headers : bool, optional (default=False)
-            Whether this is the first call to the reporter, prints only the
-            headers.
-
         start_time : float
             The start time for the current generation.
 
         gen : int
-            The current generation (0 is the first naive random population)
+            The current generation (0 is the first naive random population).
+
+        population : list
+            The current population.
+
+        fitness : list
+            The current population's raw fitness.
+
+        length : list
+            The current population's lengths.
 
         X : {array-like}, shape = [n_samples, n_features]
             Training vectors, where n_samples is the number of samples and
@@ -891,8 +900,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
             # Find the current generation's best individual
-            fitness = [program.raw_fitness_ for program in population]
-            length = [program.length_ for program in population]
             if self.metric in ('pearson', 'spearman'):
                 best_program = population[np.argmax(fitness)]
             else:
@@ -1049,10 +1056,11 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             # Reduce, maintaining order across different n_jobs
             population = list(itertools.chain.from_iterable(population))
 
+            fitness = [program.raw_fitness_ for program in population]
+            length = [program.length_ for program in population]
+
             parsimony_coefficient = None
             if self.parsimony_coefficient == 'auto':
-                fitness = [program.raw_fitness_ for program in population]
-                length = [program.length_ for program in population]
                 parsimony_coefficient = (np.cov(length, fitness)[1, 0] /
                                          np.var(length))
             for program in population:
@@ -1061,17 +1069,26 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             self._programs.append(population)
 
             if self.verbose:
-                self._verbose_reporter(start_time, gen, population,
-                                       X, y, sample_weight)
+                self._verbose_reporter(start_time, gen, population, fitness,
+                                       length, X, y, sample_weight)
+
+            # Check for early stopping
+            if self.metric in ('pearson', 'spearman'):
+                best_fitness = fitness[np.argmax(fitness)]
+                if best_fitness >= self.stopping_criteria:
+                    break
+            else:
+                best_fitness = fitness[np.argmin(fitness)]
+                if best_fitness <= self.stopping_criteria:
+                    break
 
         if isinstance(self, RegressorMixin):
             # Find the best individual in the final generation
-            fitness = [gp.raw_fitness_ for gp in self._programs[-1]]
             self._program = self._programs[-1][np.argmin(fitness)]
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
-            fitness = np.array([gp.raw_fitness_ for gp in self._programs[-1]])
+            fitness = np.array(fitness)
             hall_of_fame = fitness.argsort()[:self.hall_of_fame]
             evaluation = np.array([gp.execute(X) for gp in
                                    [self._programs[-1][i] for
@@ -1080,7 +1097,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 evaluation = np.apply_along_axis(rankdata, 1, evaluation)
 
             # Iteratively remove the worst individual of the worst pair
+            old_settings = np.seterr(divide='ignore', invalid='ignore')
             correlations = np.abs(np.corrcoef(evaluation))
+            np.seterr(**old_settings)
             np.fill_diagonal(correlations, 0.)
             components = list(range(self.hall_of_fame))
             indices = list(range(self.hall_of_fame))
@@ -1121,6 +1140,9 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     tournament_size : integer, optional (default=20)
         The number of programs that will compete to become part of the next
         generation.
+
+    stopping_criteria : float, optional (default=0.0)
+        The required metric value required in order to stop evolution early.
 
     const_range : tuple of two floats, optional (default=(-1., 1.))
         The range of constants to include in the formulas.
@@ -1243,6 +1265,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  population_size=500,
                  generations=10,
                  tournament_size=20,
+                 stopping_criteria=0.0,
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
@@ -1264,6 +1287,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             population_size=population_size,
             generations=generations,
             tournament_size=tournament_size,
+            stopping_criteria=stopping_criteria,
             const_range=const_range,
             init_depth=init_depth,
             init_method=init_method,
@@ -1347,6 +1371,9 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     tournament_size : integer, optional (default=20)
         The number of programs that will compete to become part of the next
         generation.
+
+    stopping_criteria : float, optional (default=1.0)
+        The required metric value required in order to stop evolution early.
 
     const_range : tuple of two floats, optional (default=(-1., 1.))
         The range of constants to include in the formulas.
@@ -1469,6 +1496,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  n_components=10,
                  generations=10,
                  tournament_size=20,
+                 stopping_criteria=1.0,
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
@@ -1492,6 +1520,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             n_components=n_components,
             generations=generations,
             tournament_size=tournament_size,
+            stopping_criteria=stopping_criteria,
             const_range=const_range,
             init_depth=init_depth,
             init_method=init_method,

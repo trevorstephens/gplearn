@@ -536,6 +536,18 @@ def test_parsimony_coefficient():
     assert_true(abs(est2 - est3) > 0.01)
 
 
+def test_early_stopping():
+    """Check that early stopping works"""
+
+    est1 = SymbolicRegressor(stopping_criteria=10, random_state=0)
+    est1.fit(boston.data[:400, :], boston.target[:400])
+    assert_true(len(est1._programs) == 1)
+
+    est1 = SymbolicTransformer(stopping_criteria=0.5, random_state=0)
+    est1.fit(boston.data[:400, :], boston.target[:400])
+    assert_true(len(est1._programs) == 1)
+
+
 def test_verbose_output():
     """Check verbose=1 does not cause error"""
 
