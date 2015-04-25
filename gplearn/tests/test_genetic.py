@@ -225,14 +225,28 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="mul", fillcolor="#3499cd"] ;\n' \
-           '1 [label="div", fillcolor="#3499cd"] ;\n' \
-           '2 [label="X8", fillcolor="#f89939"] ;\n' \
-           '3 [label="X1", fillcolor="#f89939"] ;\n' \
+           'node [style=filled]0 [label="mul", fillcolor="#136ed4"] ;\n' \
+           '1 [label="div", fillcolor="#136ed4"] ;\n' \
+           '2 [label="X8", fillcolor="#60a6f6"] ;\n' \
+           '3 [label="X1", fillcolor="#60a6f6"] ;\n' \
            '1 -> 3 ;\n1 -> 2 ;\n' \
-           '4 [label="sub", fillcolor="#3499cd"] ;\n' \
-           '5 [label="X9", fillcolor="#f89939"] ;\n' \
-           '6 [label="0.500", fillcolor="#f89939"] ;\n' \
+           '4 [label="sub", fillcolor="#136ed4"] ;\n' \
+           '5 [label="X9", fillcolor="#60a6f6"] ;\n' \
+           '6 [label="0.500", fillcolor="#60a6f6"] ;\n' \
+           '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
+    assert_true(output == tree)
+
+    # Test with fade_nodes
+    output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
+    tree = 'digraph program {\n' \
+           'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
+           '1 [label="div", fillcolor="#cecece"] ;\n' \
+           '2 [label="X8", fillcolor="#cecece"] ;\n' \
+           '3 [label="X1", fillcolor="#cecece"] ;\n' \
+           '1 -> 3 ;\n1 -> 2 ;\n' \
+           '4 [label="sub", fillcolor="#136ed4"] ;\n' \
+           '5 [label="X9", fillcolor="#60a6f6"] ;\n' \
+           '6 [label="0.500", fillcolor="#60a6f6"] ;\n' \
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
     assert_true(output == tree)
 
@@ -241,7 +255,7 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="X1", fillcolor="#f89939"] ;\n}'
+           'node [style=filled]0 [label="X1", fillcolor="#60a6f6"] ;\n}'
     assert_true(output == tree)
 
 

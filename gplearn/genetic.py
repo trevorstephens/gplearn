@@ -415,22 +415,41 @@ class _Program(object):
                     output += ', '
         return output
 
-    def export_graphviz(self):
-        """Returns a string, Graphviz script for visualizing the program."""
+    def export_graphviz(self, fade_nodes=None):
+        """Returns a string, Graphviz script for visualizing the program.
+
+        Parameters
+        ----------
+        fade_nodes : list, optional
+            A list of node indices to fade out for showing which were removed
+            during evolution.
+
+        Returns
+        -------
+        oupput : string
+            The Graphviz script to plot the tree representation of the program.
+        """
         terminals = []
+        if fade_nodes is None:
+            fade_nodes = []
         output = "digraph program {\nnode [style=filled]"
         for i, node in enumerate(self.program):
+            fill = "#cecece"
             if isinstance(node, six.string_types):
+                if i not in fade_nodes:
+                    fill = "#136ed4"
                 terminals.append([int(node[-1]), i])
-                output += ('%d [label="%s", fillcolor="#3499cd"] ;\n'
-                           % (i, node[:-1]))
+                output += ('%d [label="%s", fillcolor="%s"] ;\n'
+                           % (i, node[:-1], fill))
             else:
+                if i not in fade_nodes:
+                    fill = "#60a6f6"
                 if isinstance(node, int):
-                    output += ('%d [label="%s%s", fillcolor="#f89939"] ;\n'
-                               % (i, 'X', node))
+                    output += ('%d [label="%s%s", fillcolor="%s"] ;\n'
+                               % (i, 'X', node, fill))
                 else:
-                    output += ('%d [label="%.3f", fillcolor="#f89939"] ;\n'
-                               % (i, node))
+                    output += ('%d [label="%.3f", fillcolor="%s"] ;\n'
+                               % (i, node, fill))
                 if i == 0:
                     # A degenerative program of only one node
                     return output + "}"
@@ -1349,7 +1368,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     transformer : bool, optional (default=True)
         Whether to include protected square root, protected log, absolute
-        value, negative, and inverse functions in the function set.
+        value, negative, and protected inverse functions in the function set.
 
     comparison : bool, optional (default=True)
         Whether to include maximum and minimum functions in the function set.
