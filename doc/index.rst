@@ -41,7 +41,7 @@ gplearn is built on scikit-learn and a fairly recent copy (0.15.2+) is required 
 
 I hope you get some excellent results from using gplearn! If you do, please `drop me a line on my blog <http://trevorstephens.com>`_ about how you used it.
 
-Next up, read some more details about what Genetic Programming is, and how it works...
+Next up, read some more details about :ref:`what Genetic Programming is <intro>`, and how it works...
 
 Contents:
 
