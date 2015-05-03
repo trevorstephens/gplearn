@@ -49,7 +49,7 @@ Contents:
    :maxdepth: 2
 
    intro
-   installation
    examples
    reference
+   installation
 

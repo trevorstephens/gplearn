@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -19,7 +21,7 @@ Then navigate into the local `gplearn` directory and simply run::
 
     python setup.py install
 
-or
+or::
 
     python setup.py install --user
 

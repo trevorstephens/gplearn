@@ -259,5 +259,4 @@ From the hall of fame, it will then whittle down the best programs to the least 
 
 Convinced?
 
-Install the package, see some examples, and explore the full API reference!
-
+:ref:`See some examples <example>`, :ref:`explore the full API reference <reference>` and :ref:`install the package <installation>`!
