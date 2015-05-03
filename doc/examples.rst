@@ -3,6 +3,8 @@
 Examples
 ========
 
+The code used to generate these examples can be `found here <http://nbviewer.ipython.org/github/trevorstephens/gplearn/blob/master/doc/gp_examples.ipynb>`_ as an iPython Notebook.
+
 .. currentmodule:: gplearn.genetic
 
 Example 1: Symbolic Regressor
@@ -186,7 +188,7 @@ We will then apply our trained transformer to the entire Boston dataset (remembe
     gp_features = gp.transform(boston.data)
     new_boston = np.hstack((boston.data, gp_features))
 
-Now we train the Ridge regressor on the first 300 samples of the transformed dataset and see how it performs on the final 200 again:
+Now we train the Ridge regressor on the first 300 samples of the transformed dataset and see how it performs on the final 200 again::
 
     est = Ridge()
     est.fit(new_boston[:300, :], boston.target[:300])
