@@ -133,6 +133,7 @@ if not on_rtd:
 html_context = {
     'display_github': False,
     'show_source': False,
+    'html_show_sourcelink': False,
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme
