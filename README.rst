@@ -22,7 +22,7 @@
 
 |
 
-.. image:: doc/logos/gplearn-wide.png
+.. image:: https://raw.githubusercontent.com/trevorstephens/gplearn/master/doc/logos/gplearn-wide.png
     :alt: Genetic Programming in Python, with a scikit-learn inspired API
 
 |

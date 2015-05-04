@@ -38,6 +38,9 @@ setup_options = dict(
     packages=find_packages(),
     test_suite='nose.collector',
     zip_safe=False,
+    package_data={
+        'gplearn': ['tests/*.py', 'skutils/*.py', 'skutils/tests/*.py'],
+    },
     install_requires=['scikit-learn>=0.15.2'],
     extras_require={'testing': ['nose'],
                     'docs': ['Sphinx']}
