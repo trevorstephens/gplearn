@@ -1,5 +1,6 @@
 """Testing the Genetic Programming module's underlying datastructure
-(gplearn.genetic._Program)."""
+(gplearn.genetic._Program) as well as the classes that use it,
+gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 
 # Author: Trevor Stephens <trevorstephens.com>
 #
@@ -201,7 +202,6 @@ def test_print_overloading():
     finally:
         sys.stdout = orig_stdout
 
-    print(gp)
     lisp = "mul(div(X8, X1), sub(X9, 0.500))"
     assert_true(output == lisp)
 
@@ -787,6 +787,110 @@ def test_pipeline():
                         DecisionTreeRegressor())
     est.fit(boston.data, boston.target)
     assert_almost_equal(est.score(boston.data, boston.target), 1.0)
+
+
+def test_transformer_iterable():
+    """Check that the transformer is iterable"""
+
+    random_state = check_random_state(415)
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    y = random_state.uniform(size=5)
+    est = SymbolicTransformer(generations=2, random_state=0)
+    unfitted_len = len(est)
+
+    est.fit(X, y)
+    fitted_len = len(est)
+
+    # Check number of components are correct
+    assert_true(unfitted_len == 0)
+    assert_true(fitted_len == 10)
+
+    # Check iterating for individual program lengths is correct
+    expected_lens = [15, 19, 19, 12, 9, 10, 7, 14, 6, 21]
+    assert_true([gp.length_ for gp in est] == expected_lens)
+
+
+def test_print_overloading_estimator():
+    """Check that printing a fitted estimator results in 'pretty' output"""
+
+    random_state = check_random_state(415)
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    y = random_state.uniform(size=5)
+
+    # Check the regressor
+    est = SymbolicRegressor(generations=2, random_state=0)
+
+    # Unfitted
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_unfitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    # Fitted
+    est.fit(X, y)
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_fitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est._program)
+        output_program = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    assert_true(output_unfitted != output_fitted)
+    assert_true(output_unfitted == est.__repr__())
+    assert_true(output_fitted == output_program)
+
+    # Check the transformer
+    est = SymbolicTransformer(generations=2, random_state=0)
+
+    # Unfitted
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_unfitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    # Fitted
+    est.fit(X, y)
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_fitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        output = str([gp.__str__() for gp in est])
+        print(output.replace("',", ",\n").replace("'", ""))
+        output_program = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    assert_true(output_unfitted != output_fitted)
+    assert_true(output_unfitted == est.__repr__())
+    assert_true(output_fitted == output_program)
 
 
 if __name__ == "__main__":

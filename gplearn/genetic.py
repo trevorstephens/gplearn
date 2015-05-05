@@ -1306,6 +1306,12 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             verbose=verbose,
             random_state=random_state)
 
+    def __str__(self):
+        """Overloads `print` output of the object to resemble a LISP tree."""
+        if not hasattr(self, "_program"):
+            return self.__repr__()
+        return self._program.__str__()
+
     def predict(self, X):
         """Perform regression on test vectors X.
 
@@ -1538,6 +1544,25 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             n_jobs=n_jobs,
             verbose=verbose,
             random_state=random_state)
+
+    def __len__(self):
+        """Overloads `len` output to be the number of fitted components."""
+        if not hasattr(self, "_best_programs"):
+            return 0
+        return self.n_components
+
+    def __getitem__(self, item):
+        """Return the ith item of the fitted components."""
+        if item >= len(self):
+            raise IndexError
+        return self._best_programs[item]
+
+    def __str__(self):
+        """Overloads `print` output of the object to resemble LISP trees."""
+        if not hasattr(self, "_best_programs"):
+            return self.__repr__()
+        output = str([gp.__str__() for gp in self])
+        return output.replace("',", ",\n").replace("'", "")
 
     def transform(self, X):
         """Transform X according to the fitted transformer.
