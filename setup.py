@@ -34,11 +34,13 @@ setup_options = dict(
                  'Programming Language :: Python :: 3.4'],
     author='Trevor Stephens',
     author_email='trev.stephens@gmail.com',
+    url='https://github.com/trevorstephens/gplearn',
     license='new BSD',
     packages=find_packages(),
     test_suite='nose.collector',
     zip_safe=False,
     package_data={
+        '': ['LICENSE'],
         'gplearn': ['tests/*.py', 'skutils/*.py', 'skutils/tests/*.py'],
     },
     install_requires=['scikit-learn>=0.15.2'],

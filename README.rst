@@ -1,6 +1,3 @@
-.. image:: https://img.shields.io/pypi/dm/gplearn.svg
-    :target: https://pypi.python.org/pypi/gplearn/
-    :alt: Downloads
 .. image:: https://img.shields.io/pypi/v/gplearn.svg
     :target: https://pypi.python.org/pypi/gplearn/
     :alt: Version
@@ -23,6 +20,7 @@
 |
 
 .. image:: https://raw.githubusercontent.com/trevorstephens/gplearn/master/doc/logos/gplearn-wide.png
+    :target: https://github.com/trevorstephens/gplearn
     :alt: Genetic Programming in Python, with a scikit-learn inspired API
 
 |
