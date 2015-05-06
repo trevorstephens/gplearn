@@ -796,18 +796,26 @@ def test_transformer_iterable():
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
     est = SymbolicTransformer(generations=2, random_state=0)
-    unfitted_len = len(est)
 
+    # Check unfitted
+    unfitted_len = len(est)
+    unfitted_iter = [gp.length_ for gp in est]
+    expected_iter = []
+
+    assert_true(unfitted_len == 0)
+    assert_true(unfitted_iter == expected_iter)
+
+    # Check fitted
     est.fit(X, y)
     fitted_len = len(est)
+    fitted_iter = [gp.length_ for gp in est]
+    expected_iter = [15, 19, 19, 12, 9, 10, 7, 14, 6, 21]
 
-    # Check number of components are correct
-    assert_true(unfitted_len == 0)
     assert_true(fitted_len == 10)
+    assert_true(fitted_iter == expected_iter)
 
-    # Check iterating for individual program lengths is correct
-    expected_lens = [15, 19, 19, 12, 9, 10, 7, 14, 6, 21]
-    assert_true([gp.length_ for gp in est] == expected_lens)
+    # Check IndexError
+    assert_raises(IndexError, est.__getitem__, 10)
 
 
 def test_print_overloading_estimator():
