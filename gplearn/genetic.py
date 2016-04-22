@@ -1036,6 +1036,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 parents = None
             else:
                 parents = self._programs[gen - 1]
+            
+            if gen > 1:
+                self._programs[gen-2] =[]
 
             # Parallel loop
             n_jobs, n_programs, starts = _partition_estimators(
