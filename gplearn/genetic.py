@@ -1037,7 +1037,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             else:
                 parents = self._programs[gen - 1]
             
-            if keep_past_generations != True:
+            if (keep_past_generations != True) & (gen > 1):
                 self._programs[gen-2] =[]
 
             # Parallel loop
