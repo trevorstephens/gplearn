@@ -153,7 +153,7 @@ Plotting the parents shows how the genetic material from them combined to form o
 .. image:: images/ex1_fig3.png
     :align: center
 
-Example 2: Symbolic Tranformer
+Example 2: Symbolic Transformer
 ------------------------------
 
 This example demonstrates using the :class:`SymbolicTransformer` to generate new non-linear features automatically.
