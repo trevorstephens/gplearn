@@ -10,7 +10,7 @@ Symbolic Regressor
    :members:
    :inherited-members:
 
-Symbolic Tranformer
+Symbolic Transformer
 -------------------
 
 .. autoclass:: gplearn.genetic.SymbolicTransformer
