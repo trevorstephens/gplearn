@@ -26,6 +26,7 @@ sdist/
 var/
 *.egg-info/
 .installed.cfg
+setup.cfg
 *.egg
 
 # PyInstaller
@@ -57,7 +58,7 @@ coverage.xml
 *.log
 
 # Sphinx documentation
-docs/_build/
+doc/_build/
 
 # PyBuilder
 target/
