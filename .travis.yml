@@ -5,7 +5,7 @@ env:
   matrix:
     - PYTHON_VERSION="2.6" LATEST="true"
     - PYTHON_VERSION="2.7" COVERAGE="true" LATEST="true"
-    - PYTHON_VERSION="2.7" NUMPY_VERSION="1.8.0" SCIPY_VERSION="0.14.0" SKLEARN_VERSION="0.15.2"
+    - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.15.2"
     - PYTHON_VERSION="3.4" LATEST="true"
 install: source continuous_integration/install.sh
 script: bash continuous_integration/test_script.sh

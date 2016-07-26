@@ -32,7 +32,6 @@ if [[ "$LATEST" == "true" ]]; then
         scikit-learn cython
 else
     conda create -n testenv --yes python=$PYTHON_VERSION pip nose \
-        numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION \
         scikit-learn=$SKLEARN_VERSION cython
 fi
 
