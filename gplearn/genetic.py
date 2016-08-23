@@ -1,6 +1,6 @@
 """Genetic Programming in Python, with a scikit-learn inspired API
 
-The :mod:`sklearn.genetic` module implements Genetic Programming. These
+The :mod:`gplearn.genetic` module implements Genetic Programming. These
 are supervised learning methods based on applying evolutionary operations on
 computer programs.
 """
