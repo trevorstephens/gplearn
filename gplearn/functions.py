@@ -105,7 +105,8 @@ def make_function(function, name, arity):
 
 def _protected_division(x1, x2):
     """Closure of division (x1/x2) for zero denominator."""
-    return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
 
 
 def _protected_sqrt(x1):
@@ -115,12 +116,14 @@ def _protected_sqrt(x1):
 
 def _protected_log(x1):
     """Closure of log for zero arguments."""
-    return np.where(np.abs(x1) > 0.001, np.log(np.abs(x1)), 0.)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.where(np.abs(x1) > 0.001, np.log(np.abs(x1)), 0.)
 
 
 def _protected_inverse(x1):
     """Closure of log for zero arguments."""
-    return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
 
 add2 = make_function(function=np.add, name='add', arity=2)
 sub2 = make_function(function=np.subtract, name='sub', arity=2)
