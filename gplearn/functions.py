@@ -76,7 +76,7 @@ def make_function(function, name, arity):
     if not isinstance(name, six.string_types):
         raise ValueError('name must be a string, got %s' % type(name))
 
-    # Check function returns proper output shape for declared arity
+    # Check output shape
     args = []
     for i in range(arity):
         args.append(np.ones(10))
@@ -92,13 +92,19 @@ def make_function(function, name, arity):
         raise ValueError('supplied function %s does not return same shape as '
                          'input vectors.' % name)
 
-    # Check closure for zero input arguments
+    # Check closure for zero & negative input arguments
     args = []
     for i in range(arity):
         args.append(np.zeros(10))
     if not np.all(np.isfinite(function(*args))):
         raise ValueError('supplied function %s does not have closure against '
                          'zeros in argument vectors.' % name)
+    args = []
+    for i in range(arity):
+        args.append(-1 * np.ones(10))
+    if not np.all(np.isfinite(function(*args))):
+        raise ValueError('supplied function %s does not have closure against '
+                         'negatives in argument vectors.' % name)
 
     return _Function(function, name, arity)
 
