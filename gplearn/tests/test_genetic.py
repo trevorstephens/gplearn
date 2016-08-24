@@ -12,7 +12,9 @@ import sys
 
 from gplearn.genetic import _Program, SymbolicRegressor, SymbolicTransformer
 from gplearn.genetic import weighted_pearson, weighted_spearman
-
+from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, neg1,
+                               inv1, max2, min2, sin1, cos1, tan1)
+from gplearn.functions import _Function
 from scipy.stats import pearsonr, spearmanr
 
 from sklearn.externals.six.moves import StringIO
@@ -69,10 +71,10 @@ def test_weighted_correlations():
 def test_program_init_method():
     """'full' should create longer and deeper programs than other methods"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2',
-                               'sqrt1', 'log1', 'abs1', 'max2', 'min2'],
-              'arities': {1: ['sqrt1', 'log1', 'abs1'],
-                          2: ['add2', 'sub2', 'mul2', 'div2', 'max2', 'min2']},
+    params = {'function_set': [add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
+                               min2],
+              'arities': {1: [sqrt1, log1, abs1],
+                          2: [add2, sub2, mul2, div2, max2, min2]},
               'init_depth': (2, 6),
               'n_features': 10,
               'const_range': (-1.0, 1.0),
@@ -108,10 +110,10 @@ def test_program_init_method():
 def test_program_init_depth():
     """'full' should create constant depth programs for single depth limit"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2',
-                               'sqrt1', 'log1', 'abs1', 'max2', 'min2'],
-              'arities': {1: ['sqrt1', 'log1', 'abs1'],
-                          2: ['add2', 'sub2', 'mul2', 'div2', 'max2', 'min2']},
+    params = {'function_set': [add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
+                               min2],
+              'arities': {1: [sqrt1, log1, abs1],
+                          2: [add2, sub2, mul2, div2, max2, min2]},
               'init_depth': (6, 6),
               'n_features': 10,
               'const_range': (-1.0, 1.0),
@@ -143,10 +145,9 @@ def test_program_init_depth():
 def test_validate_program():
     """Check that valid programs are accepted & invalid ones raise error"""
 
-    function_set = ['add2', 'sub2', 'mul2', 'div2',
-                    'sqrt1', 'log1', 'abs1', 'max2', 'min2']
-    arities = {1: ['sqrt1', 'log1', 'abs1'],
-               2: ['add2', 'sub2', 'mul2', 'div2', 'max2', 'min2']}
+    function_set = [add2, sub2, mul2, div2, sqrt1, log1, abs1, max2, min2]
+    arities = {1: [sqrt1, log1, abs1],
+               2: [add2, sub2, mul2, div2, max2, min2]},
     init_depth = (2, 6)
     init_method = 'half and half'
     n_features = 10
@@ -156,8 +157,8 @@ def test_validate_program():
     parsimony_coefficient = 0.1
 
     random_state = check_random_state(415)
-    test_gp = ['sub2', 'abs1', 'sqrt1', 'log1', 'log1', 'sqrt1', 7, 'abs1',
-               'abs1', 'abs1', 'log1', 'sqrt1', 2]
+    test_gp = [sub2, abs1, sqrt1, log1, log1, sqrt1, 7, abs1, abs1, abs1, log1,
+               sqrt1, 2]
 
     # This one should be fine
     _ = _Program(function_set, arities, init_depth, init_method, n_features,
@@ -178,8 +179,8 @@ def test_validate_program():
 def test_print_overloading():
     """Check that printing a program object results in 'pretty' output"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
-              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
               'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
@@ -189,7 +190,7 @@ def test_print_overloading():
               'parsimony_coefficient': 0.1}
     random_state = check_random_state(415)
 
-    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
 
     gp = _Program(random_state=random_state, program=test_gp, **params)
 
@@ -209,8 +210,8 @@ def test_print_overloading():
 def test_export_graphviz():
     """Check output of a simple program to Graphviz"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
-              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
               'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
@@ -221,7 +222,7 @@ def test_export_graphviz():
     random_state = check_random_state(415)
 
     # Test for a small program
-    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
@@ -262,8 +263,8 @@ def test_export_graphviz():
 def test_execute():
     """Check executing the program works"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
-              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
               'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
@@ -274,7 +275,7 @@ def test_execute():
     random_state = check_random_state(415)
 
     # Test for a small program
-    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     gp = _Program(random_state=random_state, program=test_gp, **params)
     result = gp.execute(X)
@@ -285,8 +286,8 @@ def test_execute():
 def test_all_metrics():
     """Check all supported metrics work"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
-              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
               'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
@@ -297,7 +298,7 @@ def test_all_metrics():
     random_state = check_random_state(415)
 
     # Test for a small program
-    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
     gp = _Program(random_state=random_state, program=test_gp, **params)
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
@@ -319,8 +320,8 @@ def test_all_metrics():
 def test_get_subtree():
     """Check that get subtree does the same thing for self and new programs"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
-              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
               'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
@@ -331,7 +332,7 @@ def test_get_subtree():
     random_state = check_random_state(415)
 
     # Test for a small program
-    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
     gp = _Program(random_state=random_state, program=test_gp, **params)
 
     self_test = gp.get_subtree(check_random_state(0))
@@ -343,8 +344,8 @@ def test_get_subtree():
 def test_genetic_operations():
     """Check all genetic operations are stable and don't change programs"""
 
-    params = {'function_set': ['add2', 'sub2', 'mul2', 'div2'],
-              'arities': {2: ['add2', 'sub2', 'mul2', 'div2']},
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
               'init_depth': (2, 6),
               'init_method': 'half and half',
               'n_features': 10,
@@ -355,25 +356,30 @@ def test_genetic_operations():
     random_state = check_random_state(415)
 
     # Test for a small program
-    test_gp = ['mul2', 'div2', 8, 1, 'sub2', 9, .5]
-    donor = ['add2', 0.1, 'sub2', 2, 7]
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
+    donor = [add2, 0.1, sub2, 2, 7]
 
     gp = _Program(random_state=random_state, program=test_gp, **params)
 
-    assert_equal(gp.reproduce(),
-                 ['mul2', 'div2', 8, 1, 'sub2', 9, 0.5])
+    assert_equal([f.name if isinstance(f, _Function) else f
+                  for f in gp.reproduce()],
+                 ['mul', 'div', 8, 1, 'sub', 9, 0.5])
     assert_equal(gp.program, test_gp)
-    assert_equal(gp.crossover(donor, random_state)[0],
-                 ['sub2', 2, 7])
+    assert_equal([f.name if isinstance(f, _Function) else f
+                  for f in gp.crossover(donor, random_state)[0]],
+                 ['sub', 2, 7])
     assert_equal(gp.program, test_gp)
-    assert_equal(gp.subtree_mutation(random_state)[0],
-                 ['mul2', 'div2', 8, 1, 'sub2', 'sub2', 3, 5, 'add2', 6, 3])
+    assert_equal([f.name if isinstance(f, _Function) else f
+                  for f in gp.subtree_mutation(random_state)[0]],
+                 ['mul', 'div', 8, 1, 'sub', 'sub', 3, 5, 'add', 6, 3])
     assert_equal(gp.program, test_gp)
-    assert_equal(gp.hoist_mutation(random_state)[0],
-                 ['div2', 8, 1])
+    assert_equal([f.name if isinstance(f, _Function) else f
+                  for f in gp.hoist_mutation(random_state)[0]],
+                 ['div', 8, 1])
     assert_equal(gp.program, test_gp)
-    assert_equal(gp.point_mutation(random_state)[0],
-                 ['mul2', 'div2', 8, 1, 'sub2', 9, 0.5])
+    assert_equal([f.name if isinstance(f, _Function) else f
+                  for f in gp.point_mutation(random_state)[0]],
+                 ['mul', 'div', 8, 1, 'sub', 9, 0.5])
     assert_equal(gp.program, test_gp)
 
 

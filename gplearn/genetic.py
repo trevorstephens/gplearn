@@ -443,7 +443,7 @@ class _Program(object):
         depth = 1
         for node in self.program:
             if isinstance(node, _Function):
-                terminals.append(int(node[-1]))
+                terminals.append(node.arity)
                 depth = max(len(terminals), depth)
             else:
                 terminals[-1] -= 1
