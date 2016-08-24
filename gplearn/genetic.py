@@ -27,46 +27,13 @@ from .skutils import _partition_estimators
 from .skutils.validation import check_random_state, NotFittedError
 from .skutils.validation import check_X_y, check_array
 
+from .functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, neg1, inv1,
+                        max2, min2, sin1, cos1, tan1)
+from .functions import _Function
+
 __all__ = ['SymbolicRegressor', 'SymbolicTransformer']
 
 MAX_INT = np.iinfo(np.int32).max
-
-
-def protected_devision(x1, x2):
-    """Closure of division (x1/x2) for zero denominator."""
-    return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
-
-
-def protected_sqrt(x1):
-    """Closure of square root for negative arguments."""
-    return np.sqrt(np.abs(x1))
-
-
-def protected_log(x1):
-    """Closure of log for zero arguments."""
-    return np.where(np.abs(x1) > 0.001, np.log(np.abs(x1)), 0.)
-
-
-def protected_inverse(x1):
-    """Closure of log for zero arguments."""
-    return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
-
-
-# Format is '<name><arity>': function
-FUNCTIONS = {'add2': np.add,
-             'sub2': np.subtract,
-             'mul2': np.multiply,
-             'div2': protected_devision,
-             'sqrt1': protected_sqrt,
-             'log1': protected_log,
-             'neg1': np.negative,
-             'inv1': protected_inverse,
-             'abs1': np.abs,
-             'max2': np.maximum,
-             'min2': np.minimum,
-             'sin1': np.sin,
-             'cos1': np.cos,
-             'tan1': np.tan}
 
 
 def weighted_pearson(x1, x2, w):
@@ -351,7 +318,7 @@ class _Program(object):
         function = random_state.randint(len(self.function_set))
         function = self.function_set[function]
         program = [function]
-        terminal_stack = [int(function[-1])]
+        terminal_stack = [function.arity]
 
         while len(terminal_stack) != 0:
             depth = len(terminal_stack)
@@ -363,7 +330,7 @@ class _Program(object):
                 function = random_state.randint(len(self.function_set))
                 function = self.function_set[function]
                 program.append(function)
-                terminal_stack.append(int(function[-1]))
+                terminal_stack.append(function.arity)
             else:
                 # We need a terminal, add a variable or constant
                 terminal = random_state.randint(self.n_features + 1)
@@ -384,8 +351,8 @@ class _Program(object):
         """Rough check that the embedded program in the object is valid."""
         terminals = [0]
         for node in self.program:
-            if isinstance(node, six.string_types):
-                terminals.append(int(node[-1]))
+            if isinstance(node, _Function):
+                terminals.append(node.arity)
             else:
                 terminals[-1] -= 1
                 while terminals[-1] == 0:
@@ -398,9 +365,9 @@ class _Program(object):
         terminals = [0]
         output = ''
         for i, node in enumerate(self.program):
-            if isinstance(node, six.string_types):
-                terminals.append(int(node[-1]))
-                output += node[:-1] + '('
+            if isinstance(node, _Function):
+                terminals.append(node.arity)
+                output += node.name + '('
             else:
                 if isinstance(node, int):
                     output += 'X%s' % node
@@ -435,12 +402,12 @@ class _Program(object):
         output = "digraph program {\nnode [style=filled]"
         for i, node in enumerate(self.program):
             fill = "#cecece"
-            if isinstance(node, six.string_types):
+            if isinstance(node, _Function):
                 if i not in fade_nodes:
                     fill = "#136ed4"
-                terminals.append([int(node[-1]), i])
+                terminals.append([node.arity, i])
                 output += ('%d [label="%s", fillcolor="%s"] ;\n'
-                           % (i, node[:-1], fill))
+                           % (i, node.name, fill))
             else:
                 if i not in fade_nodes:
                     fill = "#60a6f6"
@@ -475,7 +442,7 @@ class _Program(object):
         terminals = [0]
         depth = 1
         for node in self.program:
-            if isinstance(node, six.string_types):
+            if isinstance(node, _Function):
                 terminals.append(int(node[-1]))
                 depth = max(len(terminals), depth)
             else:
@@ -517,15 +484,15 @@ class _Program(object):
 
         for node in self.program:
 
-            if isinstance(node, six.string_types):
+            if isinstance(node, _Function):
                 apply_stack.append([node])
             else:
                 # Lazily evaluate later
                 apply_stack[-1].append(node)
 
-            while len(apply_stack[-1]) == int(apply_stack[-1][0][-1]) + 1:
+            while len(apply_stack[-1]) == apply_stack[-1][0].arity + 1:
                 # Apply functions that have sufficient arguments
-                function = FUNCTIONS[apply_stack[-1][0]]
+                function = apply_stack[-1][0]
                 terminals = [np.repeat(t, X.shape[0]) if isinstance(t, float)
                              else X[:, t] if isinstance(t, int)
                              else t for t in apply_stack[-1][1:]]
@@ -634,7 +601,7 @@ class _Program(object):
         """
         if program is None:
             program = self.program
-        probs = np.array([0.9 if isinstance(node, six.string_types) else 0.1
+        probs = np.array([0.9 if isinstance(node, _Function) else 0.1
                           for node in program])
         probs = np.cumsum(probs / probs.sum())
         start = np.searchsorted(probs, random_state.uniform())
@@ -643,8 +610,8 @@ class _Program(object):
         end = start
         while stack > end - start:
             node = program[end]
-            if isinstance(node, six.string_types):
-                stack += int(node[-1])
+            if isinstance(node, _Function):
+                stack += node.arity
             end += 1
 
         return start, end
@@ -766,8 +733,8 @@ class _Program(object):
                            for _ in range(len(program))])[0]
 
         for node in mutate:
-            if isinstance(program[node], six.string_types):
-                arity = int(program[node][-1])
+            if isinstance(program[node], _Function):
+                arity = program[node].arity
                 # Find a valid replacement with same arity
                 replacement = len(self.arities[arity])
                 replacement = random_state.randint(replacement)
@@ -966,19 +933,18 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              'hall_of_fame (%d).' % (self.n_components,
                                                      self.hall_of_fame))
 
-        self._function_set = ['add2', 'sub2', 'mul2', 'div2']
+        self._function_set = [add2, sub2, mul2, div2]
         if self.transformer:
-            self._function_set.extend(['sqrt1', 'log1', 'abs1', 'neg1',
-                                       'inv1'])
+            self._function_set.extend([sqrt1, log1, abs1, neg1, inv1])
         if self.comparison:
-            self._function_set.extend(['max2', 'min2'])
+            self._function_set.extend([max2, min2])
         if self.trigonometric:
-            self._function_set.extend(['sin1', 'cos1', 'tan1'])
+            self._function_set.extend([sin1, cos1, tan1])
 
         # For point-mutation to find a compatible replacement node
         self._arities = {}
         for function in self._function_set:
-            arity = int(function[-1])
+            arity = function.arity
             self._arities[arity] = self._arities.get(arity, [])
             self._arities[arity].append(function)
 
