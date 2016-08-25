@@ -27,9 +27,7 @@ from .skutils import _partition_estimators
 from .skutils.validation import check_random_state, NotFittedError
 from .skutils.validation import check_X_y, check_array
 
-from .functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, neg1, inv1,
-                        max2, min2, sin1, cos1, tan1)
-from .functions import _Function
+from .functions import _function_map, _Function
 
 __all__ = ['SymbolicRegressor', 'SymbolicTransformer']
 
@@ -180,13 +178,12 @@ class _Program(object):
     Parameters
     ----------
     function_set : list
-        A list of valid functions to use in the program, must match keys from
-        the FUNCTIONS dict global variable.
+        A list of valid functions to use in the program.
 
     arities : dict
-        A dictionary of the form `{arity: [function names]}`. The arity is the
-        number of arguments that the function takes, the function names must
-        match those in the `function_set` parameter.
+        A dictionary of the form `{arity: [functions]}`. The arity is the
+        number of arguments that the function takes, the functions must match
+        those in the `function_set` parameter.
 
     init_depth : tuple of two ints
         The range of tree depths for the initial population of naive formulas.
@@ -772,9 +769,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
-                 transformer=True,
-                 comparison=True,
-                 trigonometric=False,
+                 function_set=('arithmetic', 'transformer', 'comparison'),
                  metric='mean absolute error',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
@@ -796,9 +791,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.const_range = const_range
         self.init_depth = init_depth
         self.init_method = init_method
-        self.transformer = transformer
-        self.comparison = comparison
-        self.trigonometric = trigonometric
+        self.function_set = function_set
         self.metric = metric
         self.parsimony_coefficient = parsimony_coefficient
         self.p_crossover = p_crossover
@@ -933,13 +926,20 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              'hall_of_fame (%d).' % (self.n_components,
                                                      self.hall_of_fame))
 
-        self._function_set = [add2, sub2, mul2, div2]
-        if self.transformer:
-            self._function_set.extend([sqrt1, log1, abs1, neg1, inv1])
-        if self.comparison:
-            self._function_set.extend([max2, min2])
-        if self.trigonometric:
-            self._function_set.extend([sin1, cos1, tan1])
+        self._function_set = []
+        for function in self.function_set:
+            if isinstance(function, six.string_types):
+                if function not in _function_map:
+                    raise ValueError('invalid function name %s found in '
+                                     '`function_set`.' % function)
+                self._function_set.extend(_function_map[function])
+            elif isinstance(function, _Function):
+                self._function_set.append(function)
+            else:
+                raise ValueError('invalid type %s found in `function_set`.'
+                                 % type(function))
+        if len(self._function_set) == 0:
+            raise ValueError('No valid functions found in `function_set`.')
 
         # For point-mutation to find a compatible replacement node
         self._arities = {}
@@ -1128,17 +1128,42 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         - 'half and half' : Trees are grown through a 50/50 mix of 'full' and
           'grow', making for a mix of tree shapes in the initial population.
 
-    transformer : bool, optional (default=True)
-        Whether to include protected square root, protected log, absolute
-        value, negative, and inverse functions in the function set.
+    function_set : iterable, optional
+        The functions to use when building and evolving programs. This iterable
+        can include strings to indicate either preset groups of functions, or
+        individual functions as outlined below. You can also include your own
+        functions as built using the ``make_function`` factory from the
+        ``functions`` module. The default is 'arithmetic', 'transformer' and
+        'comparison'.
 
-    comparison : bool, optional (default=True)
-        Whether to include maximum and minimum functions in the function set.
+        Available preset groups are:
 
-    trigonometric : bool, optional (default=False)
-        Whether to include sin, cos and tan functions in the function set. Note
-        that these functions work on radian angles, if your data is presented
-        as degrees, you may wish to covert using, for example, `np.radians`.
+        - 'arithmetic' : addition, subtraction, multiplication and division.
+        - 'transformer' : protected square root, protected log, absolute value,
+          negative, and protected inverse.
+        - 'comparison' : maximum and minimum.
+        - 'trigonometric' : sin, cos and tan.
+
+        Available individual functions are:
+
+        - 'add' : addition, arity=2.
+        - 'sub' : subtraction, arity=2.
+        - 'mul' : multiplication, arity=2.
+        - 'div' : protected division where a denominator near-zero returns 1.,
+          arity=2.
+        - 'sqrt' : protected square root where the absolute value of the
+          argument is used, arity=1.
+        - 'log' : protected log where the absolute value of the argument is
+          used and a near-zero argument returns 0., arity=1.
+        - 'abs' : absolute value, arity=1.
+        - 'neg' : negative, arity=1.
+        - 'inv' : protected inverse where a near-zero argument returns 0.,
+          arity=1.
+        - 'max' : maximum, arity=2.
+        - 'min' : minimum, arity=2.
+        - 'sin' : sine (radians), arity=1.
+        - 'cos' : cosine (radians), arity=1.
+        - 'tan' : tangent (radians), arity=1.
 
     metric : str, optional (default='mean absolute error')
         The name of the raw fitness metric. Available options include:
@@ -1235,9 +1260,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
-                 transformer=True,
-                 comparison=True,
-                 trigonometric=False,
+                 function_set=('arithmetic', 'transformer', 'comparison'),
                  metric='mean absolute error',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
@@ -1257,9 +1280,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             const_range=const_range,
             init_depth=init_depth,
             init_method=init_method,
-            transformer=transformer,
-            comparison=comparison,
-            trigonometric=trigonometric,
+            function_set=function_set,
             metric=metric,
             parsimony_coefficient=parsimony_coefficient,
             p_crossover=p_crossover,
@@ -1365,17 +1386,42 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         - 'half and half' : Trees are grown through a 50/50 mix of 'full' and
           'grow', making for a mix of tree shapes in the initial population.
 
-    transformer : bool, optional (default=True)
-        Whether to include protected square root, protected log, absolute
-        value, negative, and protected inverse functions in the function set.
+    function_set : iterable, optional
+        The functions to use when building and evolving programs. This iterable
+        can include strings to indicate either preset groups of functions, or
+        individual functions as outlined below. You can also include your own
+        functions as built using the ``make_function`` factory from the
+        ``functions`` module. The default is 'arithmetic', 'transformer' and
+        'comparison'.
 
-    comparison : bool, optional (default=True)
-        Whether to include maximum and minimum functions in the function set.
+        Available preset groups are:
 
-    trigonometric : bool, optional (default=False)
-        Whether to include sin, cos and tan functions in the function set. Note
-        that these functions work on radian angles, if your data is presented
-        as degrees, you may wish to covert using, for example, `np.radians`.
+        - 'arithmetic' : addition, subtraction, multiplication and division.
+        - 'transformer' : protected square root, protected log, absolute value,
+          negative, and protected inverse.
+        - 'comparison' : maximum and minimum.
+        - 'trigonometric' : sin, cos and tan.
+
+        Available individual functions are:
+
+        - 'add' : addition, arity=2.
+        - 'sub' : subtraction, arity=2.
+        - 'mul' : multiplication, arity=2.
+        - 'div' : protected division where a denominator near-zero returns 1.,
+          arity=2.
+        - 'sqrt' : protected square root where the absolute value of the
+          argument is used, arity=1.
+        - 'log' : protected log where the absolute value of the argument is
+          used and a near-zero argument returns 0., arity=1.
+        - 'abs' : absolute value, arity=1.
+        - 'neg' : negative, arity=1.
+        - 'inv' : protected inverse where a near-zero argument returns 0.,
+          arity=1.
+        - 'max' : maximum, arity=2.
+        - 'min' : minimum, arity=2.
+        - 'sin' : sine (radians), arity=1.
+        - 'cos' : cosine (radians), arity=1.
+        - 'tan' : tangent (radians), arity=1.
 
     metric : str, optional (default='pearson')
         The name of the raw fitness metric. Available options include:
@@ -1472,9 +1518,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
-                 transformer=True,
-                 comparison=True,
-                 trigonometric=False,
+                 function_set=['arithmetic', 'transformer', 'comparison'],
                  metric='pearson',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
@@ -1496,9 +1540,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             const_range=const_range,
             init_depth=init_depth,
             init_method=init_method,
-            transformer=transformer,
-            comparison=comparison,
-            trigonometric=trigonometric,
+            function_set=function_set,
             metric=metric,
             parsimony_coefficient=parsimony_coefficient,
             p_crossover=p_crossover,

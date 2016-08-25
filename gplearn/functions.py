@@ -142,6 +142,25 @@ inv1 = make_function(function=_protected_inverse, name='inv', arity=1)
 abs1 = make_function(function=np.abs, name='abs', arity=1)
 max2 = make_function(function=np.maximum, name='max', arity=2)
 min2 = make_function(function=np.minimum, name='min', arity=2)
-sin1 = make_function(function=np.sin, name='abs', arity=1)
+sin1 = make_function(function=np.sin, name='sin', arity=1)
 cos1 = make_function(function=np.cos, name='cos', arity=1)
 tan1 = make_function(function=np.tan, name='tan', arity=1)
+
+_function_map = {'arithmetic': [add2, sub2, mul2, div2],
+                 'transformer': [sqrt1, log1, abs1, neg1, inv1],
+                 'comparison': [max2, min2],
+                 'trigonometric': [sin1, cos1, tan1],
+                 'add': [add2],
+                 'sub': [sub2],
+                 'mul': [mul2],
+                 'div': [div2],
+                 'sqrt': [sqrt1],
+                 'log': [log1],
+                 'abs': [abs1],
+                 'neg': [neg1],
+                 'inv': [inv1],
+                 'max': [max2],
+                 'min': [min2],
+                 'sin': [sin1],
+                 'cos': [cos1],
+                 'tan': [tan1]}

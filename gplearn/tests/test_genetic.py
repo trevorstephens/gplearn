@@ -490,7 +490,9 @@ def test_trigonometric():
     est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    est2 = SymbolicRegressor(trigonometric=True, random_state=0)
+    est2 = SymbolicRegressor(function_set=['arithmetic', 'transformer',
+                                           'comparison', 'trigonometric'],
+                             random_state=0)
     est2.fit(boston.data[:400, :], boston.target[:400])
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
