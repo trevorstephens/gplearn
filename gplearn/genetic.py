@@ -769,7 +769,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
-                 function_set=('arithmetic', 'transformer', 'comparison'),
+                 function_set=('add', 'sub', 'mul', 'div'),
                  metric='mean absolute error',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
@@ -1128,21 +1128,11 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         - 'half and half' : Trees are grown through a 50/50 mix of 'full' and
           'grow', making for a mix of tree shapes in the initial population.
 
-    function_set : iterable, optional
+    function_set : iterable, optional (default=('add', 'sub', 'mul', 'div'))
         The functions to use when building and evolving programs. This iterable
-        can include strings to indicate either preset groups of functions, or
-        individual functions as outlined below. You can also include your own
-        functions as built using the ``make_function`` factory from the
-        ``functions`` module. The default is 'arithmetic', 'transformer' and
-        'comparison'.
-
-        Available preset groups are:
-
-        - 'arithmetic' : addition, subtraction, multiplication and division.
-        - 'transformer' : protected square root, protected log, absolute value,
-          negative, and protected inverse.
-        - 'comparison' : maximum and minimum.
-        - 'trigonometric' : sin, cos and tan.
+        can include strings to indicate either individual functions as outlined
+        below, or you can also include your own functions as built using the
+        ``make_function`` factory from the ``functions`` module.
 
         Available individual functions are:
 
@@ -1260,7 +1250,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
-                 function_set=('arithmetic', 'transformer', 'comparison'),
+                 function_set=('add', 'sub', 'mul', 'div'),
                  metric='mean absolute error',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
@@ -1386,21 +1376,11 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         - 'half and half' : Trees are grown through a 50/50 mix of 'full' and
           'grow', making for a mix of tree shapes in the initial population.
 
-    function_set : iterable, optional
+    function_set : iterable, optional (default=('add', 'sub', 'mul', 'div'))
         The functions to use when building and evolving programs. This iterable
-        can include strings to indicate either preset groups of functions, or
-        individual functions as outlined below. You can also include your own
-        functions as built using the ``make_function`` factory from the
-        ``functions`` module. The default is 'arithmetic', 'transformer' and
-        'comparison'.
-
-        Available preset groups are:
-
-        - 'arithmetic' : addition, subtraction, multiplication and division.
-        - 'transformer' : protected square root, protected log, absolute value,
-          negative, and protected inverse.
-        - 'comparison' : maximum and minimum.
-        - 'trigonometric' : sin, cos and tan.
+        can include strings to indicate either individual functions as outlined
+        below, or you can also include your own functions as built using the
+        ``make_function`` factory from the ``functions`` module.
 
         Available individual functions are:
 
@@ -1518,7 +1498,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  const_range=(-1., 1.),
                  init_depth=(2, 6),
                  init_method='half and half',
-                 function_set=['arithmetic', 'transformer', 'comparison'],
+                 function_set=('add', 'sub', 'mul', 'div'),
                  metric='pearson',
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,

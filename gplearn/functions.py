@@ -146,11 +146,7 @@ sin1 = make_function(function=np.sin, name='sin', arity=1)
 cos1 = make_function(function=np.cos, name='cos', arity=1)
 tan1 = make_function(function=np.tan, name='tan', arity=1)
 
-_function_map = {'arithmetic': [add2, sub2, mul2, div2],
-                 'transformer': [sqrt1, log1, abs1, neg1, inv1],
-                 'comparison': [max2, min2],
-                 'trigonometric': [sin1, cos1, tan1],
-                 'add': [add2],
+_function_map = {'add': [add2],
                  'sub': [sub2],
                  'mul': [mul2],
                  'div': [div2],

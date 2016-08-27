@@ -490,8 +490,8 @@ def test_trigonometric():
     est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    est2 = SymbolicRegressor(function_set=['arithmetic', 'transformer',
-                                           'comparison', 'trigonometric'],
+    est2 = SymbolicRegressor(function_set=['add', 'sub', 'mul', 'div',
+                                           'sin', 'cos', 'tan'],
                              random_state=0)
     est2.fit(boston.data[:400, :], boston.target[:400])
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
@@ -766,7 +766,7 @@ def test_gridsearch():
                             tournament_size=5, random_state=0)
     grid = GridSearchCV(clf, parameters, scoring='mean_absolute_error')
     grid.fit(boston.data, boston.target)
-    expected = {'parsimony_coefficient': 'auto'}
+    expected = {'parsimony_coefficient': 0.001}
     assert_equal(grid.best_params_, expected)
 
 
@@ -780,7 +780,7 @@ def test_pipeline():
                                           tournament_size=5,
                                           random_state=0))
     est.fit(boston.data, boston.target)
-    assert_almost_equal(est.score(boston.data, boston.target), -4.84921978246)
+    assert_almost_equal(est.score(boston.data, boston.target), -4.00270923)
 
     # Check the transformer
     est = make_pipeline(SymbolicTransformer(population_size=50,
@@ -799,7 +799,10 @@ def test_transformer_iterable():
     random_state = check_random_state(415)
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
-    est = SymbolicTransformer(generations=2, random_state=0)
+    function_set = ['add', 'sub', 'mul', 'div', 'sqrt', 'log', 'abs', 'neg',
+                    'inv', 'max', 'min']
+    est = SymbolicTransformer(generations=2, function_set=function_set,
+                              random_state=0)
 
     # Check unfitted
     unfitted_len = len(est)
