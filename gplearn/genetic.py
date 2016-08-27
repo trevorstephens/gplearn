@@ -760,10 +760,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
     @abstractmethod
     def __init__(self,
-                 population_size=500,
+                 population_size=1000,
                  hall_of_fame=None,
                  n_components=None,
-                 generations=10,
+                 generations=20,
                  tournament_size=20,
                  stopping_criteria=0.0,
                  const_range=(-1., 1.),
@@ -1243,8 +1243,8 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     """
 
     def __init__(self,
-                 population_size=500,
-                 generations=10,
+                 population_size=1000,
+                 generations=20,
                  tournament_size=20,
                  stopping_criteria=0.0,
                  const_range=(-1., 1.),
@@ -1489,10 +1489,10 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     """
 
     def __init__(self,
-                 population_size=500,
+                 population_size=1000,
                  hall_of_fame=100,
                  n_components=10,
-                 generations=10,
+                 generations=20,
                  tournament_size=20,
                  stopping_criteria=1.0,
                  const_range=(-1., 1.),

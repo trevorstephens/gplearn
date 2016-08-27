@@ -428,9 +428,9 @@ def test_program_input_validation():
         est.fit(boston.data, boston.target)
 
     # Check hall_of_fame and n_components for transformer
-    est = SymbolicTransformer(hall_of_fame=1000)
+    est = SymbolicTransformer(hall_of_fame=2000)
     assert_raises(ValueError, est.fit, boston.data, boston.target)
-    est = SymbolicTransformer(n_components=1000)
+    est = SymbolicTransformer(n_components=2000)
     assert_raises(ValueError, est.fit, boston.data, boston.target)
     est = SymbolicTransformer(hall_of_fame=0)
     assert_raises(ValueError, est.fit, boston.data, boston.target)
@@ -579,7 +579,7 @@ def test_verbose_output():
     assert_equal(true_header, header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
+    assert_equal(20, n_lines)
 
 
 def test_verbose_with_oob():
@@ -599,7 +599,7 @@ def test_verbose_with_oob():
     header3 = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
+    assert_equal(20, n_lines)
 
 
 def test_more_verbose_output():
@@ -623,7 +623,7 @@ def test_more_verbose_output():
     header3 = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
+    assert_equal(20, n_lines)
 
     joblib_output.seek(0)
     n_lines = sum(1 for l in joblib_output.readlines())
@@ -801,8 +801,8 @@ def test_transformer_iterable():
     y = random_state.uniform(size=5)
     function_set = ['add', 'sub', 'mul', 'div', 'sqrt', 'log', 'abs', 'neg',
                     'inv', 'max', 'min']
-    est = SymbolicTransformer(generations=2, function_set=function_set,
-                              random_state=0)
+    est = SymbolicTransformer(population_size=500, generations=2,
+                              function_set=function_set, random_state=0)
 
     # Check unfitted
     unfitted_len = len(est)
