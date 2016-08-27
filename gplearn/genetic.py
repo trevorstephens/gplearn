@@ -932,7 +932,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 if function not in _function_map:
                     raise ValueError('invalid function name %s found in '
                                      '`function_set`.' % function)
-                self._function_set.extend(_function_map[function])
+                self._function_set.append(_function_map[function])
             elif isinstance(function, _Function):
                 self._function_set.append(function)
             else:
