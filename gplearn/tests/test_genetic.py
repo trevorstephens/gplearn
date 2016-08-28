@@ -908,6 +908,33 @@ def test_print_overloading_estimator():
     assert_true(output_fitted == output_program)
 
 
+def test_validate_functions():
+    """Check that valid functions are accepted & invalid ones raise error"""
+
+    random_state = check_random_state(415)
+    X = np.reshape(random_state.uniform(size=50), (5, 10))
+    y = random_state.uniform(size=5)
+
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+        # These should be fine
+        est = Symbolic(generations=2, random_state=0,
+                       function_set=(add2, sub2, mul2, div2))
+        est.fit(boston.data, boston.target)
+        est = Symbolic(generations=2, random_state=0,
+                       function_set=('add', 'sub', 'mul', div2))
+        est.fit(boston.data, boston.target)
+
+        # These should fail
+        est = Symbolic(generations=2, random_state=0,
+                       function_set=('ni', 'sub', 'mul', div2))
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(generations=2, random_state=0,
+                       function_set=(7, 'sub', 'mul', div2))
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        est = Symbolic(generations=2, random_state=0, function_set=())
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
 if __name__ == "__main__":
     import nose
     nose.runmodule()
