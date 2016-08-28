@@ -25,7 +25,7 @@ def test_validate_function():
     assert_raises(ValueError, make_function, maximum, 'max', 1)
 
     # Check name test
-    assert_raises(ValueError, make_function, _protected_sqrt, 2, '1')
+    assert_raises(ValueError, make_function, _protected_sqrt, 2, 1)
 
     # Check return type tests
     def bad_fun1(x1, x2):
