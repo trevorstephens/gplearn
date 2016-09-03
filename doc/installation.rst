@@ -3,7 +3,9 @@
 Installation
 ============
 
-`gplearn` requires a recent version of scikit-learn (which requires numpy and scipy). So first you will need to `follow their installation instructions <http://scikit-learn.org/dev/install.html>`_ to get the dependencies.
+`gplearn` requires a recent version of scikit-learn (which requires numpy and
+scipy). So first you will need to `follow their installation instructions <http://scikit-learn.org/dev/install.html>`_
+to get the dependencies.
 
 Now that you have scikit-learn installed, you can install gplearn using pip::
 
@@ -26,4 +28,3 @@ or::
     python setup.py install --user
 
 and you're done!
-
