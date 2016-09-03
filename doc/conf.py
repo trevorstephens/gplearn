@@ -60,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'gplearn'
-copyright = u'2015, Trevor Stephens'
+copyright = u'2016, Trevor Stephens'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

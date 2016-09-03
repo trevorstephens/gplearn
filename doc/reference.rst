@@ -17,3 +17,7 @@ Symbolic Transformer
    :members:
    :inherited-members:
 
+User-Defined Functions
+----------------------
+
+.. autofunction:: gplearn.functions.make_function

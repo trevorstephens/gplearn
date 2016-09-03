@@ -3,16 +3,20 @@
 Examples
 ========
 
-The code used to generate these examples can be `found here <http://nbviewer.ipython.org/github/trevorstephens/gplearn/blob/master/doc/gp_examples.ipynb>`_ as an iPython Notebook.
+The code used to generate these examples can be
+`found here <http://nbviewer.ipython.org/github/trevorstephens/gplearn/blob/master/doc/gp_examples.ipynb>`_
+as an iPython Notebook.
 
 .. currentmodule:: gplearn.genetic
 
 Example 1: Symbolic Regressor
 -----------------------------
 
-This example demonstrates using the :class:`SymbolicRegressor` to fit a symbolic relationship.
+This example demonstrates using the :class:`SymbolicRegressor` to fit a
+symbolic relationship.
 
-Let's create some synthetic data based on the relationship :math:`y = X_0^{2} - X_1^{2} + X_1 - 1`::
+Let's create some synthetic data based on the relationship
+:math:`y = X_0^{2} - X_1^{2} + X_1 - 1`::
 
     x0 = np.arange(-1, 1, 1/10.)
     x1 = np.arange(-1, 1, 1/10.)
@@ -22,7 +26,8 @@ Let's create some synthetic data based on the relationship :math:`y = X_0^{2} - 
     ax = plt.figure().gca(projection='3d')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
-    surf = ax.plot_surface(x0, x1, y_truth, rstride=1, cstride=1, color='green', alpha=0.5)
+    surf = ax.plot_surface(x0, x1, y_truth, rstride=1, cstride=1,
+                           color='green', alpha=0.5)
     plt.show()
 
 .. image:: images/ex1_fig1.png
@@ -40,11 +45,17 @@ We can create some random training and test data that lies on this surface too::
     X_test = rng.uniform(-1, 1, 100).reshape(50, 2)
     y_test = X_test[:, 0]**2 - X_test[:, 1]**2 + X_test[:, 1] - 1
 
-Now let's consider how to fit our :class:`SymbolicRegressor` to this data. Since it's a fairly small dataset, we can probably use a large population since training time will still be pretty fast. We'll evolve 20 generations unless the error falls below 0.01. Examining the equation, it doesn't appear that the ``transformer`` or ``comparison`` function sets are useful, so we'll turn those off. Let's bump up the amount of mutation and subsample so that we can watch the OOB error evolve. We'll also increase the parsimony coefficient to keep our solutions small, since we know the truth is a pretty simple equation::
+Now let's consider how to fit our :class:`SymbolicRegressor` to this data.
+Since it's a fairly small dataset, we can probably use a large population since
+training time will still be pretty fast. We'll evolve 20 generations unless the
+error falls below 0.01. Examining the equation, it looks like the default
+function set of addition, subtraction, multiplication and division will cover
+us. Let's bump up the amount of mutation and subsample so that we can watch
+the OOB error evolve. We'll also increase the parsimony coefficient to keep our
+solutions small, since we know the truth is a pretty simple equation::
 
     est_gp = SymbolicRegressor(population_size=5000,
                                generations=20, stopping_criteria=0.01,
-                               comparison=False, transformer=False, 
                                p_crossover=0.7, p_subtree_mutation=0.1,
                                p_hoist_mutation=0.05, p_point_mutation=0.1,
                                max_samples=0.9, verbose=1,
@@ -65,13 +76,18 @@ Now let's consider how to fit our :class:`SymbolicRegressor` to this data. Since
        8     8.02    1.02643443398       11   0.043612562970   0.043612562970      1.08m
        9     9.07    1.22732144371       11   0.000781474035  0.0007814740353     59.43s
 
-The evolution process stopped early as the error of the best program in the 9th generation was better than 0.01. It also appears that the parsimony coefficient was just about right as the average length of the programs fluctuated around a bit before settling on a pretty reasonable size. Let's look at what our solution was::
+The evolution process stopped early as the error of the best program in the 9th
+generation was better than 0.01. It also appears that the parsimony coefficient
+was just about right as the average length of the programs fluctuated around a
+bit before settling on a pretty reasonable size. Let's look at what our
+solution was::
 
     print est_gp._program
     
     sub(add(-0.999, X1), mul(sub(X1, X0), add(X0, X1)))
 
-Interestingly, this does not have the same structure as our target function. But let's expand the mathematics out:
+Interestingly, this does not have the same structure as our target function.
+But let's expand the mathematics out:
 
 .. math::
     y = (-0.999 + X_1) - ((X_1 - X_0) \times (X_0 + X_1))
@@ -82,7 +98,8 @@ Interestingly, this does not have the same structure as our target function. But
 .. math::
     y = X_0^{2} - X_1^{2} + X_1 - 0.999
 
-Despite representing an interaction of :math:`X_0` and :math:`X_1`, these terms cancel and we're left with the (almost) exact relationship we were seeking!
+Despite representing an interaction of :math:`X_0` and :math:`X_1`, these terms
+cancel and we're left with the (almost) exact relationship we were seeking!
 
 Great, but let's compare with some other non-linear models to see how they do::
 
@@ -120,11 +137,15 @@ We can plot the decision surfaces of all three to visualize each one::
 .. image:: images/ex1_fig2.png
     :align: center
 
-Not bad :class:`SymbolicRegressor`! We were able to fit a very smooth function to the data, while the tree-based estimators created very "blocky" decision surfaces. The Random Forest appears to have smoothed out some of the wrinkles but in both cases the tree models have fit very well to the training data, but done worse on out-of-sample data.
+Not bad :class:`SymbolicRegressor`! We were able to fit a very smooth function
+to the data, while the tree-based estimators created very "blocky" decision
+surfaces. The Random Forest appears to have smoothed out some of the wrinkles
+but in both cases the tree models have fit very well to the training data, but
+done worse on out-of-sample data.
 
 We can also inspect the program that the :class:`SymbolicRegressor` found::
 
-    graph = pydot.graph_from_dot_data(est_gp._program.export_graphviz())
+    graph = pydotplus.graphviz.graph_from_dot_data(est_gp._program.export_graphviz())
     Image(graph.create_png())
 
 .. image:: images/ex1_child.png
@@ -140,23 +161,27 @@ And check out who its parents were::
      'donor_idx': 116,
      'donor_nodes': [0, 1, 2, 6]}
 
-This dictionary tells us what evolution operation was performed to get our new individual, as well as the parents from the prior generation, and any nodes that were removed from them during, in this case, Crossover.
+This dictionary tells us what evolution operation was performed to get our new
+individual, as well as the parents from the prior generation, and any nodes
+that were removed from them during, in this case, Crossover.
 
-Plotting the parents shows how the genetic material from them combined to form our winning program::
+Plotting the parents shows how the genetic material from them combined to form
+our winning program::
 
     idx = est_gp._program.parents['donor_idx']
     fade_nodes = est_gp._program.parents['donor_nodes']
     graph = est_gp._programs[-2][idx].export_graphviz(fade_nodes=fade_nodes)
-    graph = pydot.graph_from_dot_data(graph)
+    graph = pydotplus.graphviz.graph_from_dot_data(graph)
     Image(graph.create_png())
 
 .. image:: images/ex1_fig3.png
     :align: center
 
 Example 2: Symbolic Transformer
-------------------------------
+-------------------------------
 
-This example demonstrates using the :class:`SymbolicTransformer` to generate new non-linear features automatically.
+This example demonstrates using the :class:`SymbolicTransformer` to generate
+new non-linear features automatically.
 
 Let's load up the Boston housing dataset and randomly shuffle it::
 
@@ -166,7 +191,9 @@ Let's load up the Boston housing dataset and randomly shuffle it::
     boston.data = boston.data[perm]
     boston.target = boston.target[perm]
 
-We'll use Ridge Regression for this example and train our regressor on the first 300 samples, and see how it performs on the unseen final 200 samples. The benchmark to beat is simply Ridge running on the dataset as-is::
+We'll use Ridge Regression for this example and train our regressor on the
+first 300 samples, and see how it performs on the unseen final 200 samples. The
+benchmark to beat is simply Ridge running on the dataset as-is::
 
     est = Ridge()
     est.fit(boston.data[:300, :], boston.target[:300])
@@ -174,21 +201,35 @@ We'll use Ridge Regression for this example and train our regressor on the first
     
     0.759145222183
 
-So now we'll train our transformer on the same first 300 samples to generate some new features. Let's use a large population of 2000 individuals over 20 generations. We'll select the best 100 of these for the ``hall_of_fame``, and then use the least-correlated 10 as our new features. A little parsimony should control bloat, but we'll leave the rest of the evolution options at their defaults. The default ``metric='pearson'`` is appropriate here since we are using a linear model as the estimator. If we were going to use a tree-based estimator, the Spearman correlation might be interesting to try out too::
+So now we'll train our transformer on the same first 300 samples to generate
+some new features. Let's use a large population of 2000 individuals over 20
+generations. We'll select the best 100 of these for the ``hall_of_fame``, and
+then use the least-correlated 10 as our new features. A little parsimony should
+control bloat, but we'll leave the rest of the evolution options at their
+defaults. The default ``metric='pearson'`` is appropriate here since we are
+using a linear model as the estimator. If we were going to use a tree-based
+estimator, the Spearman correlation might be interesting to try out too::
 
+    function_set = ['add', 'sub', 'mul', 'div',
+                    'sqrt', 'log', 'abs', 'neg', 'inv',
+                    'max', 'min']
     gp = SymbolicTransformer(generations=20, population_size=2000,
                              hall_of_fame=100, n_components=10,
+                             function_set=function_set,
                              parsimony_coefficient=0.0005,
                              max_samples=0.9, verbose=1,
                              random_state=0, n_jobs=3)
     gp.fit(boston.data[:300, :], boston.target[:300])
 
-We will then apply our trained transformer to the entire Boston dataset (remember, it still hasn't seen the final 200 samples) and concatenate this to the original data::
+We will then apply our trained transformer to the entire Boston dataset
+(remember, it still hasn't seen the final 200 samples) and concatenate this to
+the original data::
 
     gp_features = gp.transform(boston.data)
     new_boston = np.hstack((boston.data, gp_features))
 
-Now we train the Ridge regressor on the first 300 samples of the transformed dataset and see how it performs on the final 200 again::
+Now we train the Ridge regressor on the first 300 samples of the transformed
+dataset and see how it performs on the final 200 again::
 
     est = Ridge()
     est.fit(new_boston[:300, :], boston.target[:300])
@@ -196,6 +237,50 @@ Now we train the Ridge regressor on the first 300 samples of the transformed dat
     
     0.853618353633
 
-Great! We have improved the :math:`R^{2}` score by a significant margin. It looks like the linear model was able to take advantage of some new non-linear features to fit the data even better.
+Great! We have improved the :math:`R^{2}` score by a significant margin. It
+looks like the linear model was able to take advantage of some new non-linear
+features to fit the data even better.
 
-Next up, :ref:`explore the full API reference <reference>` or just skip ahead :ref:`install the package <installation>`!
+.. currentmodule:: gplearn
+
+Example 3: Customizing Your Programs
+------------------------------------
+
+This example demonstrates modifying the function set with your own user-defined
+functions using the :func:`functions.make_function()` factory function.
+
+First you need to define some function which will return a numpy array of the
+correct shape. Most numpy operations will automatically do this. The factory
+will perform some basic checks on your function to ensure it complies with
+this. The function must also protect against zero division and invalid floating
+point operations (such as the log of a negative number).
+
+For this example we will implement a logical operation where two arguments are
+compared, and if the first one is larger, return a third value, otherwise
+return a fourth value:
+
+    def logic(x1, x2, x3, x4):
+        return np.where(x1 > x2, x3, x4)
+
+To make this into a ``gplearn`` compatible function, we use the factory where
+we must give it a name for display purposes and declare the arity of the
+function which must match the number of arguments that your function expects:
+
+    logical = make_function(function=logic,
+                            name='logical',
+                            arity=4)
+
+This can then be added to a ``gplearn`` estimator like so:
+
+    gp = SymbolicTransformer(function_set=['add', 'sub', 'mul', 'div', logical])
+
+After fitting, you will see some of your programs will have used your own
+customized functions, for example:
+
+    mul(logical(X0, mul(-0.629, X3), X7, sub(0.790, X7)), X9)
+
+.. image:: images/ex3_fig1.png
+    :align: center
+
+Next up, :ref:`explore the full API reference <reference>` or just skip ahead
+:ref:`install the package <installation>`!

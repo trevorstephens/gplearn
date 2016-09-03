@@ -52,4 +52,4 @@ Contents:
    examples
    reference
    installation
-
+   changelog
