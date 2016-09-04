@@ -13,8 +13,11 @@ import numpy as np
 
 from copy import deepcopy
 
+from sklearn.utils.random import sample_without_replacement
+
 from .functions import _Function
 from .fitness import weighted_pearson, weighted_spearman
+from .skutils.validation import check_random_state
 
 
 class _Program(object):
@@ -136,10 +139,12 @@ class _Program(object):
             # Create a naive random program
             self.program = self.build_program(random_state)
 
-        self.indices_ = None
         self.raw_fitness_ = None
         self.fitness_ = None
         self.parents = None
+        self._n_samples = None
+        self._max_samples = None
+        self._indices_state = None
 
     def build_program(self, random_state):
         """Build a naive random program.
@@ -239,7 +244,7 @@ class _Program(object):
 
         Returns
         -------
-        oupput : string
+        output : string
             The Graphviz script to plot the tree representation of the program.
         """
         terminals = []
@@ -356,6 +361,56 @@ class _Program(object):
         # We should never get here
         np.seterr(**old_settings)
         return None
+
+    def _get_all_indices(self, n_samples=None, max_samples=None,
+                         random_state=None):
+        """Get the indices on which to evaluate the fitness of a program.
+
+        Parameters
+        ----------
+        n_samples : int
+            The number of samples.
+
+        max_samples : int
+            The maximum number of samples to use.
+
+        random_state : RandomState instance
+            The random number generator.
+
+        Returns
+        -------
+        indices : array-like, shape = [n_samples]
+            The in-sample indices.
+
+        not_indices : array-like, shape = [n_samples]
+            The out-of-sample indices.
+        """
+        if self._indices_state is None and random_state is None:
+            raise ValueError('The program has not been evaluated for fitness '
+                             'yet, indices not available.')
+
+        if n_samples is not None and self._n_samples is None:
+            self._n_samples = n_samples
+        if max_samples is not None and self._max_samples is None:
+            self._max_samples = max_samples
+        if random_state is not None and self._indices_state is None:
+            self._indices_state = random_state.get_state()
+
+        indices_state = check_random_state(None)
+        indices_state.set_state(self._indices_state)
+
+        not_indices = sample_without_replacement(
+            n_samples,
+            n_samples - max_samples,
+            random_state=indices_state)
+        sample_counts = np.bincount(not_indices, minlength=n_samples)
+        indices = np.where(sample_counts == 0)[0]
+
+        return indices, not_indices
+
+    def _indices(self):
+        """Get the indices used to measure the program's fitness."""
+        return self._get_all_indices[0]
 
     def raw_fitness(self, X, y, sample_weight):
         """Evaluate the raw fitness of the program according to X, y.
@@ -597,3 +652,4 @@ class _Program(object):
 
     depth_ = property(_depth)
     length_ = property(_length)
+    indices_ = property(_indices)
