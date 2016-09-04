@@ -10,8 +10,9 @@ import numpy as np
 import pickle
 import sys
 
-from gplearn.genetic import _Program, SymbolicRegressor, SymbolicTransformer
-from gplearn.genetic import weighted_pearson, weighted_spearman
+from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
+from gplearn.fitness import weighted_pearson, weighted_spearman
+from gplearn._program import _Program
 from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, neg1,
                                inv1, max2, min2, sin1, cos1, tan1)
 from gplearn.functions import _Function

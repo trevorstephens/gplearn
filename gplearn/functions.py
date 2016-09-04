@@ -13,6 +13,8 @@ import numpy as np
 
 from sklearn.externals import six
 
+__all__ = ['make_function']
+
 
 class _Function(object):
 

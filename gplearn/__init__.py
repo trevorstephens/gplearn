@@ -4,4 +4,4 @@
 """
 __version__ = '0.2.dev0'
 
-__all__ = ['genetic', 'functions']
+__all__ = ['genetic', 'functions', 'fitness']
