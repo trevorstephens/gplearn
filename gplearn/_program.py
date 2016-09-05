@@ -362,8 +362,8 @@ class _Program(object):
         np.seterr(**old_settings)
         return None
 
-    def _get_all_indices(self, n_samples=None, max_samples=None,
-                         random_state=None):
+    def get_all_indices(self, n_samples=None, max_samples=None,
+                        random_state=None):
         """Get the indices on which to evaluate the fitness of a program.
 
         Parameters
@@ -400,17 +400,17 @@ class _Program(object):
         indices_state.set_state(self._indices_state)
 
         not_indices = sample_without_replacement(
-            n_samples,
-            n_samples - max_samples,
+            self._n_samples,
+            self._n_samples - self._max_samples,
             random_state=indices_state)
-        sample_counts = np.bincount(not_indices, minlength=n_samples)
+        sample_counts = np.bincount(not_indices, minlength=self._n_samples)
         indices = np.where(sample_counts == 0)[0]
 
         return indices, not_indices
 
     def _indices(self):
         """Get the indices used to measure the program's fitness."""
-        return self._get_all_indices[0]
+        return self.get_all_indices()[0]
 
     def raw_fitness(self, X, y, sample_weight):
         """Evaluate the raw fitness of the program according to X, y.

@@ -29,6 +29,7 @@ from sklearn.tree import DecisionTreeRegressor
 from gplearn.skutils.testing import assert_false, assert_true
 from gplearn.skutils.testing import assert_greater
 from gplearn.skutils.testing import assert_equal, assert_almost_equal
+from gplearn.skutils.testing import assert_array_equal
 from gplearn.skutils.testing import assert_array_almost_equal
 from gplearn.skutils.testing import assert_raises
 from gplearn.skutils.validation import check_random_state
@@ -934,6 +935,37 @@ def test_validate_functions():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_indices():
+    """Check that indices are stable when generated on the fly."""
+
+    params = {'function_set': [add2, sub2, mul2, div2],
+              'arities': {2: [add2, sub2, mul2, div2]},
+              'init_depth': (2, 6),
+              'init_method': 'half and half',
+              'n_features': 10,
+              'const_range': (-1.0, 1.0),
+              'metric': 'mean absolute error',
+              'p_point_replace': 0.05,
+              'parsimony_coefficient': 0.1}
+    random_state = check_random_state(415)
+    test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+
+    assert_raises(ValueError, gp.get_all_indices)
+    assert_raises(ValueError, gp._indices)
+
+    def get_indices_property():
+        return gp.indices_
+
+    assert_raises(ValueError, get_indices_property)
+
+    indices, _ = gp.get_all_indices(10, 7, random_state)
+
+    assert_array_equal(indices, gp.get_all_indices()[0])
+    assert_array_equal(indices, gp._indices())
+    assert_array_equal(indices, gp.indices_)
 
 
 if __name__ == "__main__":

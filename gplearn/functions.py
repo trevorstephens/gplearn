@@ -79,9 +79,7 @@ def make_function(function, name, arity):
         raise ValueError('name must be a string, got %s' % type(name))
 
     # Check output shape
-    args = []
-    for i in range(arity):
-        args.append(np.ones(10))
+    args = [np.ones(10) for _ in range(arity)]
     try:
         function(*args)
     except ValueError:
@@ -95,15 +93,11 @@ def make_function(function, name, arity):
                          'input vectors.' % name)
 
     # Check closure for zero & negative input arguments
-    args = []
-    for i in range(arity):
-        args.append(np.zeros(10))
+    args = [np.zeros(10) for _ in range(arity)]
     if not np.all(np.isfinite(function(*args))):
         raise ValueError('supplied function %s does not have closure against '
                          'zeros in argument vectors.' % name)
-    args = []
-    for i in range(arity):
-        args.append(-1 * np.ones(10))
+    args = [-1 * np.ones(10) for _ in range(arity)]
     if not np.all(np.isfinite(function(*args))):
         raise ValueError('supplied function %s does not have closure against '
                          'negatives in argument vectors.' % name)
