@@ -20,7 +20,6 @@ from scipy.stats import rankdata
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
-from sklearn.utils.random import sample_without_replacement
 
 from .skutils import _partition_estimators
 from .skutils.validation import check_random_state, NotFittedError
@@ -131,17 +130,19 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
             curr_sample_weight = np.ones((n_samples,))
         else:
             curr_sample_weight = sample_weight.copy()
+        oob_sample_weight = curr_sample_weight.copy()
 
-        not_indices = sample_without_replacement(
-            n_samples,
-            n_samples - max_samples,
-            random_state=random_state)
-        sample_counts = np.bincount(not_indices, minlength=n_samples)
-        indices = np.where(sample_counts == 0)[0]
+        indices, not_indices = program.get_all_indices(n_samples,
+                                                       max_samples,
+                                                       random_state)
+
         curr_sample_weight[not_indices] = 0
+        oob_sample_weight[indices] = 0
 
         program.raw_fitness_ = program.raw_fitness(X, y, curr_sample_weight)
-        program.indices_ = indices
+        if max_samples < n_samples:
+            # Calculate OOB fitness
+            program.oob_fitness_ = program.raw_fitness(X, y, oob_sample_weight)
 
         programs.append(program)
 
@@ -207,10 +208,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                           gen=None,
                           population=None,
                           fitness=None,
-                          length=None,
-                          X=None,
-                          y=None,
-                          sample_weight=None):
+                          length=None):
         """A report of the progress of the evolution process.
 
         Parameters
@@ -229,16 +227,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         length : list
             The current population's lengths.
-
-        X : {array-like}, shape = [n_samples, n_features]
-            Training vectors, where n_samples is the number of samples and
-            n_features is the number of features.
-
-        y : array-like, shape = [n_samples]
-            Target values.
-
-        sample_weight : array-like, shape = [n_samples], optional
-            Weights applied to individual samples.
         """
         if start_time is None:
             print('%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
@@ -265,14 +253,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
             oob_fitness = 'N/A'
             if self.max_samples < 1.0:
-                # Calculate OOB fitness
-                if sample_weight is None:
-                    curr_sample_weight = np.ones(y.shape)
-                else:
-                    curr_sample_weight = sample_weight.copy()
-                curr_sample_weight[best_program.indices_] = 0
-                oob_fitness = best_program.raw_fitness(X, y,
-                                                       curr_sample_weight)
+                oob_fitness = best_program.oob_fitness_
 
             print('%4s %8s %16s %8s %16s %16s %10s' %
                   (gen,
@@ -432,9 +413,22 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
             self._programs.append(population)
 
+            # Remove old programs that didn't make it into the new population.
+            for old_gen in np.arange(gen, 0, -1):
+                indices = []
+                for program in self._programs[old_gen]:
+                    if program is not None:
+                        for idx in program.parents:
+                            if 'idx' in idx:
+                                indices.append(program.parents[idx])
+                indices = set(indices)
+                for idx in range(self.population_size):
+                    if idx not in indices:
+                        self._programs[old_gen - 1][idx] = None
+
             if self.verbose:
                 self._verbose_reporter(start_time, gen, population, fitness,
-                                       length, X, y, sample_weight)
+                                       length)
 
             # Check for early stopping
             if self.metric in ('pearson', 'spearman'):
