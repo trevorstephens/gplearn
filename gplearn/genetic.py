@@ -455,9 +455,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 evaluation = np.apply_along_axis(rankdata, 1, evaluation)
 
             # Iteratively remove the worst individual of the worst pair
-            old_settings = np.seterr(divide='ignore', invalid='ignore')
-            correlations = np.abs(np.corrcoef(evaluation))
-            np.seterr(**old_settings)
+            with np.errstate(divide='ignore', invalid='ignore'):
+                correlations = np.abs(np.corrcoef(evaluation))
             np.fill_diagonal(correlations, 0.)
             components = list(range(self.hall_of_fame))
             indices = list(range(self.hall_of_fame))

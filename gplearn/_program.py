@@ -321,9 +321,6 @@ class _Program(object):
         y_hats : array-like, shape = [n_samples]
             The result of executing the program on X.
         """
-        # Stop warnings being raised for protected division, etc
-        old_settings = np.seterr(divide='ignore', invalid='ignore')
-
         # Check for single-node programs
         node = self.program[0]
         if isinstance(node, float):
@@ -352,14 +349,12 @@ class _Program(object):
                     apply_stack.pop()
                     apply_stack[-1].append(intermediate_result)
                 else:
-                    np.seterr(**old_settings)
                     # Protect for rmsle:
                     if self.metric == 'rmsle':
                         intermediate_result[intermediate_result <= 1e-16] = 0
                     return intermediate_result
 
         # We should never get here
-        np.seterr(**old_settings)
         return None
 
     def get_all_indices(self, n_samples=None, max_samples=None,

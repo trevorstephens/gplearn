@@ -15,13 +15,13 @@ from scipy.stats import rankdata
 
 def weighted_pearson(x1, x2, w):
     """Calculate the weighted Pearson correlation coefficient."""
-    old_settings = np.seterr(divide='ignore', invalid='ignore')
-    x1_demean = x1 - np.average(x1, weights=w)
-    x2_demean = x2 - np.average(x2, weights=w)
-    corr = ((np.sum(w * x1_demean * x2_demean) / np.sum(w)) /
-            np.sqrt((np.sum(w * x1_demean ** 2) * np.sum(w * x2_demean ** 2)) /
-                    (np.sum(w) ** 2)))
-    np.seterr(**old_settings)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        x1_demean = x1 - np.average(x1, weights=w)
+        x2_demean = x2 - np.average(x2, weights=w)
+        corr = ((np.sum(w * x1_demean * x2_demean) / np.sum(w)) /
+                np.sqrt((np.sum(w * x1_demean ** 2) *
+                         np.sum(w * x2_demean ** 2)) /
+                        (np.sum(w) ** 2)))
     if np.isfinite(corr):
         return np.abs(corr)
     return 0
