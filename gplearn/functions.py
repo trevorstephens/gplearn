@@ -57,7 +57,7 @@ def make_function(function, name, arity):
     Parameters
     ----------
     function : callable
-        A function with signature function(x1, *args) that returns a Numpy
+        A function with signature `function(x1, *args)` that returns a Numpy
         array of the same shape as its arguments.
 
     name : str
@@ -65,7 +65,7 @@ def make_function(function, name, arity):
         and its visualizations.
 
     arity : int
-        The number of arguments that the ``function`` takes.
+        The number of arguments that the `function` takes.
     """
     if not isinstance(arity, int):
         raise ValueError('arity must be an int, got %s' % type(arity))
