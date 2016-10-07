@@ -32,15 +32,16 @@ class _Fitness(object):
         vector, `y_pred` is the predicted values from the genetic program, and
         sample_weight is the sample_weight vector.
 
-    sign : float
+    greater_is_better : bool
         Whether a higher value from `function` indicates a better fit. In
         general this would be False for metrics indicating the magnitude of
         the error, and True for metrics indicating the quality of fit.
     """
 
-    def __init__(self, function, sign):
+    def __init__(self, function, greater_is_better):
         self.function = function
-        self.sign = sign
+        self.greater_is_better = greater_is_better
+        self.sign = 1 if greater_is_better else -1
 
     def __call__(self, *args):
         return self.function(*args)
@@ -79,9 +80,7 @@ def make_fitness(function, greater_is_better):
 
     # TODO: Check higher_is_better, output is float, etc
 
-    sign = 1 if greater_is_better else -1
-
-    return _Fitness(function, sign)
+    return _Fitness(function, greater_is_better)
 
 
 def _weighted_pearson(y, y_pred, w):
@@ -120,12 +119,6 @@ def _root_mean_square_error(y, y_pred, w):
     return np.sqrt(np.average(((y_pred - y) ** 2), weights=w))
 
 
-def _root_mean_square_log_error(y, y_pred, w):
-    """Calculate the root mean square logarithmic error."""
-    return np.sqrt(np.average((np.log(y_pred + 1) - np.log(y + 1)) ** 2,
-                              weights=w))
-
-
 weighted_pearson = make_fitness(function=_weighted_pearson,
                                 greater_is_better=True)
 weighted_spearman = make_fitness(function=_weighted_spearman,
@@ -136,12 +129,9 @@ mean_square_error = make_fitness(function=_mean_square_error,
                                  greater_is_better=False)
 root_mean_square_error = make_fitness(function=_root_mean_square_error,
                                       greater_is_better=False)
-root_mean_square_log_error = make_fitness(function=_root_mean_square_log_error,
-                                          greater_is_better=False)
 
 _fitness_map = {'pearson': weighted_pearson,
                 'spearman': weighted_spearman,
                 'mean absolute error': mean_absolute_error,
                 'mse': mean_square_error,
-                'rmse': root_mean_square_error,
-                'rmsle': root_mean_square_log_error}
+                'rmse': root_mean_square_error}

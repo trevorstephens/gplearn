@@ -25,6 +25,7 @@ from .skutils import _partition_estimators
 from .skutils.validation import check_random_state, NotFittedError
 from .skutils.validation import check_X_y, check_array
 
+from .fitness import _fitness_map, _Fitness
 from .functions import _function_map, _Function
 
 from ._program import _Program
@@ -44,7 +45,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     init_depth = params['init_depth']
     init_method = params['init_method']
     const_range = params['const_range']
-    metric = params['metric']
+    metric = params['_metric']
     parsimony_coefficient = params['parsimony_coefficient']
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
@@ -56,7 +57,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
         """Find the fittest individual from a sub-population."""
         contenders = random_state.randint(0, len(parents), tournament_size)
         fitness = [parents[p].fitness_ for p in contenders]
-        if metric in ('pearson', 'spearman'):
+        if metric.greater_is_better:
             parent_index = contenders[np.argmax(fitness)]
         else:
             parent_index = contenders[np.argmin(fitness)]
@@ -246,7 +247,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
             # Find the current generation's best individual
-            if self.metric in ('pearson', 'spearman'):
+            if self._metric.greater_is_better:
                 best_program = population[np.argmax(fitness)]
             else:
                 best_program = population[np.argmin(fitness)]
@@ -327,14 +328,18 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             self._arities[arity] = self._arities.get(arity, [])
             self._arities[arity].append(function)
 
-        if isinstance(self, RegressorMixin):
-            if self.metric not in ('mean absolute error',
-                                   'mse', 'rmse', 'rmsle'):
+        if isinstance(self.metric, _Fitness):
+            self._metric = self.metric
+        elif isinstance(self, RegressorMixin):
+            if self.metric not in ('mean absolute error', 'mse', 'rmse'):
                 raise ValueError('Unsupported metric: %s' % self.metric)
-
-        if isinstance(self, TransformerMixin):
+            else:
+                self._metric = _fitness_map[self.metric]
+        elif isinstance(self, TransformerMixin):
             if self.metric not in ('pearson', 'spearman'):
                 raise ValueError('Unsupported metric: %s' % self.metric)
+            else:
+                self._metric = _fitness_map[self.metric]
 
         self._method_probs = np.array([self.p_crossover,
                                        self.p_subtree_mutation,
@@ -364,6 +369,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              'order: (min_depth, max_depth).')
 
         params = self.get_params()
+        params['_metric'] = self._metric
         params['function_set'] = self._function_set
         params['arities'] = self._arities
         params['method_probs'] = self._method_probs
@@ -431,7 +437,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                                        length)
 
             # Check for early stopping
-            if self.metric in ('pearson', 'spearman'):
+            if self._metric.greater_is_better:
                 best_fitness = fitness[np.argmax(fitness)]
                 if best_fitness >= self.stopping_criteria:
                     break
@@ -551,8 +557,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
 
         - 'mean absolute error',
         - 'mse' for mean squared error,
-        - 'rmse' for root mean squared error, and
-        - 'rmsle' for root mean squared logarithmic error.
+        - 'rmse' for root mean squared error.
 
     parsimony_coefficient : float or "auto", optional (default=0.001)
         This constant penalizes large programs by adjusting their fitness to

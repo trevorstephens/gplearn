@@ -16,7 +16,6 @@ from copy import deepcopy
 from sklearn.utils.random import sample_without_replacement
 
 from .functions import _Function
-from .fitness import weighted_pearson, weighted_spearman
 from .skutils.validation import check_random_state
 
 
@@ -58,9 +57,8 @@ class _Program(object):
     const_range : tuple of two floats
         The range of constants to include in the formulas.
 
-    metric : str
-        The name of the raw fitness metric. Available options include
-        'mean absolute error', 'mse', 'rmse' and 'rmsle'.
+    metric : _Fitness object
+        The raw fitness metric.
 
     p_point_replace : float
         The probability that any given node will be mutated during point
@@ -349,9 +347,6 @@ class _Program(object):
                     apply_stack.pop()
                     apply_stack[-1].append(intermediate_result)
                 else:
-                    # Protect for rmsle:
-                    if self.metric == 'rmsle':
-                        intermediate_result[intermediate_result <= 1e-16] = 0
                     return intermediate_result
 
         # We should never get here
@@ -428,32 +423,7 @@ class _Program(object):
             The raw fitness of the program.
         """
         y_pred = self.execute(X)
-
-        if self.metric == 'mean absolute error':
-            raw_fitness = np.average(np.abs(y_pred - y),
-                                     weights=sample_weight)
-
-        elif self.metric == 'mse':
-            raw_fitness = np.average(((y_pred - y) ** 2),
-                                     weights=sample_weight)
-
-        elif self.metric == 'rmse':
-            raw_fitness = np.sqrt(np.average(((y_pred - y) ** 2),
-                                             weights=sample_weight))
-
-        elif self.metric == 'rmsle':
-            raw_fitness = np.sqrt(np.average((np.log(y_pred + 1) -
-                                              np.log(y + 1)) ** 2,
-                                             weights=sample_weight))
-
-        elif self.metric == 'pearson':
-            raw_fitness = weighted_pearson(y_pred, y, sample_weight)
-
-        elif self.metric == 'spearman':
-            raw_fitness = weighted_spearman(y_pred, y, sample_weight)
-
-        else:
-            raise ValueError('Unsupported metric: %s' % self.metric)
+        raw_fitness = self.metric(y, y_pred, sample_weight)
 
         return raw_fitness
 
@@ -473,10 +443,8 @@ class _Program(object):
         """
         if parsimony_coefficient is None:
             parsimony_coefficient = self.parsimony_coefficient
-        penalty = parsimony_coefficient * len(self.program)
-        if self.metric in ('pearson', 'spearman'):
-            penalty *= -1
-        return self.raw_fitness_ + penalty
+        penalty = parsimony_coefficient * len(self.program) * self.metric.sign
+        return self.raw_fitness_ - penalty
 
     def get_subtree(self, random_state, program=None):
         """Get a random subtree from the program.
