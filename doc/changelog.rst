@@ -26,6 +26,11 @@ Version 0.2.0
   the current population through genetic operations. This reduces the number of
   programs stored in the estimator which helps for large populations, high
   number of generations as well as for runs with significant bloat.
+- Allow users to define their own fitness measures. Supported by the
+  :func:`fitess.make_fitness()` factory function. Using this a user may define
+  any metric by which to measure the fitness of a program to optimize any
+  problem. This also required modifying the API slightly with the deprecation
+  of the `rmsle` error measure for the :class:`genetic.SymbolicRegressor`.
 
 
 Version 0.1.0

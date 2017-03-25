@@ -12,6 +12,7 @@ import numpy as np
 
 from scipy.stats import rankdata
 from sklearn.externals import six
+import numbers
 
 __all__ = ['make_fitness']
 
@@ -71,14 +72,16 @@ def make_fitness(function, greater_is_better):
         the error, and True for metrics indicating the quality of fit.
     """
     if not isinstance(greater_is_better, bool):
-        raise ValueError('higher_is_better must be bool, got %s'
+        raise ValueError('greater_is_better must be bool, got %s'
                          % type(greater_is_better))
     if six.get_function_code(function).co_argcount != 3:
-            raise ValueError('function requires 3 arguments (y, y_pred, w),'
-                             ' got %d.'
-                             % six.get_function_code(function).co_argcount)
-
-    # TODO: Check higher_is_better, output is float, etc
+        raise ValueError('function requires 3 arguments (y, y_pred, w),'
+                         ' got %d.'
+                         % six.get_function_code(function).co_argcount)
+    if not isinstance(function(np.array([1, 1]),
+                      np.array([2, 2]),
+                      np.array([1, 1])), numbers.Number):
+        raise ValueError('function must return a numeric.')
 
     return _Fitness(function, greater_is_better)
 
@@ -94,7 +97,7 @@ def _weighted_pearson(y, y_pred, w):
                         (np.sum(w) ** 2)))
     if np.isfinite(corr):
         return np.abs(corr)
-    return 0
+    return 0.
 
 
 def _weighted_spearman(y, y_pred, w):

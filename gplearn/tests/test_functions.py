@@ -39,10 +39,12 @@ def test_validate_function():
 
     # Check closure for negatives test
     def _unprotected_sqrt(x1):
-        return np.sqrt(x1)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            return np.sqrt(x1)
     assert_raises(ValueError, make_function, _unprotected_sqrt, 'sqrt', 1)
 
     # Check closure for zeros test
     def _unprotected_div(x1, x2):
-        return np.divide(x1, x2)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            return np.divide(x1, x2)
     assert_raises(ValueError, make_function, _unprotected_div, 'div', 2)
