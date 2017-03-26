@@ -282,5 +282,41 @@ customized functions, for example:
 .. image:: images/ex3_fig1.png
     :align: center
 
+Example 4: Customizing Your Fitness Measure
+-------------------------------------------
+
+You can easily create your own fitness measure to have your programs evolve to
+optimize whatever metric you need. This is done using the
+:func:`fitness.make_fitness()` factory function. Let's say we wish to measure
+our programs using MAPE (mean absolute percentage error). First we would need
+to implement a function that returns this value. The function must take the
+arguments `y` (the actual target values), `y_pred` (the predicted values from
+the program) and `w` (the weights to apply to each sample) to work. For MAPE, a
+possible solution is:
+
+    def _mape(y, y_pred, w):
+        """Calculate the mean absolute percentage error."""
+        diffs = np.abs(np.divide((np.maximum(0.001, y) - np.maximum(0.001, y_pred)),
+                                 np.maximum(0.001, y)))
+        return 100. * np.average(diffs, weights=w)
+
+Division by zero must be protected for a metric like MAPE as it is generally
+used for cases where the target is positive and non-zero (like forecasting
+demand). We need to keep in mind that the programs begin by being totally
+naive, so a negative return value is possible. The `np.maximum` function will
+protect against these cases, though you may wish to treat this differently
+depending on your specific use case.
+
+We then create a fitness measure for use in our evolution by using the
+:func:`fitness.make_fitness()` factory function as follows:
+
+    mape = make_fitness(_mape, greater_is_better=False)
+
+This fitness measure can now be used to evolve a program that optimizes for
+your specific needs by passing the new fitness object to the `metric` parameter
+when creating an estimator:
+
+    est = SymbolicRegressor(metric=mape, verbose=1)
+
 Next up, :ref:`explore the full API reference <reference>` or just skip ahead
 :ref:`install the package <installation>`!
