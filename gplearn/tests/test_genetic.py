@@ -17,6 +17,7 @@ from gplearn.fitness import _fitness_map
 from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, neg1,
                                inv1, max2, min2, sin1, cos1, tan1)
 from gplearn.functions import _Function
+from gplearn.fitness import make_fitness
 from scipy.stats import pearsonr, spearmanr
 
 from sklearn.externals.six.moves import StringIO
@@ -932,6 +933,22 @@ def test_validate_functions():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_validate_fitness():
+    """Check that custom fitness functions are accepted"""
+
+    def _custom_metric(y, y_pred, w):
+        """Calculate the root mean square error."""
+        return np.sqrt(np.average(((y_pred - y) ** 2), weights=w))
+
+    custom_metric = make_fitness(function=_custom_metric,
+                                 greater_is_better=True)
+
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+        # These should be fine
+        est = Symbolic(generations=2, random_state=0, metric=custom_metric)
+        est.fit(boston.data, boston.target)
 
 
 def test_indices():
