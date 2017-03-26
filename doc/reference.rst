@@ -21,3 +21,4 @@ User-Defined Functions
 ----------------------
 
 .. autofunction:: gplearn.functions.make_function
+.. autofunction:: gplearn.fitness.make_fitness

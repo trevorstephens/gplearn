@@ -13,9 +13,11 @@ import sys
 from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
 from gplearn.fitness import weighted_pearson, weighted_spearman
 from gplearn._program import _Program
+from gplearn.fitness import _fitness_map
 from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, neg1,
                                inv1, max2, min2, sin1, cos1, tan1)
 from gplearn.functions import _Function
+from gplearn.fitness import make_fitness
 from scipy.stats import pearsonr, spearmanr
 
 from sklearn.externals.six.moves import StringIO
@@ -305,18 +307,14 @@ def test_all_metrics():
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
     sample_weight = np.ones(5)
-    expected = [1.48719809776, 1.82389179833, 1.76013763179, 0.98663772258,
-                -0.2928200724, -0.5]
+    expected = [1.48719809776, 1.82389179833, 1.76013763179, -0.2928200724,
+                -0.5]
     result = []
-    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle',
-              'pearson', 'spearman']:
-        gp.metric = m
+    for m in ['mean absolute error', 'mse', 'rmse', 'pearson', 'spearman']:
+        gp.metric = _fitness_map[m]
         gp.raw_fitness_ = gp.raw_fitness(X, y, sample_weight)
         result.append(gp.fitness())
     assert_array_almost_equal(result, expected)
-    # And check a fake one
-    gp.metric = 'the larch'
-    assert_raises(ValueError, gp.raw_fitness, X, y, sample_weight)
 
 
 def test_get_subtree():
@@ -440,7 +438,7 @@ def test_program_input_validation():
     assert_raises(ValueError, est.fit, boston.data, boston.target)
 
     # Check regressor metrics
-    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle']:
+    for m in ['mean absolute error', 'mse', 'rmse']:
         est = SymbolicRegressor(generations=2, metric=m)
         est.fit(boston.data, boston.target)
     # And check the transformer metrics as well as a fake one
@@ -452,7 +450,7 @@ def test_program_input_validation():
         est = SymbolicTransformer(generations=2, metric=m)
         est.fit(boston.data, boston.target)
     # And check the regressor metrics as well as a fake one
-    for m in ['mean absolute error', 'mse', 'rmse', 'rmsle', 'the larch']:
+    for m in ['mean absolute error', 'mse', 'rmse', 'the larch']:
         est = SymbolicTransformer(generations=2, metric=m)
         assert_raises(ValueError, est.fit, boston.data, boston.target)
 
@@ -935,6 +933,22 @@ def test_validate_functions():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_validate_fitness():
+    """Check that custom fitness functions are accepted"""
+
+    def _custom_metric(y, y_pred, w):
+        """Calculate the root mean square error."""
+        return np.sqrt(np.average(((y_pred - y) ** 2), weights=w))
+
+    custom_metric = make_fitness(function=_custom_metric,
+                                 greater_is_better=True)
+
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+        # These should be fine
+        est = Symbolic(generations=2, random_state=0, metric=custom_metric)
+        est.fit(boston.data, boston.target)
 
 
 def test_indices():
