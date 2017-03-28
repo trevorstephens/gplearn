@@ -318,5 +318,27 @@ when creating an estimator:
 
     est = SymbolicRegressor(metric=mape, verbose=1)
 
+.. currentmodule:: gplearn.genetic
+
+Example 5: Continuing Evolution With warm_start:
+------------------------------------------------
+
+If you are evolving a lot of generations in your training session, but find
+that you need to keep evolving more, you can use the `warm_start` parameter in
+both :class:`SymbolicRegressor` and :class:`SymbolicTransformer` to continue
+evolution beyond your original estimates. To do so, start evolution as usual:
+
+    est = SymbolicRegressor(generations=10)
+    est.fit(X, y)
+
+If you then need to add further generations, simply change the `generations`
+and `warm_start` attributes and fit again:
+
+    est.set_params(generations=20, warm_start=True)
+    est.fit(X, y)
+
+Evolution will then continue for a further 10 generations without losing the
+programs that had been previously trained.
+
 Next up, :ref:`explore the full API reference <reference>` or just skip ahead
 :ref:`install the package <installation>`!

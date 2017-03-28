@@ -34,6 +34,7 @@ from gplearn.skutils.testing import assert_equal, assert_almost_equal
 from gplearn.skutils.testing import assert_array_equal
 from gplearn.skutils.testing import assert_array_almost_equal
 from gplearn.skutils.testing import assert_raises
+from gplearn.skutils.testing import assert_warns
 from gplearn.skutils.validation import check_random_state
 
 # load the boston dataset and randomly permute it
@@ -980,6 +981,33 @@ def test_indices():
     assert_array_equal(indices, gp.get_all_indices()[0])
     assert_array_equal(indices, gp._indices())
     assert_array_equal(indices, gp.indices_)
+
+
+def test_warm_start():
+    """Check the warm_start functionality works as expected."""
+
+    est = SymbolicRegressor(generations=20, random_state=415)
+    est.fit(boston.data, boston.target)
+    cold_fitness = est._program.fitness_
+    cold_program = est._program.__str__()
+
+    # Check fitting fewer generations raises error
+    est.set_params(generations=5, warm_start=True)
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+    # Check fitting the same number of generations warns
+    est.set_params(generations=20, warm_start=True)
+    assert_warns(UserWarning, est.fit, boston.data, boston.target)
+
+    # Check warm starts get the same result
+    est = SymbolicRegressor(generations=10, random_state=415)
+    est.fit(boston.data, boston.target)
+    est.set_params(generations=20, warm_start=True)
+    est.fit(boston.data, boston.target)
+    warm_fitness = est._program.fitness_
+    warm_program = est._program.__str__()
+    assert_almost_equal(cold_fitness, warm_fitness)
+    assert_equal(cold_program, warm_program)
 
 
 if __name__ == "__main__":
