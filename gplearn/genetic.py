@@ -388,8 +388,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             raise ValueError('generations=%d must be larger or equal to '
                              'len(_programs)=%d when warm_start==True'
                              % (self.generations, len(self._programs)))
-
         elif n_more_generations == 0:
+            fitness = [program.raw_fitness_ for program in self._programs[-1]]
             warn("Warm-start fitting without increasing n_estimators does not "
                  "fit new trees.")
 
