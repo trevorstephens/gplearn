@@ -318,9 +318,6 @@ when creating an estimator:
 
     est = SymbolicRegressor(metric=mape, verbose=1)
 
-Next up, :ref:`explore the full API reference <reference>` or just skip ahead
-:ref:`install the package <installation>`!
-
 .. currentmodule:: gplearn.genetic
 
 Example 5: Continuing Evolution With warm_start:
@@ -342,3 +339,6 @@ and `warm_start` attributes and fit again:
 
 Evolution will then continue for a further 10 generations without losing the
 programs that had been previously trained.
+
+Next up, :ref:`explore the full API reference <reference>` or just skip ahead
+:ref:`install the package <installation>`!
