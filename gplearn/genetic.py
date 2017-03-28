@@ -14,6 +14,7 @@ import itertools
 
 from abc import ABCMeta, abstractmethod
 from time import time
+from warnings import warn
 
 from scipy.stats import rankdata
 
@@ -178,6 +179,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 warm_start=False,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -200,6 +202,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.p_point_mutation = p_point_mutation
         self.p_point_replace = p_point_replace
         self.max_samples = max_samples
+        self.warm_start = warm_start
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
@@ -374,14 +377,34 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         params['arities'] = self._arities
         params['method_probs'] = self._method_probs
 
-        self._programs = []
+        if not self.warm_start or not hasattr(self, "_programs"):
+            # Free allocated memory, if any
+            self._programs = []
+
+        prior_generations = len(self._programs)
+        n_more_generations = self.generations - prior_generations
+
+        if n_more_generations < 0:
+            raise ValueError('generations=%d must be larger or equal to '
+                             'len(_programs)=%d when warm_start==True'
+                             % (self.generations, len(self._programs)))
+
+        elif n_more_generations == 0:
+            warn("Warm-start fitting without increasing n_estimators does not "
+                 "fit new trees.")
+
+        if self.warm_start:
+            # Generate and discard seeds that would have been produced on the
+            # initial fit call.
+            for i in range(len(self._programs)):
+                _ = random_state.randint(MAX_INT, size=self.population_size)
 
         if self.verbose:
             # Print header fields
             self._verbose_reporter()
             start_time = time()
 
-        for gen in range(self.generations):
+        for gen in range(prior_generations, self.generations):
 
             if gen == 0:
                 parents = None
@@ -614,6 +637,11 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
+    warm_start : bool, optional (default=False)
+        When set to ``True``, reuse the solution of the previous call to fit
+        and add more generations to the evolution, otherwise, just fit a new
+        evolution.
+
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
         of jobs is set to the number of cores.
@@ -655,6 +683,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 warm_start=False,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -675,6 +704,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
             max_samples=max_samples,
+            warm_start=warm_start,
             n_jobs=n_jobs,
             verbose=verbose,
             random_state=random_state)
@@ -860,6 +890,11 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
+    warm_start : bool, optional (default=False)
+        When set to ``True``, reuse the solution of the previous call to fit
+        and add more generations to the evolution, otherwise, just fit a new
+        evolution.
+
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
         of jobs is set to the number of cores.
@@ -903,6 +938,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 warm_start=False,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -925,6 +961,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
             max_samples=max_samples,
+            warm_start=warm_start,
             n_jobs=n_jobs,
             verbose=verbose,
             random_state=random_state)
