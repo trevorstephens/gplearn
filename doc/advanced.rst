@@ -5,8 +5,8 @@ Advanced Use
 
 .. currentmodule:: gplearn
 
-Saving You Programs
--------------------
+Saving Your Programs
+--------------------
 
 If you want to save your program for later use, you can use the `pickle` or
 `cPickle` libraries to achieve this:
