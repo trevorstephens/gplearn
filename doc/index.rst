@@ -77,6 +77,7 @@ Contents:
    intro
    examples
    reference
+   advanced
    installation
    contributing
    changelog
