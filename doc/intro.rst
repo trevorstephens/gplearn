@@ -132,13 +132,13 @@ This could then be evaluated recursively, starting from the left and holding
 onto a stack which keeps track of how much cumulative arity needs to be
 satisfied by the terminal nodes.
 
-Under the hood, gplearn's representation is similar to this, and uses Python
+Under the hood, ``gplearn``'s representation is similar to this, and uses Python
 lists to store the functions and terminals. Constants are represented by
 floating point numbers, variables by integers and functions by a custom
-`Function` object.
+``Function`` object.
 
-In gplearn, the available function set is controlled by an arguments that is
-set when initializing an estimator. The default set is the arithmetic
+In ``gplearn``, the available function set is controlled by an arguments that
+is set when initializing an estimator. The default set is the arithmetic
 operators: addition, subtraction, division and multiplication. But you can also
 add in some transformers, comparison functions or trigonometric identities that
 are all built-in. These strings are put into the ``function_set`` argument to
@@ -161,9 +161,13 @@ include them in your programs.
 
 You should chose whether these functions are valid for your program.
 
-You can also set up your own functions by using the ``functions.make_function``
+.. currentmodule:: gplearn
+
+You can also set up your own functions by using the :func:`functions.make_function`
 factory function which will create a gp-compatible function node that can be
-incorporated into your programs. See :ref:`an examples here <example>`.
+incorporated into your programs. See :ref:`advanced use here <advanced>`.
+
+.. currentmodule:: gplearn.genetic
 
 Fitness
 -------
@@ -176,15 +180,15 @@ the same thing, and as with those other machine learning terms, in GP we have
 to know whether the metric needs to be maximized or minimized in order to be
 able to select the best program in a group.
 
-In gplearn, several metrics are available by setting the ``metric`` parameter.
+In ``gplearn``, several metrics are available by setting the ``metric``
+parameter.
 
 For the :class:`SymbolicRegressor` several common error metrics are available
 and the evolution process seeks to minimize them. The default is the magnitude
 of the error, 'mean absolute error'. Other metrics available are:
 
-    - 'mse' for mean squared error,
-    - 'rmse' for root mean squared error, and
-    - 'rmsle' for root mean squared logarithmic error.
+    - 'mse' for mean squared error, and
+    - 'rmse' for root mean squared error.
 
 For the :class:`SymbolicTransformer`, where indirect optimization is sought,
 the metrics are based on correlation between the program's output and the
@@ -194,17 +198,20 @@ target, these are maximized by the evolution process:
       default), and
     - 'spearman' for Spearman's rank-order correlation coefficient.
 
-If you have any requests for additional metrics to optimize, let me know
-through the bug tracker and I'll do what I can to include popular ones in the
-next release.
+.. currentmodule:: gplearn
+
+You can also set up your own fitness measures by using the
+:func:`fitness.make_fitness` factory function which will create a
+gp-compatible fitness function that can be used to evaluate your programs. See
+:ref:`advanced use here <advanced>`.
 
 Evaluating the fitness of all the programs in a population is probably the most
-expensive part of GP. In gplearn, you can parallelize this computation by using
-the ``n_jobs`` parameter to choose how many cores should work on it at once. If
-your dataset is small, the overhead of splitting the work over several cores is
-probably more than the benefit of the reduced work per core. This is because
-the work is parallelized per generation, so use this only if your dataset is
-large and the fitness calculation takes a long time.
+expensive part of GP. In ``gplearn``, you can parallelize this computation by
+using the ``n_jobs`` parameter to choose how many cores should work on it at
+once. If your dataset is small, the overhead of splitting the work over several
+cores is probably more than the benefit of the reduced work per core. This is
+because the work is parallelized per generation, so use this only if your
+dataset is large and the fitness calculation takes a long time.
 
 Closure
 -------
@@ -223,7 +230,7 @@ Functions like division must be modified to be able to accept any input
 argument that could turn up to return a valid number at evaluation so that
 nodes higher up the tree can successfully evaluate their output.
 
-In gplearn, several protected functions are used:
+In ``gplearn``, several protected functions are used:
 
     - division, if the denominator lies between -0.001 and 0.001, returns
       1.0.
@@ -238,8 +245,8 @@ program, a valid numerical output can be guaranteed, even if we must sacrifice
 some interpretability to get there.
 
 If you define your own functions, you will need to guard for this as well. The
-``functions.make_function`` factory function will perform some basic checks on
-your function to ensure it will guard against the most common invalid
+:func:`functions.make_function` factory function will perform some basic checks
+on your function to ensure it will guard against the most common invalid
 operations with negative or near-zero operations.
 
 Sufficiency
@@ -334,7 +341,7 @@ Selection
 ---------
 
 Now that we have a population of programs, we need to decide which ones will
-get to evolve into the next generation. In gplearn this is done through
+get to evolve into the next generation. In ``gplearn`` this is done through
 tournaments. From the population, a smaller subset is selected at random to
 compete, the size of which is controlled by the ``tournament_size`` parameter.
 The fittest individual in this subset is then selected to move on to the next
@@ -353,7 +360,8 @@ Evolution
 As discussed in the selection section, we use the fitness measure to find the
 fittest individual in the tournament to survive. But this individual does not
 just graduate unaltered to the next generation, genetic operations are
-performed on them. Several common genetic operations are supported by gplearn.
+performed on them. Several common genetic operations are supported by
+``gplearn``.
 
 **Crossover**
 
@@ -449,14 +457,14 @@ grow larger and larger with no significant improvement in fitness. This is
 known as bloat and leads to longer and longer computation times with little
 benefit to the solution.
 
-Bloat can be fought in gplearn in several ways. The principle weapon is using a
-penalized fitness measure during selection where the fitness of an individual
-is made worse the larger it is. In this way, should there be two programs with
-identical fitness competing in a tournament, the smaller program will be
-selected and the larger one discarded. The ``parsimony_coefficient`` parameter
-controls this penalty and may need to be experimented with to get good
-performance. Too large a penalty and your smallest programs will tend to be
-selected regardless of their actual performance on the data, too small and
+Bloat can be fought in ``gplearn`` in several ways. The principle weapon is
+using a penalized fitness measure during selection where the fitness of an
+individual is made worse the larger it is. In this way, should there be two
+programs with identical fitness competing in a tournament, the smaller program
+will be selected and the larger one discarded. The ``parsimony_coefficient``
+parameter controls this penalty and may need to be experimented with to get
+good performance. Too large a penalty and your smallest programs will tend to
+be selected regardless of their actual performance on the data, too small and
 bloat will continue unabated. The final winner of the evolution process is
 still chosen based on the unpenalized fitness, otherwise known as its raw
 fitness.
@@ -467,7 +475,7 @@ depending on the relationship between program fitness and size in the
 population and will change from generation to generation.
 
 Another method to fight bloat is by using genetic operations that make programs
-smaller. gplearn has hoist mutation which removes parts of programs during
+smaller. ``gplearn`` has hoist mutation which removes parts of programs during
 evolution. It can be controlled by the  ``p_hoist_mutation`` parameter.
 
 Finally, you could increase the amount of subsampling performed on your data to
@@ -477,6 +485,8 @@ bonus, if you choose to subsample, you also get to see the “out of bag” fitn
 of the best program in the verbose reporter (activated by setting
 ``verbose=1``). Hopefully this is pretty close to the in-sample fitness that is
 also reported.
+
+.. currentmodule:: gplearn.genetic
 
 Transformer
 -----------
@@ -513,4 +523,6 @@ same correlation method, Pearson or Spearman, as used by the evolution process.
 
 Convinced?
 
-:ref:`See some examples <example>`, :ref:`explore the full API reference <reference>` and :ref:`install the package <installation>`!
+:ref:`See some examples <example>`,
+:ref:`explore the full API reference <reference>` and
+:ref:`install the package <installation>`!

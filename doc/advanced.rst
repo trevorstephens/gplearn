@@ -8,8 +8,8 @@ Advanced Use
 Saving Your Programs
 --------------------
 
-If you want to save your program for later use, you can use the `pickle` or
-`cPickle` libraries to achieve this::
+If you want to save your program for later use, you can use the ``pickle`` or
+``cPickle`` libraries to achieve this::
 
     import cPickle as pickle
 
@@ -76,9 +76,9 @@ optimize whatever metric you need. This is done using the
 :func:`fitness.make_fitness()` factory function. Let's say we wish to measure
 our programs using MAPE (mean absolute percentage error). First we would need
 to implement a function that returns this value. The function must take the
-arguments `y` (the actual target values), `y_pred` (the predicted values from
-the program) and `w` (the weights to apply to each sample) to work. For MAPE, a
-possible solution is::
+arguments ``y`` (the actual target values), ``y_pred`` (the predicted values
+from the program) and ``w`` (the weights to apply to each sample) to work. For
+MAPE, a possible solution is::
 
     def _mape(y, y_pred, w):
         """Calculate the mean absolute percentage error."""
@@ -89,7 +89,7 @@ possible solution is::
 Division by zero must be protected for a metric like MAPE as it is generally
 used for cases where the target is positive and non-zero (like forecasting
 demand). We need to keep in mind that the programs begin by being totally
-naive, so a negative return value is possible. The `np.maximum` function will
+naive, so a negative return value is possible. The ``np.maximum`` function will
 protect against these cases, though you may wish to treat this differently
 depending on your specific use case.
 
@@ -99,7 +99,7 @@ We then create a fitness measure for use in our evolution by using the
     mape = make_fitness(_mape, greater_is_better=False)
 
 This fitness measure can now be used to evolve a program that optimizes for
-your specific needs by passing the new fitness object to the `metric` parameter
+your specific needs by passing the new fitness object to the ``metric`` parameter
 when creating an estimator::
 
     est = SymbolicRegressor(metric=mape, verbose=1)
@@ -110,15 +110,15 @@ Continuing Evolution With warm_start
 ------------------------------------
 
 If you are evolving a lot of generations in your training session, but find
-that you need to keep evolving more, you can use the `warm_start` parameter in
+that you need to keep evolving more, you can use the ``warm_start`` parameter in
 both :class:`SymbolicRegressor` and :class:`SymbolicTransformer` to continue
 evolution beyond your original estimates. To do so, start evolution as usual::
 
     est = SymbolicRegressor(generations=10)
     est.fit(X, y)
 
-If you then need to add further generations, simply change the `generations`
-and `warm_start` attributes and fit again::
+If you then need to add further generations, simply change the ``generations``
+and ``warm_start`` attributes and fit again::
 
     est.set_params(generations=20, warm_start=True)
     est.fit(X, y)

@@ -3,11 +3,11 @@
 Installation
 ============
 
-`gplearn` requires a recent version of scikit-learn (which requires numpy and
+``gplearn`` requires a recent version of scikit-learn (which requires numpy and
 scipy). So first you will need to `follow their installation instructions <http://scikit-learn.org/dev/install.html>`_
 to get the dependencies.
 
-Now that you have scikit-learn installed, you can install gplearn using pip::
+Now that you have scikit-learn installed, you can install ``gplearn`` using pip::
 
     pip install gplearn
 
@@ -19,7 +19,7 @@ For the latest development version, first get the source from github::
 
     git clone https://github.com/trevorstephens/gplearn.git
 
-Then navigate into the local `gplearn` directory and simply run::
+Then navigate into the local ``gplearn`` directory and simply run::
 
     python setup.py install
 
