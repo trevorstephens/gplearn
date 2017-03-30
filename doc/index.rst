@@ -44,7 +44,7 @@ targets in order to predict new data. Each successive generation of programs is
 then evolved from the one that came before it by selecting the fittest
 individuals from the population to undergo genetic operations.
 
-``gplearn`` retains the familiar scikit-learn ``fit``/``predict``` API and
+``gplearn`` retains the familiar scikit-learn ``fit``/``predict`` API and
 works with the existing scikit-learn `pipeline <http://scikit-learn.org/stable/modules/pipeline.html>`_
 and `grid search <http://scikit-learn.org/stable/modules/grid_search.html>`_
 modules. The package attempts to squeeze a lot of functionality into a
