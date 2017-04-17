@@ -268,7 +268,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                    oob_fitness,
                    remaining_time))
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y, sample_weight=None, keep_past_generations=True):
         """Fit the Genetic Program according to X, y.
 
         Parameters
@@ -410,6 +410,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 parents = None
             else:
                 parents = self._programs[gen - 1]
+            
+            if keep_past_generations != True:
+                self._programs[gen-2] =[]
 
             # Parallel loop
             n_jobs, n_programs, starts = _partition_estimators(
