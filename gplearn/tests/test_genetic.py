@@ -1010,6 +1010,31 @@ def test_warm_start():
     assert_equal(cold_program, warm_program)
 
 
+def test_customizied_regressor_metrics():
+    """Check whether parameter greater_is_better works fine"""
+
+    x_data = rng.uniform(-1, 1, 100).reshape(50, 2)
+    y_true = x_data[:, 0] ** 2 + x_data[:, 1] ** 2
+
+    est_gp = SymbolicRegressor(metric='mean absolute error', stopping_criteria=0.000001, random_state=415,
+                               parsimony_coefficient=0.001, verbose=0, init_method='full', init_depth=(2, 4))
+    est_gp.fit(x_data, y_true)
+    formula = est_gp.__str__()
+    assert_equal("add(mul(X1, X1), mul(X0, X0))", formula, True)
+
+    def neg_mean_absolute_error(y, y_pred, sample_weight):
+        return -1 * mean_absolute_error(y, y_pred, sample_weight)
+
+    customizied_fitness = make_fitness(neg_mean_absolute_error, greater_is_better=True)
+
+    c_est_gp = SymbolicRegressor(metric=customizied_fitness, stopping_criteria=-0.000001, random_state=415,
+                                 parsimony_coefficient=0.001, verbose=0, init_method='full', init_depth=(2, 4))
+    c_est_gp.fit(x_data, y_true)
+    c_formula = c_est_gp.__str__()
+
+    assert_equal("add(mul(X1, X1), mul(X0, X0))", c_formula, True)
+
+
 if __name__ == "__main__":
     import nose
     nose.runmodule()

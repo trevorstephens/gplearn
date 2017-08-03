@@ -471,7 +471,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         if isinstance(self, RegressorMixin):
             # Find the best individual in the final generation
-            self._program = self._programs[-1][np.argmin(fitness)]
+            if self._metric.greater_is_better:
+                self._program = self._programs[-1][np.argmax(fitness)]
+            else:
+                self._program = self._programs[-1][np.argmin(fitness)]
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
