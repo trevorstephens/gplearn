@@ -28,14 +28,14 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 
-from gplearn.skutils.testing import assert_false, assert_true
-from gplearn.skutils.testing import assert_greater
-from gplearn.skutils.testing import assert_equal, assert_almost_equal
-from gplearn.skutils.testing import assert_array_equal
-from gplearn.skutils.testing import assert_array_almost_equal
-from gplearn.skutils.testing import assert_raises
-from gplearn.skutils.testing import assert_warns
-from gplearn.skutils.validation import check_random_state
+from sklearn.utils.testing import assert_false, assert_true
+from sklearn.utils.testing import assert_greater
+from sklearn.utils.testing import assert_equal, assert_almost_equal
+from sklearn.utils.testing import assert_array_equal
+from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_raises
+from sklearn.utils.testing import assert_warns
+from sklearn.utils.validation import check_random_state
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
