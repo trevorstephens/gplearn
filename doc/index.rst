@@ -59,7 +59,7 @@ but should also work for binary classification. Future versions of the package
 will expand this class to support more complicated multi-target classification
 problems, and much more is planned too.
 
-``gplearn`` is built on scikit-learn and a fairly recent copy (0.15.2+) is required
+``gplearn`` is built on scikit-learn and a fairly recent copy (0.18.1+) is required
 for installation. If you come across any issues in running or installing the
 package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
 
