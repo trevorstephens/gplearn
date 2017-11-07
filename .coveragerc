@@ -3,6 +3,5 @@ branch = True
 source = gplearn
 include = */gplearn/*
 omit =
-    */gplearn/skutils/*
     */gplearn/tests/*
     */gplearn/doc/*
