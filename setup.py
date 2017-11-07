@@ -45,7 +45,7 @@ setup_options = dict(
         '': ['LICENSE'],
         'gplearn': ['tests/*.py', 'skutils/*.py', 'skutils/tests/*.py'],
     },
-    install_requires=['scikit-learn>=0.15.2'],
+    install_requires=['scikit-learn>=0.18.1'],
     extras_require={'testing': ['nose'],
                     'docs': ['Sphinx']}
 )

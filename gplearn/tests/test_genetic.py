@@ -27,7 +27,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
-
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.testing import assert_false, assert_true
 from sklearn.utils.testing import assert_greater
 from sklearn.utils.testing import assert_equal, assert_almost_equal
@@ -43,6 +43,16 @@ boston = load_boston()
 perm = rng.permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
+
+
+def test_sklearn_estimator_checks_regressor():
+    """Run the sklearn estimator validation checks on SymbolicRegressor"""
+    check_estimator(SymbolicRegressor)
+
+
+def test_sklearn_estimator_checks_transformer():
+    """Run the sklearn estimator validation checks on SymbolicTransformer"""
+    check_estimator(SymbolicTransformer)
 
 
 def test_weighted_correlations():
