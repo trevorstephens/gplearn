@@ -12,8 +12,6 @@ at which the fixe is no longer needed.
 
 import inspect
 import warnings
-import sys
-import functools
 
 import numpy as np
 import scipy.sparse as sp
@@ -189,30 +187,6 @@ except ImportError:
 
 
 try:
-    from itertools import combinations_with_replacement
-except ImportError:
-    # Backport of itertools.combinations_with_replacement for Python 2.6,
-    # from Python 3.4 documentation (http://tinyurl.com/comb-w-r), copyright
-    # Python Software Foundation (https://docs.python.org/3/license.html)
-    def combinations_with_replacement(iterable, r):
-        # combinations_with_replacement('ABC', 2) --> AA AB AC BB BC CC
-        pool = tuple(iterable)
-        n = len(pool)
-        if not n and r:
-            return
-        indices = [0] * r
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != n - 1:
-                    break
-            else:
-                return
-            indices[i:] = [indices[i] + 1] * (r - i)
-            yield tuple(pool[i] for i in indices)
-
-
-try:
     from numpy import isclose
 except ImportError:
     def isclose(a, b, rtol=1.e-5, atol=1.e-8, equal_nan=False):
@@ -309,25 +283,6 @@ if np_version < (1, 8):
             return flag[indx][rev_idx]
 else:
     from numpy import in1d
-
-
-if sys.version_info < (2, 7, 0):
-    # partial cannot be pickled in Python 2.6
-    # http://bugs.python.org/issue1398
-    class partial(object):
-        def __init__(self, func, *args, **keywords):
-            functools.update_wrapper(self, func)
-            self.func = func
-            self.args = args
-            self.keywords = keywords
-
-        def __call__(self, *args, **keywords):
-            args = self.args + args
-            kwargs = self.keywords.copy()
-            kwargs.update(keywords)
-            return self.func(*args, **kwargs)
-else:
-    from functools import partial
 
 
 if np_version < (1, 6, 2):

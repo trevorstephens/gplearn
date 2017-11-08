@@ -3,7 +3,6 @@ virtualenv:
   system_site_packages: true
 env:
   matrix:
-    - PYTHON_VERSION="2.6" LATEST="true"
     - PYTHON_VERSION="2.7" COVERAGE="true" LATEST="true"
     - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.15.2"
     - PYTHON_VERSION="3.4" LATEST="true"
