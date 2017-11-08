@@ -16,7 +16,7 @@ from copy import deepcopy
 from sklearn.utils.random import sample_without_replacement
 
 from .functions import _Function
-from .skutils.validation import check_random_state
+from .utils import check_random_state
 
 
 class _Program(object):

@@ -22,20 +22,20 @@ from scipy.stats import pearsonr, spearmanr
 
 from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston
-from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
-
-from gplearn.skutils.testing import assert_false, assert_true
-from gplearn.skutils.testing import assert_greater
-from gplearn.skutils.testing import assert_equal, assert_almost_equal
-from gplearn.skutils.testing import assert_array_equal
-from gplearn.skutils.testing import assert_array_almost_equal
-from gplearn.skutils.testing import assert_raises
-from gplearn.skutils.testing import assert_warns
-from gplearn.skutils.validation import check_random_state
+from sklearn.utils.estimator_checks import check_estimator
+from sklearn.utils.testing import assert_false, assert_true
+from sklearn.utils.testing import assert_greater
+from sklearn.utils.testing import assert_equal, assert_almost_equal
+from sklearn.utils.testing import assert_array_equal
+from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_raises
+from sklearn.utils.testing import assert_warns
+from sklearn.utils.validation import check_random_state
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -43,6 +43,18 @@ boston = load_boston()
 perm = rng.permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
+
+
+def test_sklearn_estimator_checks_regressor():
+    """Run the sklearn estimator validation checks on SymbolicRegressor"""
+
+    check_estimator(SymbolicRegressor)
+
+
+def test_sklearn_estimator_checks_transformer():
+    """Run the sklearn estimator validation checks on SymbolicTransformer"""
+
+    check_estimator(SymbolicTransformer)
 
 
 def test_weighted_correlations():
@@ -74,7 +86,7 @@ def test_weighted_correlations():
 
 
 def test_program_init_method():
-    """'full' should create longer and deeper programs than other methods"""
+    """Check 'full' creates longer and deeper programs than other methods"""
 
     params = {'function_set': [add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2],
@@ -113,7 +125,7 @@ def test_program_init_method():
 
 
 def test_program_init_depth():
-    """'full' should create constant depth programs for single depth limit"""
+    """Check 'full' creates constant depth programs for single depth limit"""
 
     params = {'function_set': [add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2],
@@ -765,7 +777,7 @@ def test_gridsearch():
     parameters = {'parsimony_coefficient': [0.001, 0.1, 'auto']}
     clf = SymbolicRegressor(population_size=50, generations=5,
                             tournament_size=5, random_state=0)
-    grid = GridSearchCV(clf, parameters, scoring='mean_absolute_error')
+    grid = GridSearchCV(clf, parameters, scoring='neg_mean_absolute_error')
     grid.fit(boston.data, boston.target)
     expected = {'parsimony_coefficient': 0.001}
     assert_equal(grid.best_params_, expected)

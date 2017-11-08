@@ -5,7 +5,7 @@
 # License: BSD 3 clause
 
 from gplearn.fitness import make_fitness, _mean_square_error
-from gplearn.skutils.testing import assert_raises
+from sklearn.utils.testing import assert_raises
 
 
 def test_validate_fitness():

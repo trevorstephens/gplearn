@@ -4,7 +4,7 @@ virtualenv:
 env:
   matrix:
     - PYTHON_VERSION="2.7" COVERAGE="true" LATEST="true"
-    - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.15.2"
+    - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.18.1"
     - PYTHON_VERSION="3.4" LATEST="true"
     - PYTHON_VERSION="3.5" LATEST="true"
     - PYTHON_VERSION="3.6" LATEST="true"

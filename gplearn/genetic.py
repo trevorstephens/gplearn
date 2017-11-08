@@ -21,10 +21,10 @@ from scipy.stats import rankdata
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
+from sklearn.utils.validation import check_X_y, check_array
 
-from .skutils import _partition_estimators
-from .skutils.validation import check_random_state, NotFittedError
-from .skutils.validation import check_X_y, check_array
+from .utils import _partition_estimators
+from .utils import check_random_state, NotFittedError
 
 from .fitness import _fitness_map, _Fitness
 from .functions import _function_map, _Function
@@ -292,6 +292,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         # Check arrays
         X, y = check_X_y(X, y, y_numeric=True)
+        if sample_weight is not None:
+            sample_weight = check_array(sample_weight, ensure_2d=False)
         _, self.n_features_ = X.shape
 
         hall_of_fame = self.hall_of_fame
