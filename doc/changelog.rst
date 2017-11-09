@@ -4,6 +4,16 @@
 Release History
 ===============
 
+Version 0.2.1
+-------------
+
+- Increase minimum required version of ``scikit-learn`` to 0.18.1. This allows
+  streamlining the test suite and removal of many utilities to reduce future
+  technical debt.
+- Drop support for Python 2.6 and add support for Python 3.5 and 3.6 in order
+  to support the latest release of ``scikit-learn`` 0.19 and avoid future test
+  failures. By `hugovk <https://github.com/hugovk>`_.
+
 Version 0.2.0
 -------------
 
