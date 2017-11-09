@@ -7,7 +7,7 @@ env:
     - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.18.1"
     - PYTHON_VERSION="3.4" LATEST="true"
     - PYTHON_VERSION="3.5" LATEST="true"
-    - PYTHON_VERSION="3.6" LATEST="true" QUALITY="true"
+    - PYTHON_VERSION="3.6" QUALITY="true" LATEST="true"
 install: source continuous_integration/install.sh
 script: bash continuous_integration/test_script.sh
 after_success:
