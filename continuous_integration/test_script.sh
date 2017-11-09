@@ -20,7 +20,7 @@ else
 fi
 
 if [[ "$QUALITY" == "true" ]]; then
-    prospector gplearn || true;
+    prospector --doc-warnings gplearn || true;
 fi
 
 #make test-doc test-sphinxext
