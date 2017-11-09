@@ -19,4 +19,8 @@ else
     nosetests -s -v gplearn
 fi
 
+if [[ "$QUALITY" == "true" ]]; then
+    prospector --doc-warnings gplearn || true;
+fi
+
 #make test-doc test-sphinxext

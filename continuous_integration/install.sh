@@ -41,6 +41,10 @@ if [[ "$COVERAGE" == "true" ]]; then
     pip install coverage coveralls
 fi
 
+if [[ "$QUALITY" == "true" ]]; then
+    pip install prospector
+fi
+
 # Build gplearn in the install.sh script to collapse the verbose
 # build output in the travis output when it succeeds.
 python --version
