@@ -20,8 +20,8 @@ from .utils import check_random_state
 
 
 class _Program(object):
-
-    """A program-like representation of the evolved program.
+    """
+    A program-like representation of the evolved program.
 
     This is the underlying data-structure used by the public classes in this
     module. It should not be used directly by the user.
@@ -104,6 +104,7 @@ class _Program(object):
 
     length_ : int
         The number of functions and terminals in the program.
+
     """
 
     def __init__(self,
@@ -145,7 +146,8 @@ class _Program(object):
         self._indices_state = None
 
     def build_program(self, random_state):
-        """Build a naive random program.
+        """
+        Build a naive random program.
 
         Parameters
         ----------
@@ -156,9 +158,10 @@ class _Program(object):
         -------
         program : list
             The flattened tree representation of the program.
+
         """
         if self.init_method == 'half and half':
-            method = ['grow', 'full'][random_state.randint(2)]
+            method = ('full' if random_state.randint(2) else 'grow')
         else:
             method = self.init_method
         max_depth = random_state.randint(*self.init_depth)
@@ -169,7 +172,7 @@ class _Program(object):
         program = [function]
         terminal_stack = [function.arity]
 
-        while len(terminal_stack) != 0:
+        while terminal_stack:
             depth = len(terminal_stack)
             choice = self.n_features + len(self.function_set)
             choice = random_state.randint(choice)
@@ -189,7 +192,7 @@ class _Program(object):
                 terminal_stack[-1] -= 1
                 while terminal_stack[-1] == 0:
                     terminal_stack.pop()
-                    if len(terminal_stack) == 0:
+                    if not terminal_stack:
                         return program
                     terminal_stack[-1] -= 1
 
@@ -232,7 +235,8 @@ class _Program(object):
         return output
 
     def export_graphviz(self, fade_nodes=None):
-        """Returns a string, Graphviz script for visualizing the program.
+        """
+        Returns a string, Graphviz script for visualizing the program.
 
         Parameters
         ----------
@@ -244,6 +248,7 @@ class _Program(object):
         -------
         output : string
             The Graphviz script to plot the tree representation of the program.
+
         """
         terminals = []
         if fade_nodes is None:
@@ -278,7 +283,7 @@ class _Program(object):
                     if len(terminals[-1]) == 2:
                         parent = terminals[-1][-1]
                         terminals.pop()
-                        if len(terminals) == 0:
+                        if not terminals:
                             return output + "}"
                         terminals[-1].append(parent)
                         terminals[-1][0] -= 1
@@ -306,7 +311,8 @@ class _Program(object):
         return len(self.program)
 
     def execute(self, X):
-        """Execute the program according to X.
+        """
+        Execute the program according to X.
 
         Parameters
         ----------
@@ -318,6 +324,7 @@ class _Program(object):
         -------
         y_hats : array-like, shape = [n_samples]
             The result of executing the program on X.
+
         """
         # Check for single-node programs
         node = self.program[0]
@@ -354,7 +361,8 @@ class _Program(object):
 
     def get_all_indices(self, n_samples=None, max_samples=None,
                         random_state=None):
-        """Get the indices on which to evaluate the fitness of a program.
+        """
+        Get the indices on which to evaluate the fitness of a program.
 
         Parameters
         ----------
@@ -374,6 +382,7 @@ class _Program(object):
 
         not_indices : array-like, shape = [n_samples]
             The out-of-sample indices.
+
         """
         if self._indices_state is None and random_state is None:
             raise ValueError('The program has not been evaluated for fitness '
@@ -403,7 +412,8 @@ class _Program(object):
         return self.get_all_indices()[0]
 
     def raw_fitness(self, X, y, sample_weight):
-        """Evaluate the raw fitness of the program according to X, y.
+        """
+        Evaluate the raw fitness of the program according to X, y.
 
         Parameters
         ----------
@@ -421,6 +431,7 @@ class _Program(object):
         -------
         raw_fitness : float
             The raw fitness of the program.
+
         """
         y_pred = self.execute(X)
         raw_fitness = self.metric(y, y_pred, sample_weight)
@@ -428,7 +439,8 @@ class _Program(object):
         return raw_fitness
 
     def fitness(self, parsimony_coefficient=None):
-        """Evaluate the penalized fitness of the program according to X, y.
+        """
+        Evaluate the penalized fitness of the program according to X, y.
 
         Parameters
         ----------
@@ -440,6 +452,7 @@ class _Program(object):
         -------
         fitness : float
             The penalized fitness of the program.
+
         """
         if parsimony_coefficient is None:
             parsimony_coefficient = self.parsimony_coefficient
@@ -447,7 +460,8 @@ class _Program(object):
         return self.raw_fitness_ - penalty
 
     def get_subtree(self, random_state, program=None):
-        """Get a random subtree from the program.
+        """
+        Get a random subtree from the program.
 
         Parameters
         ----------
@@ -462,6 +476,7 @@ class _Program(object):
         -------
         start, end : tuple of two ints
             The indices of the start and end of the random subtree.
+
         """
         if program is None:
             program = self.program
@@ -485,7 +500,8 @@ class _Program(object):
         return deepcopy(self.program)
 
     def crossover(self, donor, random_state):
-        """Perform the crossover genetic operation on the program.
+        """
+        Perform the crossover genetic operation on the program.
 
         Crossover selects a random subtree from the embedded program to be
         replaced. A donor also has a subtree selected at random and this is
@@ -503,6 +519,7 @@ class _Program(object):
         -------
         program : list
             The flattened tree representation of the program.
+
         """
         # Get a subtree to replace
         start, end = self.get_subtree(random_state)
@@ -517,7 +534,8 @@ class _Program(object):
                 self.program[end:]), removed, donor_removed
 
     def subtree_mutation(self, random_state):
-        """Perform the subtree mutation operation on the program.
+        """
+        Perform the subtree mutation operation on the program.
 
         Subtree mutation selects a random subtree from the embedded program to
         be replaced. A donor subtree is generated at random and this is
@@ -535,6 +553,7 @@ class _Program(object):
         -------
         program : list
             The flattened tree representation of the program.
+
         """
         # Build a new naive program
         chicken = self.build_program(random_state)
@@ -542,7 +561,8 @@ class _Program(object):
         return self.crossover(chicken, random_state)
 
     def hoist_mutation(self, random_state):
-        """Perform the hoist mutation operation on the program.
+        """
+        Perform the hoist mutation operation on the program.
 
         Hoist mutation selects a random subtree from the embedded program to
         be replaced. A random subtree of that subtree is then selected and this
@@ -558,6 +578,7 @@ class _Program(object):
         -------
         program : list
             The flattened tree representation of the program.
+
         """
         # Get a subtree to replace
         start, end = self.get_subtree(random_state)
@@ -571,7 +592,8 @@ class _Program(object):
         return self.program[:start] + hoist + self.program[end:], removed
 
     def point_mutation(self, random_state):
-        """Perform the point mutation operation on the program.
+        """
+        Perform the point mutation operation on the program.
 
         Point mutation selects random nodes from the embedded program to be
         replaced. Terminals are replaced by other terminals and functions are
@@ -587,6 +609,7 @@ class _Program(object):
         -------
         program : list
             The flattened tree representation of the program.
+
         """
         program = deepcopy(self.program)
 
