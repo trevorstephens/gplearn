@@ -1,1 +1,11 @@
-doc-warnings: yes
+strictness: medium
+test-warnings: false
+doc-warnings: true
+
+pep257:
+  disable:
+    - D211
+    - D213
+  enable:
+    - D203
+    - D212

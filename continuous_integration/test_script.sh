@@ -20,7 +20,7 @@ else
 fi
 
 if [[ "$QUALITY" == "true" ]]; then
-    prospector --doc-warnings gplearn || true;
+    prospector --profile $TRAVIS_BUILD_DIR/.landscape gplearn || true;
 fi
 
 #make test-doc test-sphinxext

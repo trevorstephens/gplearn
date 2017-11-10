@@ -20,8 +20,8 @@ from .utils import check_random_state
 
 
 class _Program(object):
-    """
-    A program-like representation of the evolved program.
+
+    """A program-like representation of the evolved program.
 
     This is the underlying data-structure used by the public classes in this
     module. It should not be used directly by the user.
@@ -146,8 +146,7 @@ class _Program(object):
         self._indices_state = None
 
     def build_program(self, random_state):
-        """
-        Build a naive random program.
+        """Build a naive random program.
 
         Parameters
         ----------
@@ -235,8 +234,7 @@ class _Program(object):
         return output
 
     def export_graphviz(self, fade_nodes=None):
-        """
-        Returns a string, Graphviz script for visualizing the program.
+        """Returns a string, Graphviz script for visualizing the program.
 
         Parameters
         ----------
@@ -311,8 +309,7 @@ class _Program(object):
         return len(self.program)
 
     def execute(self, X):
-        """
-        Execute the program according to X.
+        """Execute the program according to X.
 
         Parameters
         ----------
@@ -361,8 +358,7 @@ class _Program(object):
 
     def get_all_indices(self, n_samples=None, max_samples=None,
                         random_state=None):
-        """
-        Get the indices on which to evaluate the fitness of a program.
+        """Get the indices on which to evaluate the fitness of a program.
 
         Parameters
         ----------
@@ -412,8 +408,7 @@ class _Program(object):
         return self.get_all_indices()[0]
 
     def raw_fitness(self, X, y, sample_weight):
-        """
-        Evaluate the raw fitness of the program according to X, y.
+        """Evaluate the raw fitness of the program according to X, y.
 
         Parameters
         ----------
@@ -439,8 +434,7 @@ class _Program(object):
         return raw_fitness
 
     def fitness(self, parsimony_coefficient=None):
-        """
-        Evaluate the penalized fitness of the program according to X, y.
+        """Evaluate the penalized fitness of the program according to X, y.
 
         Parameters
         ----------
@@ -460,8 +454,7 @@ class _Program(object):
         return self.raw_fitness_ - penalty
 
     def get_subtree(self, random_state, program=None):
-        """
-        Get a random subtree from the program.
+        """Get a random subtree from the program.
 
         Parameters
         ----------
@@ -500,8 +493,7 @@ class _Program(object):
         return deepcopy(self.program)
 
     def crossover(self, donor, random_state):
-        """
-        Perform the crossover genetic operation on the program.
+        """Perform the crossover genetic operation on the program.
 
         Crossover selects a random subtree from the embedded program to be
         replaced. A donor also has a subtree selected at random and this is
@@ -534,8 +526,7 @@ class _Program(object):
                 self.program[end:]), removed, donor_removed
 
     def subtree_mutation(self, random_state):
-        """
-        Perform the subtree mutation operation on the program.
+        """Perform the subtree mutation operation on the program.
 
         Subtree mutation selects a random subtree from the embedded program to
         be replaced. A donor subtree is generated at random and this is
@@ -561,8 +552,7 @@ class _Program(object):
         return self.crossover(chicken, random_state)
 
     def hoist_mutation(self, random_state):
-        """
-        Perform the hoist mutation operation on the program.
+        """Perform the hoist mutation operation on the program.
 
         Hoist mutation selects a random subtree from the embedded program to
         be replaced. A random subtree of that subtree is then selected and this
@@ -592,8 +582,7 @@ class _Program(object):
         return self.program[:start] + hoist + self.program[end:], removed
 
     def point_mutation(self, random_state):
-        """
-        Perform the point mutation operation on the program.
+        """Perform the point mutation operation on the program.
 
         Point mutation selects random nodes from the embedded program to be
         replaced. Terminals are replaced by other terminals and functions are
