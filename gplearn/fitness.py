@@ -8,11 +8,11 @@ the computer programs created by the :mod:`gplearn.genetic` module.
 #
 # License: BSD 3 clause
 
-import numpy as np
+import numbers
 
+import numpy as np
 from scipy.stats import rankdata
 from sklearn.externals import six
-import numbers
 
 __all__ = ['make_fitness']
 

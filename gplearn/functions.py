@@ -10,7 +10,6 @@ own custom functions.
 # License: BSD 3 clause
 
 import numpy as np
-
 from sklearn.externals import six
 
 __all__ = ['make_function']

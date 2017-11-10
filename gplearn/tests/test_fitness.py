@@ -4,9 +4,9 @@
 #
 # License: BSD 3 clause
 
-from gplearn.fitness import make_fitness, _mean_square_error
 from sklearn.utils.testing import assert_raises
 
+from gplearn.fitness import make_fitness, _mean_square_error
 
 def test_validate_fitness():
     """Check that valid fitness measures are accepted & invalid raise error"""

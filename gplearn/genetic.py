@@ -9,27 +9,23 @@ computer programs.
 #
 # License: BSD 3 clause
 
-import numpy as np
 import itertools
-
 from abc import ABCMeta, abstractmethod
 from time import time
 from warnings import warn
 
+import numpy as np
 from scipy.stats import rankdata
-
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.validation import check_X_y, check_array
 
-from .utils import _partition_estimators
-from .utils import check_random_state, NotFittedError
-
+from ._program import _Program
 from .fitness import _fitness_map, _Fitness
 from .functions import _function_map, _Function
-
-from ._program import _Program
+from .utils import _partition_estimators
+from .utils import check_random_state, NotFittedError
 
 __all__ = ['SymbolicRegressor', 'SymbolicTransformer']
 
@@ -157,6 +153,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
     Warning: This class should not be used directly.
     Use derived classes instead.
+
     """
 
     @abstractmethod

@@ -9,10 +9,9 @@ computer program. It is used for creating and evolving programs used in the
 #
 # License: BSD 3 clause
 
-import numpy as np
-
 from copy import deepcopy
 
+import numpy as np
 from sklearn.utils.random import sample_without_replacement
 
 from .functions import _Function
