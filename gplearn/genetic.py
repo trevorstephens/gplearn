@@ -481,7 +481,11 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
             fitness = np.array(fitness)
-            hall_of_fame = fitness.argsort()[:self.hall_of_fame]
+            if self._metric.greater_is_better:
+                hall_of_fame = fitness.argsort()[:self.hall_of_fame]
+            else:
+                hall_of_fame = fitness.argsort()[(self.population_size -
+                                                  self.hall_of_fame):]
             evaluation = np.array([gp.execute(X) for gp in
                                    [self._programs[-1][i] for
                                     i in hall_of_fame]])
