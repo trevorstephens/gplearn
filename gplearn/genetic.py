@@ -231,6 +231,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         length : list
             The current population's lengths.
+
         """
         if start_time is None:
             print('%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
@@ -287,6 +288,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         -------
         self : object
             Returns self.
+
         """
         random_state = check_random_state(self.random_state)
 
@@ -323,7 +325,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             else:
                 raise ValueError('invalid type %s found in `function_set`.'
                                  % type(function))
-        if len(self._function_set) == 0:
+        if not self._function_set:
             raise ValueError('No valid functions found in `function_set`.')
 
         # For point-mutation to find a compatible replacement node
@@ -657,7 +659,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
-    See also
+    See Also
     --------
     SymbolicTransformer
 
@@ -666,6 +668,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     .. [1] J. Koza, "Genetic Programming", 1992.
 
     .. [2] R. Poli, et al. "A Field Guide to Genetic Programming", 2008.
+
     """
 
     def __init__(self,
@@ -730,6 +733,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         -------
         y : array, shape = [n_samples]
             Predicted values for X.
+
         """
         if not hasattr(self, "_program"):
             raise NotFittedError("SymbolicRegressor not fitted.")
@@ -910,7 +914,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
-    See also
+    See Also
     --------
     SymbolicRegressor
 
@@ -919,6 +923,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     .. [1] J. Koza, "Genetic Programming", 1992.
 
     .. [2] R. Poli, et al. "A Field Guide to Genetic Programming", 2008.
+
     """
 
     def __init__(self,
@@ -1000,6 +1005,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         -------
         X_new : array-like, shape = [n_samples, n_components]
             Transformed array.
+
         """
         if not hasattr(self, "_best_programs"):
             raise NotFittedError("SymbolicTransformer not fitted.")
@@ -1035,5 +1041,6 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         -------
         X_new : array-like, shape = [n_samples, n_components]
             Transformed array.
+
         """
         return self.fit(X, y, sample_weight).transform(X)

@@ -4,8 +4,8 @@ doc-warnings: true
 
 pep257:
   disable:
-    - D211
-    - D213
+    - D211 # No blank lines allowed before class docstring
+    - D213 # Multi-line docstring summary should start at the second line
   enable:
-    - D203
-    - D212
+    - D203 # 1 blank line required before class docstring
+    - D212 # Multi-line docstring summary should start at the first line

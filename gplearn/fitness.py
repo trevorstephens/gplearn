@@ -37,6 +37,7 @@ class _Fitness(object):
         Whether a higher value from `function` indicates a better fit. In
         general this would be False for metrics indicating the magnitude of
         the error, and True for metrics indicating the quality of fit.
+
     """
 
     def __init__(self, function, greater_is_better):
@@ -70,6 +71,7 @@ def make_fitness(function, greater_is_better):
         Whether a higher value from `function` indicates a better fit. In
         general this would be False for metrics indicating the magnitude of
         the error, and True for metrics indicating the quality of fit.
+
     """
     if not isinstance(greater_is_better, bool):
         raise ValueError('greater_is_better must be bool, got %s'

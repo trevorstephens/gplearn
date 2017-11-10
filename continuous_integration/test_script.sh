@@ -13,14 +13,14 @@ python -c "import numpy; print('numpy %s' % numpy.__version__)"
 python -c "import scipy; print('scipy %s' % scipy.__version__)"
 python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
 
+if [[ "$QUALITY" == "true" ]]; then
+    prospector --profile $TRAVIS_BUILD_DIR/.landscape gplearn || true;
+fi
+
 if [[ "$COVERAGE" == "true" ]]; then
     nosetests -s -v --with-coverage --cover-package=gplearn
 else
     nosetests -s -v gplearn
-fi
-
-if [[ "$QUALITY" == "true" ]]; then
-    prospector --profile $TRAVIS_BUILD_DIR/.landscape gplearn || true;
 fi
 
 #make test-doc test-sphinxext
