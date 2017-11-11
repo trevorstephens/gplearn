@@ -6,20 +6,11 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 #
 # License: BSD 3 clause
 
-import numpy as np
 import pickle
 import sys
 
-from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
-from gplearn.fitness import weighted_pearson, weighted_spearman
-from gplearn._program import _Program
-from gplearn.fitness import _fitness_map
-from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
-                               min2)
-from gplearn.functions import _Function
-from gplearn.fitness import make_fitness
+import numpy as np
 from scipy.stats import pearsonr, spearmanr
-
 from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston
 from sklearn.metrics import mean_absolute_error
@@ -36,6 +27,15 @@ from sklearn.utils.testing import assert_array_almost_equal
 from sklearn.utils.testing import assert_raises
 from sklearn.utils.testing import assert_warns
 from sklearn.utils.validation import check_random_state
+
+from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
+from gplearn.fitness import weighted_pearson, weighted_spearman
+from gplearn._program import _Program
+from gplearn.fitness import _fitness_map
+from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
+                               min2)
+from gplearn.functions import _Function
+from gplearn.fitness import make_fitness
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)

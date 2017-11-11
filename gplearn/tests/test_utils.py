@@ -5,10 +5,9 @@
 # License: BSD 3 clause
 
 import numpy as np
+from sklearn.utils.testing import assert_raises, assert_true
 
 from gplearn.utils import _get_n_jobs, check_random_state, cpu_count
-
-from sklearn.utils.testing import assert_raises, assert_true
 
 
 def test_check_random_state():

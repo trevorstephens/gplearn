@@ -10,7 +10,6 @@ own custom functions.
 # License: BSD 3 clause
 
 import numpy as np
-
 from sklearn.externals import six
 
 __all__ = ['make_function']
@@ -35,6 +34,7 @@ class _Function(object):
 
     arity : int
         The number of arguments that the ``function`` takes.
+
     """
 
     def __init__(self, function, name, arity):
@@ -66,6 +66,7 @@ def make_function(function, name, arity):
 
     arity : int
         The number of arguments that the `function` takes.
+
     """
     if not isinstance(arity, int):
         raise ValueError('arity must be an int, got %s' % type(arity))

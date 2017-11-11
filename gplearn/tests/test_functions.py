@@ -5,12 +5,10 @@
 # License: BSD 3 clause
 
 import numpy as np
-
 from numpy import maximum
+from sklearn.utils.testing import assert_raises
 
 from gplearn.functions import _protected_sqrt, make_function
-
-from sklearn.utils.testing import assert_raises
 
 
 def test_validate_function():
