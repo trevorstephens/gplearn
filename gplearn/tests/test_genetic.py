@@ -829,7 +829,7 @@ def test_transformer_iterable():
     est.fit(X, y)
     fitted_len = len(est)
     fitted_iter = [gp.length_ for gp in est]
-    expected_iter = [15, 19, 19, 12, 9, 10, 7, 14, 6, 21]
+    expected_iter = [7, 22, 4, 3, 9, 33, 9, 29, 7, 12]
 
     assert_true(fitted_len == 10)
     assert_true(fitted_iter == expected_iter)
@@ -1023,7 +1023,7 @@ def test_warm_start():
 
 
 def test_customized_regressor_metrics():
-    """Check whether parameter greater_is_better works fine"""
+    """Check whether greater_is_better works for SymbolicRegressor."""
 
     x_data = rng.uniform(-1, 1, 100).reshape(50, 2)
     y_true = x_data[:, 0] ** 2 + x_data[:, 1] ** 2
@@ -1034,7 +1034,7 @@ def test_customized_regressor_metrics():
                                init_depth=(2, 4))
     est_gp.fit(x_data, y_true)
     formula = est_gp.__str__()
-    assert_equal("add(mul(X1, X1), mul(X0, X0))", formula, True)
+    assert_equal('add(mul(X1, X1), mul(X0, X0))', formula, True)
 
     def neg_mean_absolute_error(y, y_pred, sample_weight):
         return -1 * mean_absolute_error(y, y_pred, sample_weight)
@@ -1048,7 +1048,44 @@ def test_customized_regressor_metrics():
                                  init_method='full', init_depth=(2, 4))
     c_est_gp.fit(x_data, y_true)
     c_formula = c_est_gp.__str__()
-    assert_equal("add(mul(X1, X1), mul(X0, X0))", c_formula, True)
+    assert_equal('add(mul(X1, X1), mul(X0, X0))', c_formula, True)
+
+
+def test_customized_transformer_metrics():
+    """Check whether greater_is_better works for SymbolicTransformer."""
+
+    est_gp = SymbolicTransformer(population_size=100, hall_of_fame=10,
+                                 n_components=1, metric='pearson',
+                                 random_state=415)
+    est_gp.fit(boston.data, boston.target)
+    for program in est_gp:
+        formula = program.__str__()
+    assert_equal('div(sub(div(X11, X12), add(X12, X0)), X10)', formula, True)
+
+    def _neg_weighted_pearson(y, y_pred, w):
+        """Calculate the weighted Pearson correlation coefficient."""
+        with np.errstate(divide='ignore', invalid='ignore'):
+            y_pred_demean = y_pred - np.average(y_pred, weights=w)
+            y_demean = y - np.average(y, weights=w)
+            corr = ((np.sum(w * y_pred_demean * y_demean) / np.sum(w)) /
+                    np.sqrt((np.sum(w * y_pred_demean ** 2) *
+                             np.sum(w * y_demean ** 2)) /
+                            (np.sum(w) ** 2)))
+        if np.isfinite(corr):
+            return -1 * np.abs(corr)
+        return 0.
+
+    neg_weighted_pearson = make_fitness(function=_neg_weighted_pearson,
+                                        greater_is_better=False)
+
+    c_est_gp = SymbolicTransformer(population_size=100, hall_of_fame=10,
+                                   n_components=1, stopping_criteria=-1,
+                                   metric=neg_weighted_pearson,
+                                   random_state=415)
+    c_est_gp.fit(boston.data, boston.target)
+    for program in c_est_gp:
+        c_formula = program.__str__()
+    assert_equal('div(sub(div(X11, X12), add(X12, X0)), X10)', c_formula, True)
 
 
 if __name__ == "__main__":
