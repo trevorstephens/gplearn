@@ -4,9 +4,18 @@
 Release History
 ===============
 
-Version 0.2.1
+Version 0.3.0
 -------------
 
+- Fixed two bugs in :class:`genetic.SymbolicTransformer` where the final
+  solution selection logic was incorrect. This fix will change the solutions
+  from all previous versions of `gplearn`.
+- Fixed bug in :class:`genetic.SymbolicRegressor` where a custom fitness
+  measure was defined in :func:`fitness.make_fitness()` with the parameter
+  `greater_is_better=True`. This was ignored during final solution selection.
+  This change will alter the results from previous releases where
+  `greater_is_better=True` was set in a custom fitness measure. By
+  `sun ao <https://github.com/eggachecat>`_.
 - Increase minimum required version of ``scikit-learn`` to 0.18.1. This allows
   streamlining the test suite and removal of many utilities to reduce future
   technical debt.
