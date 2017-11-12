@@ -1054,13 +1054,15 @@ def test_customized_regressor_metrics():
 def test_customized_transformer_metrics():
     """Check whether greater_is_better works for SymbolicTransformer."""
 
-    est_gp = SymbolicTransformer(population_size=100, hall_of_fame=10,
-                                 n_components=1, metric='pearson',
-                                 random_state=415)
+    est_gp = SymbolicTransformer(generations=2, population_size=100,
+                                 hall_of_fame=10, n_components=1,
+                                 metric='pearson', random_state=415)
     est_gp.fit(boston.data, boston.target)
     for program in est_gp:
         formula = program.__str__()
-    assert_equal('div(sub(div(X11, X12), add(X12, X0)), X10)', formula, True)
+    expected_formula = ('sub(div(mul(X4, X12), div(X9, X9)), '
+                        'sub(div(X11, X12), add(X12, X0)))')
+    assert_equal(expected_formula, formula, True)
 
     def _neg_weighted_pearson(y, y_pred, w):
         """Calculate the weighted Pearson correlation coefficient."""
@@ -1078,14 +1080,15 @@ def test_customized_transformer_metrics():
     neg_weighted_pearson = make_fitness(function=_neg_weighted_pearson,
                                         greater_is_better=False)
 
-    c_est_gp = SymbolicTransformer(population_size=100, hall_of_fame=10,
-                                   n_components=1, stopping_criteria=-1,
+    c_est_gp = SymbolicTransformer(generations=2, population_size=100,
+                                   hall_of_fame=10, n_components=1,
+                                   stopping_criteria=-1,
                                    metric=neg_weighted_pearson,
                                    random_state=415)
     c_est_gp.fit(boston.data, boston.target)
     for program in c_est_gp:
         c_formula = program.__str__()
-    assert_equal('div(sub(div(X11, X12), add(X12, X0)), X10)', c_formula, True)
+    assert_equal(expected_formula, c_formula, True)
 
 
 if __name__ == "__main__":

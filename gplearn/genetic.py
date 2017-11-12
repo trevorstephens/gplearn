@@ -500,14 +500,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             while len(components) > self.n_components:
                 most_correlated = np.unravel_index(np.argmax(correlations),
                                                    correlations.shape)
-                # Find hall of fame program indexes
-                worst = np.array(components)[np.array(most_correlated)]
-                # Find their fitness
-                worst = fitness[hall_of_fame[worst]]
-                if self._metric.greater_is_better:
-                    worst = most_correlated[np.argmin(worst)]
-                else:
-                    worst = most_correlated[np.argmax(worst)]
+                # The correlation matrix is sorted by fitness, so identifying
+                # the least fit of the pair is simply getting the higher index
+                worst = max(most_correlated)
                 components.pop(worst)
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]

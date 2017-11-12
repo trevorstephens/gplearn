@@ -8,8 +8,10 @@ Version 0.3.0
 -------------
 
 - Fixed two bugs in :class:`genetic.SymbolicTransformer` where the final
-  solution selection logic was incorrect. This fix will change the solutions
-  from all previous versions of `gplearn`.
+  solution selection logic was incorrect and suboptimal. This fix will change
+  the solutions from all previous versions of `gplearn`. Thanks to
+  `iblasi <https://github.com/iblasi>`_ for diagnosing the problem and helping
+  craft the solution.
 - Fixed bug in :class:`genetic.SymbolicRegressor` where a custom fitness
   measure was defined in :func:`fitness.make_fitness()` with the parameter
   `greater_is_better=True`. This was ignored during final solution selection.
