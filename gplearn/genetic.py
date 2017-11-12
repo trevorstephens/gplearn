@@ -482,8 +482,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             # Find the best individuals in the final generation
             fitness = np.array(fitness)
             if self._metric.greater_is_better:
-                hall_of_fame = fitness.argsort()[(self.population_size -
-                                                  self.hall_of_fame):]
+                hall_of_fame = fitness.argsort()[::-1][:self.hall_of_fame]
             else:
                 hall_of_fame = fitness.argsort()[:self.hall_of_fame]
             evaluation = np.array([gp.execute(X) for gp in
@@ -492,16 +491,23 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             if self.metric == 'spearman':
                 evaluation = np.apply_along_axis(rankdata, 1, evaluation)
 
-            # Iteratively remove the worst individual of the worst pair
             with np.errstate(divide='ignore', invalid='ignore'):
                 correlations = np.abs(np.corrcoef(evaluation))
             np.fill_diagonal(correlations, 0.)
             components = list(range(self.hall_of_fame))
             indices = list(range(self.hall_of_fame))
+            # Iteratively remove least fit individual of most correlated pair
             while len(components) > self.n_components:
-                worst = np.unravel_index(np.argmax(correlations),
-                                         correlations.shape)
-                worst = worst[np.argmax(np.sum(correlations[worst, :], 1))]
+                most_correlated = np.unravel_index(np.argmax(correlations),
+                                                   correlations.shape)
+                # Find hall of fame program indexes
+                worst = np.array(components)[np.array(most_correlated)]
+                # Find their fitness
+                worst = fitness[hall_of_fame[worst]]
+                if self._metric.greater_is_better:
+                    worst = most_correlated[np.argmin(worst)]
+                else:
+                    worst = most_correlated[np.argmax(worst)]
                 components.pop(worst)
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]
