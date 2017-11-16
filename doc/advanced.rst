@@ -63,7 +63,7 @@ This can then be added to a ``gplearn`` estimator like so::
 After fitting, you will see some of your programs will have used your own
 customized functions, for example::
 
-    mul(logical(X0, mul(-0.629, X3), X7, sub(0.790, X7)), X9)
+    sub(logical(X6, add(X11, 0.898), X10, X2), X5)
 
 .. image:: images/ex3_fig1.png
     :align: center

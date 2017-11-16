@@ -65,16 +65,13 @@ solutions small, since we know the truth is a pretty simple equation::
         |    Population Average   |             Best Individual              |
     ---- ------------------------- ------------------------------------------ ----------
      Gen   Length          Fitness   Length          Fitness      OOB Fitness  Time Left
-       0    38.13     386.19117972        7   0.331580808730   0.470286152255     55.15s
-       1     9.91    1.66832489614        5   0.335361761359   0.488347149514      1.25m
-       2     7.76      1.888657267        7   0.260765934398   0.565517599814      1.45m
-       3     5.37    1.00018638338       17   0.223753461954   0.274920433701      1.42m
-       4     4.69   0.878161643513       17   0.145095322600   0.158359554221      1.35m
-       5      6.1    0.91987274474       11   0.043612562970   0.043612562970      1.31m
-       6     7.18    1.09868887802       11   0.043612562970   0.043612562970      1.23m
-       7     7.65    1.96650325011       11   0.043612562970   0.043612562970      1.18m
-       8     8.02    1.02643443398       11   0.043612562970   0.043612562970      1.08m
-       9     9.07    1.22732144371       11   0.000781474035  0.0007814740353     59.43s
+       0    38.13     458.57768152        5   0.320665972828   0.556763539274      1.28m
+       1     9.97    1.70232723129        5   0.320201761523   0.624787148042     57.78s
+       2     7.72    1.94456344674       11   0.239536660154   0.533148180489     46.35s
+       3     5.41   0.990156815469        7   0.235676349446   0.719906258051     37.93s
+       4     4.66   0.894443363616       11   0.103946413589   0.103946413589     32.20s
+       5     5.41   0.940242380405       11   0.060802040427   0.060802040427     28.15s
+       6     6.78     1.0953592564       11   0.000781474035   0.000781474035     24.85s
 
 The evolution process stopped early as the error of the best program in the 9th
 generation was better than 0.01. It also appears that the parsimony coefficient
@@ -154,12 +151,12 @@ We can also inspect the program that the :class:`SymbolicRegressor` found::
 And check out who its parents were::
 
     print est_gp._program.parents
-    
+
     {'method': 'Crossover',
-     'parent_idx': 374,
+     'parent_idx': 1555,
      'parent_nodes': [1, 2, 3],
-     'donor_idx': 116,
-     'donor_nodes': [0, 1, 2, 6]}
+     'donor_idx': 78,
+     'donor_nodes': []}
 
 This dictionary tells us what evolution operation was performed to get our new
 individual, as well as the parents from the prior generation, and any nodes
@@ -235,7 +232,7 @@ dataset and see how it performs on the final 200 again::
     est.fit(new_boston[:300, :], boston.target[:300])
     print est.score(new_boston[300:, :], boston.target[300:])
     
-    0.853618353633
+    0.841750404385
 
 Great! We have improved the :math:`R^{2}` score by a significant margin. It
 looks like the linear model was able to take advantage of some new non-linear

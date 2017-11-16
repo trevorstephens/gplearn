@@ -480,23 +480,28 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
             fitness = np.array(fitness)
-            hall_of_fame = fitness.argsort()[:self.hall_of_fame]
+            if self._metric.greater_is_better:
+                hall_of_fame = fitness.argsort()[::-1][:self.hall_of_fame]
+            else:
+                hall_of_fame = fitness.argsort()[:self.hall_of_fame]
             evaluation = np.array([gp.execute(X) for gp in
                                    [self._programs[-1][i] for
                                     i in hall_of_fame]])
             if self.metric == 'spearman':
                 evaluation = np.apply_along_axis(rankdata, 1, evaluation)
 
-            # Iteratively remove the worst individual of the worst pair
             with np.errstate(divide='ignore', invalid='ignore'):
                 correlations = np.abs(np.corrcoef(evaluation))
             np.fill_diagonal(correlations, 0.)
             components = list(range(self.hall_of_fame))
             indices = list(range(self.hall_of_fame))
+            # Iteratively remove least fit individual of most correlated pair
             while len(components) > self.n_components:
-                worst = np.unravel_index(np.argmax(correlations),
-                                         correlations.shape)
-                worst = worst[np.argmax(np.sum(correlations[worst, :], 1))]
+                most_correlated = np.unravel_index(np.argmax(correlations),
+                                                   correlations.shape)
+                # The correlation matrix is sorted by fitness, so identifying
+                # the least fit of the pair is simply getting the higher index
+                worst = max(most_correlated)
                 components.pop(worst)
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]
