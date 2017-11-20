@@ -92,6 +92,11 @@ class _Program(object):
     fitness_ : float
         The penalized fitness of the individual program.
 
+    oob_fitness_ : float
+        The out-of-bag raw fitness of the individual program for the held-out
+        samples. Only present when sub-sampling was used in the estimator by
+        specifying `max_samples` < 1.0.
+
     parents : dict, or None
         If None, this is a naive random program from the initial population.
         Otherwise it includes meta-data about the program's parent(s) as well

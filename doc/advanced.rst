@@ -3,10 +3,31 @@
 Advanced Use
 ============
 
+.. currentmodule:: gplearn.genetic
+
+.. _introspection:
+
+Introspecting Programs
+----------------------
+
+If you wish to learn more about how the evolution process came to the final
+solution, ``gplearn`` provides several means to examine the best programs and
+their parents. Most of these methods are illustrated
+:ref:`in the examples section <example>`.
+
+Both :class:`SymbolicRegressor` and :class:`SymbolicTransformer` overload the
+`print` function to output a LISP-style flattened tree representation of the
+program. Simply `print` the fitted estimator and the program will be output to
+your session.
+
+
+
 .. currentmodule:: gplearn
 
-Saving Your Programs
---------------------
+.. _export:
+
+Exporting
+---------
 
 If you want to save your program for later use, you can use the ``pickle`` or
 ``cPickle`` libraries to achieve this::
@@ -29,8 +50,10 @@ You can then load it at another date easily::
 And use it as if it was the Python session where you originally trained the
 model.
 
-Customizing Your Programs
--------------------------
+.. _custom_functions:
+
+Custom Functions
+----------------
 
 This example demonstrates modifying the function set with your own user-defined
 functions using the :func:`functions.make_function()` factory function.
@@ -45,20 +68,24 @@ For this example we will implement a logical operation where two arguments are
 compared, and if the first one is larger, return a third value, otherwise
 return a fourth value::
 
-    def logic(x1, x2, x3, x4):
+    def _logical(x1, x2, x3, x4):
         return np.where(x1 > x2, x3, x4)
 
 To make this into a ``gplearn`` compatible function, we use the factory where
 we must give it a name for display purposes and declare the arity of the
 function which must match the number of arguments that your function expects::
 
-    logical = make_function(function=logic,
+    logical = make_function(function=_logical,
                             name='logical',
                             arity=4)
 
 This can then be added to a ``gplearn`` estimator like so::
 
     gp = SymbolicTransformer(function_set=['add', 'sub', 'mul', 'div', logical])
+
+**Note that custom functions should be specified as the function object name
+(ie. with no quotes), while built-in functions use the name of the function as
+a string.**
 
 After fitting, you will see some of your programs will have used your own
 customized functions, for example::
@@ -68,8 +95,32 @@ customized functions, for example::
 .. image:: images/ex3_fig1.png
     :align: center
 
-Customizing Your Fitness Measure
---------------------------------
+In other mathematical relationships, it may be necessary to ensure the function
+has :ref:`closure <closure>`. This means that the function will always return a
+valid floating point result. Using ``np.where``, the user can protect against
+invalid operations and substitute problematic values with a default such as 0
+or 1. One example is the built-in protected division function where infinite
+values resulting by divide by zero are replaced by 1::
+
+    def _protected_division(x1, x2):
+        with np.errstate(divide='ignore', invalid='ignore'):
+            return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
+
+Or a custom function where floating-point overflow is protected in an
+exponential function::
+
+    def _protected_exponent(x1):
+        with np.errstate(over='ignore'):
+            return np.where(np.abs(x1) < 100, np.exp(x), 0.)
+
+For further information on the types of errors that numpy can encounter and
+what you will need to protect against in your own custom functions, see
+`here <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.seterr.html#numpy.seterr>`_.
+
+.. _custom_fitness:
+
+Custom Fitness
+--------------
 
 You can easily create your own fitness measure to have your programs evolve to
 optimize whatever metric you need. This is done using the
@@ -106,8 +157,10 @@ when creating an estimator::
 
 .. currentmodule:: gplearn.genetic
 
-Continuing Evolution With warm_start
-------------------------------------
+.. _warm_start:
+
+Continuing Evolution
+--------------------
 
 If you are evolving a lot of generations in your training session, but find
 that you need to keep evolving more, you can use the ``warm_start`` parameter in
