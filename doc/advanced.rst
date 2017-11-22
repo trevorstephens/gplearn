@@ -16,11 +16,139 @@ their parents. Most of these methods are illustrated
 :ref:`in the examples section <example>`.
 
 Both :class:`SymbolicRegressor` and :class:`SymbolicTransformer` overload the
-`print` function to output a LISP-style flattened tree representation of the
-program. Simply `print` the fitted estimator and the program will be output to
-your session.
+``print`` function to output a LISP-style flattened tree representation of the
+program. Simply ``print(est)`` the fitted estimator and the program will be
+output to your session.
 
+If you would like to see more details about the final programs, you can access
+the underlying ``_Program`` objects which contains several attributes and
+methods that can yield more information about them.
 
+:class:`SymbolicRegressor` has a private attribute ``_program`` which is a
+single ``_Program`` object that was the fittest found during evolution.
+
+:class:`SymbolicTransformer` on the other hand has a private attribute
+``_best_programs`` which is a list of ``_Program`` objects of length
+``n_components`` being the least-correlated and fittest programs found during
+evolution. :class:`SymbolicTransformer` is also iterable so you can loop
+through the estimator itself to access each underlying ``_Program`` object.
+
+Each ``_Program`` object can also be printed as with the estimator themselves
+to get a readable representation of the programs. They also have several
+attributes that you can use to further understand the programs:
+
+    - ``raw_fitness_`` : The raw fitness of the individual program.
+    - ``fitness_`` : The penalized fitness of the individual program.
+    - ``oob_fitness_`` : The out-of-bag raw fitness of the individual program
+      for the held-out samples. Only present when sub-sampling was used in the
+      estimator by specifying ``max_samples`` < 1.0.
+    - ``depth_`` : The maximum depth of the program tree.
+    - ``length_`` : The number of functions and terminals in the program.
+
+For example with a :class:`SymbolicTransformer`::
+
+    for program in est_gp:
+        print(program)
+        print(program.raw_fitness_)
+
+        div(div(X11, X12), X10)
+        0.840099070652
+        sub(div(mul(X4, X12), div(X9, X9)), sub(div(X11, X12), add(X12, X0)))
+        0.814627147552
+
+Or if you want to access the individual programs::
+
+    print(est_gp._best_programs[0])
+
+    div(div(X11, X12), X10)
+
+And for a :class:`SymbolicRegressor`::
+
+    print(est_gp)
+    print(est_gp._program)
+    print(est_gp._program.raw_fitness_)
+
+    add(sub(add(X5, div(X5, 0.388)), X0), div(add(X5, X10), X12))
+    add(sub(add(X5, div(X5, 0.388)), X0), div(add(X5, X10), X12))
+    4.88966783112
+
+You can also plot the programs as a program tree using Graphviz via the
+``export_graphviz`` method of the ``_Program`` objects. In a Jupyter notebook
+this is easy using the ``pydotplus`` package::
+
+    from IPython.display import Image
+    import pydotplus
+    graph = est_gp._program.export_graphviz()
+    graph = pydotplus.graphviz.graph_from_dot_data(graph)
+    Image(graph.create_png())
+
+This assumes you are satisfied with only seeing the final results, but the
+relevant programs that led to the final solutions are still retained in the
+estimator's ``_programs`` attribute. This object is a list of lists of all of
+the ``_Program`` objects that were involved in the evolution of the solution.
+The first entry in the outer list is the original naive generation of programs
+while the last entry is the final generation in which the solutions were found.
+
+Note that any programs in earlier generations that were discarded through the
+selection process are replaced with ``None`` objects to conserve memory.
+
+Each of the programs in the final solution and the generations that preceded
+them have a attribute called ``parents``. Except for the naive programs from
+the initial population who have a ``parents`` value of ``None``, this
+dictionary contains information about how that program was evolved. Its
+contents differ depending on the genetic operation that was performed on its
+parents to yield that program:
+
+    - Crossover:
+        - 'method': 'Crossover'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the subtree in the
+          parent program that was replaced.
+        - 'donor_idx': The index of the donor program in the previous
+          generation.
+        - 'donor_nodes': The indices of the nodes in the subtree in the
+          donor program that was donated to the parent.
+    - Subtree Mutation:
+        - 'method': 'Subtree Mutation'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the subtree in the
+          parent program that was replaced.
+    - Hoist Mutation:
+        - 'method': 'Hoist Mutation'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the parent program that
+          were removed.
+    - Point Mutation:
+        - 'method': 'Point Mutation'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the parent program that
+          were replaced.
+    - Reproduction:
+        - 'method': 'Reproduction'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': An empty list as nothing was changed.
+
+The ``export_graphviz`` also has an optional parameter ``fade_nodes`` which
+can take a list of nodes that should be shown as being altered in the
+visualization. For example if the best program had this parent::
+
+    print(est_gp._program.parents)
+
+    {'parent_idx': 75, 'parent_nodes': [1, 10], 'method': 'Point Mutation'}
+
+You could plot its parent with the affected nodes indicated using::
+
+    idx = est_gp._program.parents['parent_idx']
+    fade_nodes = est_gp._program.parents['parent_nodes']
+    print(est_gp._programs[-2][idx])
+    graph = est_gp._programs[-2][idx].export_graphviz(fade_nodes=fade_nodes)
+    graph = pydotplus.graphviz.graph_from_dot_data(graph)
+    Image(graph.create_png())
 
 .. currentmodule:: gplearn
 
