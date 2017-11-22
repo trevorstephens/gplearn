@@ -61,6 +61,7 @@ So you're skeptical. I hope so. Read on and discover the ways that the fittest
 programs in the population interact with one another to yield an even better
 generation.
 
+.. _representation:
 
 Representation
 --------------
@@ -165,9 +166,12 @@ You should chose whether these functions are valid for your program.
 
 You can also set up your own functions by using the :func:`functions.make_function`
 factory function which will create a gp-compatible function node that can be
-incorporated into your programs. See :ref:`advanced use here <advanced>`.
+incorporated into your programs. See
+:ref:`advanced use here <custom_functions>`.
 
 .. currentmodule:: gplearn.genetic
+
+.. _fitness:
 
 Fitness
 -------
@@ -203,7 +207,7 @@ target, these are maximized by the evolution process:
 You can also set up your own fitness measures by using the
 :func:`fitness.make_fitness` factory function which will create a
 gp-compatible fitness function that can be used to evaluate your programs. See
-:ref:`advanced use here <advanced>`.
+:ref:`advanced use here <custom_fitness>`.
 
 Evaluating the fitness of all the programs in a population is probably the most
 expensive part of GP. In ``gplearn``, you can parallelize this computation by
@@ -212,6 +216,8 @@ once. If your dataset is small, the overhead of splitting the work over several
 cores is probably more than the benefit of the reduced work per core. This is
 because the work is parallelized per generation, so use this only if your
 dataset is large and the fitness calculation takes a long time.
+
+.. _closure:
 
 Closure
 -------
@@ -249,6 +255,8 @@ If you define your own functions, you will need to guard for this as well. The
 on your function to ensure it will guard against the most common invalid
 operations with negative or near-zero operations.
 
+.. _sufficiency:
+
 Sufficiency
 -----------
 
@@ -283,6 +291,8 @@ solution, start with a larger program depth. And if your dataset has a lot of
 variables, perhaps the “full” initialization method makes more sense to kick
 start the initial population with bigger programs that encompass more of the
 data than "grow" might yield.
+
+.. _initilization:
 
 Initialization
 --------------
@@ -337,6 +347,8 @@ well-known 'ramped half and half' initialization method which seeds the
 population with lots of programs of different sizes and shapes, leading to a
 diverse mix of representations.
 
+.. _selection:
+
 Selection
 ---------
 
@@ -353,6 +365,8 @@ smaller tournament size will likely maintain more diversity in the population
 as more programs are given a chance to evolve and the population may find a
 better solution at the expense of taking longer. This is known as selection
 pressure, and your choice here may be governed by the computation time.
+
+.. _evolution:
 
 Evolution
 ---------
@@ -432,6 +446,8 @@ independent probabilities, be less than one, the balance of genetic operations
 shall fall back on reproduction. That is, a tournament winner is cloned and
 enters the next generation unmodified.
 
+.. _termination:
+
 Termination
 -----------
 
@@ -442,6 +458,8 @@ fitness that exceeds the parameter ``stopping_criteria``, which defaults to
 being a perfect score. You may need to do a couple of test runs to determine
 what metric is possible if you are working with real-life data in order to set
 this value appropriately.
+
+.. _bloat:
 
 Bloat
 -----
@@ -487,6 +505,8 @@ of the best program in the verbose reporter (activated by setting
 also reported.
 
 .. currentmodule:: gplearn.genetic
+
+.. _transformer:
 
 Transformer
 -----------

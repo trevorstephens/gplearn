@@ -3,10 +3,159 @@
 Advanced Use
 ============
 
+.. currentmodule:: gplearn.genetic
+
+.. _introspection:
+
+Introspecting Programs
+----------------------
+
+If you wish to learn more about how the evolution process came to the final
+solution, ``gplearn`` provides several means to examine the best programs and
+their parents. Most of these methods are illustrated
+:ref:`in the examples section <example>`.
+
+Both :class:`SymbolicRegressor` and :class:`SymbolicTransformer` overload the
+``print`` function to output a LISP-style flattened tree representation of the
+program. Simply ``print(est)`` the fitted estimator and the program will be
+output to your session.
+
+If you would like to see more details about the final programs, you can access
+the underlying ``_Program`` objects which contains several attributes and
+methods that can yield more information about them.
+
+:class:`SymbolicRegressor` has a private attribute ``_program`` which is a
+single ``_Program`` object that was the fittest found during evolution.
+
+:class:`SymbolicTransformer` on the other hand has a private attribute
+``_best_programs`` which is a list of ``_Program`` objects of length
+``n_components`` being the least-correlated and fittest programs found during
+evolution. :class:`SymbolicTransformer` is also iterable so you can loop
+through the estimator itself to access each underlying ``_Program`` object.
+
+Each ``_Program`` object can also be printed as with the estimator themselves
+to get a readable representation of the programs. They also have several
+attributes that you can use to further understand the programs:
+
+    - ``raw_fitness_`` : The raw fitness of the individual program.
+    - ``fitness_`` : The penalized fitness of the individual program.
+    - ``oob_fitness_`` : The out-of-bag raw fitness of the individual program
+      for the held-out samples. Only present when sub-sampling was used in the
+      estimator by specifying ``max_samples`` < 1.0.
+    - ``depth_`` : The maximum depth of the program tree.
+    - ``length_`` : The number of functions and terminals in the program.
+
+For example with a :class:`SymbolicTransformer`::
+
+    for program in est_gp:
+        print(program)
+        print(program.raw_fitness_)
+
+        div(div(X11, X12), X10)
+        0.840099070652
+        sub(div(mul(X4, X12), div(X9, X9)), sub(div(X11, X12), add(X12, X0)))
+        0.814627147552
+
+Or if you want to access the individual programs::
+
+    print(est_gp._best_programs[0])
+
+    div(div(X11, X12), X10)
+
+And for a :class:`SymbolicRegressor`::
+
+    print(est_gp)
+    print(est_gp._program)
+    print(est_gp._program.raw_fitness_)
+
+    add(sub(add(X5, div(X5, 0.388)), X0), div(add(X5, X10), X12))
+    add(sub(add(X5, div(X5, 0.388)), X0), div(add(X5, X10), X12))
+    4.88966783112
+
+You can also plot the programs as a program tree using Graphviz via the
+``export_graphviz`` method of the ``_Program`` objects. In a Jupyter notebook
+this is easy using the ``pydotplus`` package::
+
+    from IPython.display import Image
+    import pydotplus
+    graph = est_gp._program.export_graphviz()
+    graph = pydotplus.graphviz.graph_from_dot_data(graph)
+    Image(graph.create_png())
+
+This assumes you are satisfied with only seeing the final results, but the
+relevant programs that led to the final solutions are still retained in the
+estimator's ``_programs`` attribute. This object is a list of lists of all of
+the ``_Program`` objects that were involved in the evolution of the solution.
+The first entry in the outer list is the original naive generation of programs
+while the last entry is the final generation in which the solutions were found.
+
+Note that any programs in earlier generations that were discarded through the
+selection process are replaced with ``None`` objects to conserve memory.
+
+Each of the programs in the final solution and the generations that preceded
+them have a attribute called ``parents``. Except for the naive programs from
+the initial population who have a ``parents`` value of ``None``, this
+dictionary contains information about how that program was evolved. Its
+contents differ depending on the genetic operation that was performed on its
+parents to yield that program:
+
+    - Crossover:
+        - 'method': 'Crossover'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the subtree in the
+          parent program that was replaced.
+        - 'donor_idx': The index of the donor program in the previous
+          generation.
+        - 'donor_nodes': The indices of the nodes in the subtree in the
+          donor program that was donated to the parent.
+    - Subtree Mutation:
+        - 'method': 'Subtree Mutation'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the subtree in the
+          parent program that was replaced.
+    - Hoist Mutation:
+        - 'method': 'Hoist Mutation'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the parent program that
+          were removed.
+    - Point Mutation:
+        - 'method': 'Point Mutation'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': The indices of the nodes in the parent program that
+          were replaced.
+    - Reproduction:
+        - 'method': 'Reproduction'
+        - 'parent_idx': The index of the parent program in the previous
+          generation.
+        - 'parent_nodes': An empty list as nothing was changed.
+
+The ``export_graphviz`` also has an optional parameter ``fade_nodes`` which
+can take a list of nodes that should be shown as being altered in the
+visualization. For example if the best program had this parent::
+
+    print(est_gp._program.parents)
+
+    {'parent_idx': 75, 'parent_nodes': [1, 10], 'method': 'Point Mutation'}
+
+You could plot its parent with the affected nodes indicated using::
+
+    idx = est_gp._program.parents['parent_idx']
+    fade_nodes = est_gp._program.parents['parent_nodes']
+    print(est_gp._programs[-2][idx])
+    graph = est_gp._programs[-2][idx].export_graphviz(fade_nodes=fade_nodes)
+    graph = pydotplus.graphviz.graph_from_dot_data(graph)
+    Image(graph.create_png())
+
 .. currentmodule:: gplearn
 
-Saving Your Programs
---------------------
+.. _export:
+
+Exporting
+---------
 
 If you want to save your program for later use, you can use the ``pickle`` or
 ``cPickle`` libraries to achieve this::
@@ -29,8 +178,10 @@ You can then load it at another date easily::
 And use it as if it was the Python session where you originally trained the
 model.
 
-Customizing Your Programs
--------------------------
+.. _custom_functions:
+
+Custom Functions
+----------------
 
 This example demonstrates modifying the function set with your own user-defined
 functions using the :func:`functions.make_function()` factory function.
@@ -45,20 +196,24 @@ For this example we will implement a logical operation where two arguments are
 compared, and if the first one is larger, return a third value, otherwise
 return a fourth value::
 
-    def logic(x1, x2, x3, x4):
+    def _logical(x1, x2, x3, x4):
         return np.where(x1 > x2, x3, x4)
 
 To make this into a ``gplearn`` compatible function, we use the factory where
 we must give it a name for display purposes and declare the arity of the
 function which must match the number of arguments that your function expects::
 
-    logical = make_function(function=logic,
+    logical = make_function(function=_logical,
                             name='logical',
                             arity=4)
 
 This can then be added to a ``gplearn`` estimator like so::
 
     gp = SymbolicTransformer(function_set=['add', 'sub', 'mul', 'div', logical])
+
+**Note that custom functions should be specified as the function object name
+(ie. with no quotes), while built-in functions use the name of the function as
+a string.**
 
 After fitting, you will see some of your programs will have used your own
 customized functions, for example::
@@ -68,8 +223,32 @@ customized functions, for example::
 .. image:: images/ex3_fig1.png
     :align: center
 
-Customizing Your Fitness Measure
---------------------------------
+In other mathematical relationships, it may be necessary to ensure the function
+has :ref:`closure <closure>`. This means that the function will always return a
+valid floating point result. Using ``np.where``, the user can protect against
+invalid operations and substitute problematic values with a default such as 0
+or 1. One example is the built-in protected division function where infinite
+values resulting by divide by zero are replaced by 1::
+
+    def _protected_division(x1, x2):
+        with np.errstate(divide='ignore', invalid='ignore'):
+            return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
+
+Or a custom function where floating-point overflow is protected in an
+exponential function::
+
+    def _protected_exponent(x1):
+        with np.errstate(over='ignore'):
+            return np.where(np.abs(x1) < 100, np.exp(x), 0.)
+
+For further information on the types of errors that numpy can encounter and
+what you will need to protect against in your own custom functions, see
+`here <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.seterr.html#numpy.seterr>`_.
+
+.. _custom_fitness:
+
+Custom Fitness
+--------------
 
 You can easily create your own fitness measure to have your programs evolve to
 optimize whatever metric you need. This is done using the
@@ -106,8 +285,10 @@ when creating an estimator::
 
 .. currentmodule:: gplearn.genetic
 
-Continuing Evolution With warm_start
-------------------------------------
+.. _warm_start:
+
+Continuing Evolution
+--------------------
 
 If you are evolving a lot of generations in your training session, but find
 that you need to keep evolving more, you can use the ``warm_start`` parameter in
