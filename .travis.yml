@@ -1,6 +1,5 @@
 language: python
-virtualenv:
-  system_site_packages: true
+
 env:
   matrix:
     - PYTHON_VERSION="2.7" COVERAGE="true" QUALITY="true" LATEST="true"
@@ -8,11 +7,54 @@ env:
     - PYTHON_VERSION="3.4" LATEST="true"
     - PYTHON_VERSION="3.5" LATEST="true"
     - PYTHON_VERSION="3.6" LATEST="true"
-install: source continuous_integration/install.sh
-script: bash continuous_integration/test_script.sh
+
+install:
+  - set -e
+  - deactivate
+  - sudo apt-get update
+  - if [[ "$PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh \
+        -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+        -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  - if [[ "$LATEST" == "true" ]]; then
+      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose \
+        scikit-learn cython
+    else
+      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose \
+        scikit-learn=$SKLEARN_VERSION cython
+    fi
+  - source activate testenv
+  - if [[ "$COVERAGE" == "true" ]]; then
+      pip install coverage coveralls
+    fi
+  - if [[ "$QUALITY" == "true" ]]; then
+      pip install prospector
+    fi
+  - python --version
+  - python -c "import numpy; print('numpy %s' % numpy.__version__)"
+  - python -c "import scipy; print('scipy %s' % scipy.__version__)"
+  - python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
+  - python setup.py install
+
+script:
+  - set -e
+  - if [[ "$QUALITY" == "true" ]]; then
+      prospector --profile $TRAVIS_BUILD_DIR/.landscape gplearn || true;
+    fi
+  - if [[ "$COVERAGE" == "true" ]]; then
+      nosetests -s -v --with-coverage --cover-package=gplearn;
+    else
+      nosetests -s -v gplearn;
+    fi
+
 after_success:
-    # Ignore coveralls failures as the coveralls server is not very reliable
-    # but we don't want travis to report a failure in the github UI just
-    # because the coverage report failed to be published.
     - if [[ "$COVERAGE" == "true" ]]; then coveralls || echo "failed"; fi
-cache: apt
