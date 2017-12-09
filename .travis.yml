@@ -13,11 +13,9 @@ install:
   - deactivate
   - sudo apt-get update
   - if [[ "$PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh \
-        -O miniconda.sh;
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-        -O miniconda.sh;
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -26,11 +24,9 @@ install:
   - conda update -q conda
   - conda info -a
   - if [[ "$LATEST" == "true" ]]; then
-      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose \
-        scikit-learn cython
+      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose scikit-learn cython
     else
-      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose \
-        scikit-learn=$SKLEARN_VERSION cython
+      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose scikit-learn=$SKLEARN_VERSION cython
     fi
   - source activate testenv
   - if [[ "$COVERAGE" == "true" ]]; then
