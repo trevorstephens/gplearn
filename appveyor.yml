@@ -8,12 +8,12 @@ environment:
       MINICONDA_PATH: C:\Miniconda36-x64
 
 install:
-  - "ECHO %PYTHON_VERSION% %MINICONDA_PATH%"
-  - "set PATH=%MINICONDA_PATH%;%MINICONDA_PATH%\\Scripts;%PATH%"
+  - ECHO %PYTHON_VERSION% %MINICONDA_PATH%
+  - set PATH=%MINICONDA_PATH%;%MINICONDA_PATH%\\Scripts;%PATH%
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n testenv -y python=$PYTHON_VERSION pip nose scikit-learn cython;"
+  - conda create -q -n testenv -y python=$PYTHON_VERSION pip nose scikit-learn cython
   - source activate testenv
   - python --version
   - python -c "import numpy; print('numpy %s' % numpy.__version__)"
