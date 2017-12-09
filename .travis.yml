@@ -35,14 +35,14 @@ install:
   - if [[ "$QUALITY" == "true" ]]; then
       pip install prospector;
     fi
+
+script:
+  - set -e
   - python --version
   - python -c "import numpy; print('numpy %s' % numpy.__version__)"
   - python -c "import scipy; print('scipy %s' % scipy.__version__)"
   - python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
   - python setup.py install
-
-script:
-  - set -e
   - if [[ "$QUALITY" == "true" ]]; then
       prospector --profile $TRAVIS_BUILD_DIR/.landscape gplearn || true;
     fi
