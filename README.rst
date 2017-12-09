@@ -10,6 +10,9 @@
 .. image:: https://travis-ci.org/trevorstephens/gplearn.svg?branch=master
     :target: https://travis-ci.org/trevorstephens/gplearn
     :alt: Test Status
+.. image:: https://ci.appveyor.com/api/projects/status/wqq9xxaxuyyt7nya?svg=true
+    :target: https://ci.appveyor.com/project/trevorstephens/gplearn
+    :alt: Windows Test Status
 .. image:: https://coveralls.io/repos/trevorstephens/gplearn/badge.svg
     :target: https://coveralls.io/r/trevorstephens/gplearn
     :alt: Test Coverage

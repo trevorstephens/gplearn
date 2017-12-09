@@ -40,6 +40,7 @@ Please ensure that:
 - Comply with `PEP8 <https://pypi.python.org/pypi/pep8>`_.
 
 Currently ``gplearn`` uses `Travis CI <https://travis-ci.org/trevorstephens/gplearn>`_
+and `AppVeyor <https://ci.appveyor.com/project/trevorstephens/gplearn>`_
 for testing, `Coveralls <https://coveralls.io/github/trevorstephens/gplearn>`_
 for code coverage reports, and `Landscape <https://landscape.io/github/trevorstephens/gplearn/>`_
 for code quality checks. These applications should automatically run on your
