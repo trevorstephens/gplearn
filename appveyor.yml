@@ -9,7 +9,7 @@ environment:
 
 install:
   - "ECHO %PYTHON_VERSION% %MINICONDA_PATH%"
-  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - "set PATH=%MINICONDA_PATH%;%MINICONDA_PATH%\\Scripts;%PATH%"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
