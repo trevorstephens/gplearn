@@ -30,10 +30,10 @@ install:
     fi
   - source activate testenv
   - if [[ "$COVERAGE" == "true" ]]; then
-      pip install coverage coveralls
+      pip install coverage coveralls;
     fi
   - if [[ "$QUALITY" == "true" ]]; then
-      pip install prospector
+      pip install prospector;
     fi
   - python --version
   - python -c "import numpy; print('numpy %s' % numpy.__version__)"
