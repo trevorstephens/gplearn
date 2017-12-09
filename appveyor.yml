@@ -16,9 +16,6 @@ install:
   - conda create -q -n testenv -y nose scikit-learn cython
   - activate testenv
   - python --version
-  - python -c "import numpy; print('numpy %s' % numpy.__version__)"
-  - python -c "import scipy; print('scipy %s' % scipy.__version__)"
-  - python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
   - python setup.py install
 
 test_script:
