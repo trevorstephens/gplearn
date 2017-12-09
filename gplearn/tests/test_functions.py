@@ -6,9 +6,19 @@
 
 import numpy as np
 from numpy import maximum
-from sklearn.utils.testing import assert_raises
+from sklearn.datasets import load_boston
+from sklearn.utils.testing import assert_equal, assert_raises
+from sklearn.utils.validation import check_random_state
 
 from gplearn.functions import _protected_sqrt, make_function
+from gplearn.genetic import SymbolicTransformer
+
+# load the boston dataset and randomly permute it
+rng = check_random_state(0)
+boston = load_boston()
+perm = rng.permutation(boston.target.size)
+boston.data = boston.data[perm]
+boston.target = boston.target[perm]
 
 
 def test_validate_function():
@@ -47,3 +57,25 @@ def test_validate_function():
         with np.errstate(divide='ignore', invalid='ignore'):
             return np.divide(x1, x2)
     assert_raises(ValueError, make_function, _unprotected_div, 'div', 2)
+
+
+def test_function_in_program():
+    """Check that using a custom function in a program works"""
+
+    def logic(x1, x2, x3, x4):
+        return np.where(x1 > x2, x3, x4)
+
+    logical = make_function(function=logic,
+                            name='logical',
+                            arity=4)
+    function_set = ['add', 'sub', 'mul', 'div', logical]
+    est = SymbolicTransformer(generations=2, population_size=2000,
+                              hall_of_fame=100, n_components=10,
+                              function_set=function_set,
+                              parsimony_coefficient=0.0005,
+                              max_samples=0.9, random_state=0)
+    est.fit(boston.data[:300, :], boston.target[:300])
+
+    formula = est._programs[0][906].__str__()
+    expected_formula = 'sub(logical(X6, add(X11, 0.898), X10, X2), X5)'
+    assert_equal(expected_formula, formula, True)
