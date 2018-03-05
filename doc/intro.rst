@@ -242,7 +242,7 @@ In ``gplearn``, several protected functions are used:
       1.0.
     - square root returns the square root of the absolute value of the
       argument.
-    - log returns the square root of the absolute value of the argument, or
+    - log returns the logarithm of the absolute value of the argument, or
       for very small values less than 0.001, it returns 0.0.
     - inverse, if the argument lies between -0.001 and 0.001, returns 0.0.
 
