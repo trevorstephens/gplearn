@@ -19,6 +19,9 @@
 .. image:: https://landscape.io/github/trevorstephens/gplearn/master/landscape.svg?style=flat
     :target: https://landscape.io/github/trevorstephens/gplearn/master
     :alt: Code Health
+.. image:: http://depsy.org/api/package/pypi/gplearn/badge.svg
+    :target: http://depsy.org/package/python/gplearn
+    :alt: Research software impact
 
 |
 
