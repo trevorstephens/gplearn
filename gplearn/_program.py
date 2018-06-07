@@ -188,9 +188,16 @@ class _Program(object):
                 terminal_stack.append(function.arity)
             else:
                 # We need a terminal, add a variable or constant
-                terminal = random_state.randint(self.n_features + 1)
+                if self.const_range is not None:
+                    terminal = random_state.randint(self.n_features + 1)
+                else:
+                    terminal = random_state.randint(self.n_features)
                 if terminal == self.n_features:
                     terminal = random_state.uniform(*self.const_range)
+                    if self.const_range is None:
+                        # We should never get here
+                        raise ValueError('A constant was produced with '
+                                         'const_range=None.')
                 program.append(terminal)
                 terminal_stack[-1] -= 1
                 while terminal_stack[-1] == 0:
@@ -622,9 +629,16 @@ class _Program(object):
                 program[node] = replacement
             else:
                 # We've got a terminal, add a const or variable
-                terminal = random_state.randint(self.n_features + 1)
+                if self.const_range is not None:
+                    terminal = random_state.randint(self.n_features + 1)
+                else:
+                    terminal = random_state.randint(self.n_features)
                 if terminal == self.n_features:
                     terminal = random_state.uniform(*self.const_range)
+                    if self.const_range is None:
+                        # We should never get here
+                        raise ValueError('A constant was produced with '
+                                         'const_range=None.')
                 program[node] = terminal
 
         return program, list(mutate)

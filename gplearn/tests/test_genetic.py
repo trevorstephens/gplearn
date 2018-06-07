@@ -416,10 +416,12 @@ def test_program_input_validation():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(const_range='ni')
         assert_raises(ValueError, est.fit, boston.data, boston.target)
-        # And check acceptable, but strange, representations of init_depth
-        est = Symbolic(const_range=(2, 2))
+        # And check acceptable, but strange, representations of const_range
+        est = Symbolic(generations=2, const_range=(2, 2))
         est.fit(boston.data, boston.target)
-        est = Symbolic(const_range=(4, 2))
+        est = Symbolic(generations=2, const_range=None)
+        est.fit(boston.data, boston.target)
+        est = Symbolic(generations=2, const_range=(4, 2))
         est.fit(boston.data, boston.target)
 
         # Check invalid init_depth
@@ -436,7 +438,7 @@ def test_program_input_validation():
         est = Symbolic(init_depth=(4, 2))
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         # And check acceptable, but strange, representations of init_depth
-        est = Symbolic(init_depth=(2, 2))
+        est = Symbolic(generations=2, init_depth=(2, 2))
         est.fit(boston.data, boston.target)
 
     # Check hall_of_fame and n_components for transformer
@@ -465,6 +467,36 @@ def test_program_input_validation():
     for m in ['mean absolute error', 'mse', 'rmse', 'the larch']:
         est = SymbolicTransformer(generations=2, metric=m)
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_none_const_range():
+    """Check that const_range=None produces no constants"""
+
+    # Check with None as const_range
+    est = SymbolicRegressor(const_range=None, generations=2)
+    est.fit(boston.data, boston.target)
+    float_count = 0
+    for generation in est._programs:
+        for program in generation:
+            if program is None:
+                continue
+            for element in program.program:
+                if type(element) == float:
+                    float_count += 1
+    assert_true(float_count == 0)
+
+    # Check with default const_range
+    est = SymbolicRegressor(generations=2)
+    est.fit(boston.data, boston.target)
+    float_count = 0
+    for generation in est._programs:
+        for program in generation:
+            if program is None:
+                continue
+            for element in program.program:
+                if type(element) == float:
+                    float_count += 1
+    assert_true(float_count > 1)
 
 
 def test_sample_weight():
