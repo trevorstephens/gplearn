@@ -361,9 +361,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              '"grow", "full" and "half and half". Given %s.'
                              % self.init_method)
 
-        if (not isinstance(self.const_range, tuple) or
-                len(self.const_range) != 2):
-            raise ValueError('const_range should be a tuple with length two.')
+        if not((isinstance(self.const_range, tuple) and
+                len(self.const_range) == 2) or self.const_range is None):
+            raise ValueError('const_range should be a tuple with length two, '
+                             'or None.')
 
         if (not isinstance(self.init_depth, tuple) or
                 len(self.init_depth) != 2):
@@ -539,8 +540,9 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     stopping_criteria : float, optional (default=0.0)
         The required metric value required in order to stop evolution early.
 
-    const_range : tuple of two floats, optional (default=(-1., 1.))
-        The range of constants to include in the formulas.
+    const_range : tuple of two floats, or None, optional (default=(-1., 1.))
+        The range of constants to include in the formulas. If None then no
+        constants will be included in the candidate programs.
 
     init_depth : tuple of two ints, optional (default=(2, 6))
         The range of tree depths for the initial population of naive formulas.
@@ -795,8 +797,9 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     stopping_criteria : float, optional (default=1.0)
         The required metric value required in order to stop evolution early.
 
-    const_range : tuple of two floats, optional (default=(-1., 1.))
-        The range of constants to include in the formulas.
+    const_range : tuple of two floats, or None, optional (default=(-1., 1.))
+        The range of constants to include in the formulas. If None then no
+        constants will be included in the candidate programs.
 
     init_depth : tuple of two ints, optional (default=(2, 6))
         The range of tree depths for the initial population of naive formulas.
