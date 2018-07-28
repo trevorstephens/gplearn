@@ -47,6 +47,8 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
     max_samples = params['max_samples']
+    slim = params['slim']
+
 
     max_samples = int(max_samples * n_samples)
 
@@ -121,7 +123,9 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            random_state=random_state,
                            program=program)
 
-        program.parents = genome
+        # Only keep parent references
+        if not slim:
+            program.parents = genome
 
         # Draw samples, using sample weights, and then fit
         if sample_weight is None:
@@ -179,7 +183,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  warm_start=False,
                  n_jobs=1,
                  verbose=0,
-                 random_state=None):
+                 random_state=None,
+                 slim=False):
 
         self.population_size = population_size
         self.hall_of_fame = hall_of_fame
@@ -203,6 +208,21 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
+        self.slim = slim
+        self._parent_generation = None
+        self._trained_generations = 0
+
+    def get_prior_generation_count(self):
+        if self.slim:
+            return self._trained_generations
+        else:
+            return len(self._programs)
+
+    def get_prior_generation(self):
+        if self.slim:
+            return self._parent_generation
+        else:
+            return self._programs[-1]
 
     def _verbose_reporter(self,
                           start_time=None,
@@ -382,22 +402,22 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             # Free allocated memory, if any
             self._programs = []
 
-        prior_generations = len(self._programs)
+        prior_generations = self.get_prior_generation_count()
         n_more_generations = self.generations - prior_generations
 
         if n_more_generations < 0:
             raise ValueError('generations=%d must be larger or equal to '
                              'len(_programs)=%d when warm_start==True'
-                             % (self.generations, len(self._programs)))
+                             % (self.generations, self.get_prior_generation_count()))
         elif n_more_generations == 0:
-            fitness = [program.raw_fitness_ for program in self._programs[-1]]
+            fitness = [program.raw_fitness_ for program in self.get_prior_generation()]
             warn("Warm-start fitting without increasing n_estimators does not "
                  "fit new trees.")
 
         if self.warm_start:
             # Generate and discard seeds that would have been produced on the
             # initial fit call.
-            for i in range(len(self._programs)):
+            for i in range(self.get_prior_generation_count()):
                 _ = random_state.randint(MAX_INT, size=self.population_size)
 
         if self.verbose:
@@ -410,7 +430,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             if gen == 0:
                 parents = None
             else:
-                parents = self._programs[gen - 1]
+                parents = self.get_prior_generation()
 
             # Parallel loop
             n_jobs, n_programs, starts = _partition_estimators(
@@ -441,20 +461,24 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             for program in population:
                 program.fitness_ = program.fitness(parsimony_coefficient)
 
-            self._programs.append(population)
+            if self.slim:
+                self._parent_generation = population
+            else:
+                self._programs.append(population)
 
             # Remove old programs that didn't make it into the new population.
-            for old_gen in np.arange(gen, 0, -1):
-                indices = []
-                for program in self._programs[old_gen]:
-                    if program is not None:
-                        for idx in program.parents:
-                            if 'idx' in idx:
-                                indices.append(program.parents[idx])
-                indices = set(indices)
-                for idx in range(self.population_size):
-                    if idx not in indices:
-                        self._programs[old_gen - 1][idx] = None
+            if not self.slim:
+                for old_gen in np.arange(gen, 0, -1):
+                    indices = []
+                    for program in self._programs[old_gen]:
+                        if program is not None:
+                            for idx in program.parents:
+                                if 'idx' in idx:
+                                    indices.append(program.parents[idx])
+                    indices = set(indices)
+                    for idx in range(self.population_size):
+                        if idx not in indices:
+                            self._programs[old_gen - 1][idx] = None
 
             if self.verbose:
                 self._verbose_reporter(start_time, gen, population, fitness,
@@ -473,9 +497,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if isinstance(self, RegressorMixin):
             # Find the best individual in the final generation
             if self._metric.greater_is_better:
-                self._program = self._programs[-1][np.argmax(fitness)]
+                self._program = population[np.argmax(fitness)]
             else:
-                self._program = self._programs[-1][np.argmin(fitness)]
+                self._program = population[np.argmin(fitness)]
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
@@ -485,7 +509,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             else:
                 hall_of_fame = fitness.argsort()[:self.hall_of_fame]
             evaluation = np.array([gp.execute(X) for gp in
-                                   [self._programs[-1][i] for
+                                   [population[i] for
                                     i in hall_of_fame]])
             if self.metric == 'spearman':
                 evaluation = np.apply_along_axis(rankdata, 1, evaluation)
@@ -506,7 +530,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]
                 indices = list(range(len(components)))
-            self._best_programs = [self._programs[-1][i] for i in
+            self._best_programs = [population[i] for i in
                                    hall_of_fame[components]]
 
         return self
@@ -664,6 +688,8 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
+    slim : bool, optional (default=False)
+
     See Also
     --------
     SymbolicTransformer
@@ -696,7 +722,8 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  warm_start=False,
                  n_jobs=1,
                  verbose=0,
-                 random_state=None):
+                 random_state=None,
+                 slim=False):
         super(SymbolicRegressor, self).__init__(
             population_size=population_size,
             generations=generations,
@@ -717,7 +744,8 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             warm_start=warm_start,
             n_jobs=n_jobs,
             verbose=verbose,
-            random_state=random_state)
+            random_state=random_state,
+            slim=slim)
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
@@ -919,6 +947,8 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
+    slim : bool, optional (default=False)
+
     See Also
     --------
     SymbolicRegressor
@@ -953,7 +983,8 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  warm_start=False,
                  n_jobs=1,
                  verbose=0,
-                 random_state=None):
+                 random_state=None,
+                 slim=False):
         super(SymbolicTransformer, self).__init__(
             population_size=population_size,
             hall_of_fame=hall_of_fame,
@@ -976,7 +1007,8 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             warm_start=warm_start,
             n_jobs=n_jobs,
             verbose=verbose,
-            random_state=random_state)
+            random_state=random_state,
+            slim=slim)
 
     def __len__(self):
         """Overloads `len` output to be the number of fitted components."""
