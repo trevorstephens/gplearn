@@ -1005,6 +1005,28 @@ def test_warm_start():
     assert_equal(cold_program, warm_program)
 
 
+def test_slim_parameter():
+    est = SymbolicRegressor(population_size=50,
+                            generations=5,
+                            tournament_size=5,
+                            random_state=0,
+                            slim=True)
+    est.fit(boston.data, boston.target)
+    assert_equal(len(est._programs), 0)
+    assert_equal(est._program.parents, None)
+
+    est = SymbolicTransformer(population_size=50,
+                              generations=5,
+                              tournament_size=5,
+                              hall_of_fame=20,
+                              random_state=0,
+                              slim=True)
+    est.fit(boston.data, boston.target)
+    assert_equal(len(est._programs), 0)
+    assert_equal(est._best_programs[0].parents, None)
+
+
+
 if __name__ == "__main__":
     import nose
     nose.runmodule()
