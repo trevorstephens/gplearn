@@ -404,6 +404,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         prior_generations = self.get_prior_generation_count()
         n_more_generations = self.generations - prior_generations
+        population = None
 
         if n_more_generations < 0:
             raise ValueError('generations=%d must be larger or equal to '
@@ -493,6 +494,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 best_fitness = fitness[np.argmin(fitness)]
                 if best_fitness <= self.stopping_criteria:
                     break
+
+        if population is None:
+            population = self.get_prior_generation()
 
         if isinstance(self, RegressorMixin):
             # Find the best individual in the final generation
