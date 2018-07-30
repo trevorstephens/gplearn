@@ -4,6 +4,13 @@
 Release History
 ===============
 
+Version 0.4.0
+-------------
+
+- Allow users to exclude constants from their programs by setting
+  ``const_range=None`` in :class:`genetic.SymbolicRegressor` or
+  :class:`genetic.SymbolicTransformer`.
+
 Version 0.3.0
 -------------
 
@@ -63,6 +70,6 @@ Version 0.2.0
 Version 0.1.0
 -------------
 
-Initial public release supporting symbolic regression tasks through the
-:class:`genetic.SymbolicRegressor` class for regression problems and the
-:class:`genetic.SymbolicTransformer` class for automated feature engineering.
+- Initial public release supporting symbolic regression tasks through the
+  :class:`genetic.SymbolicRegressor` class for regression problems and the
+  :class:`genetic.SymbolicTransformer` class for automated feature engineering.
