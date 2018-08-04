@@ -2,11 +2,12 @@ language: python
 
 env:
   matrix:
-    - PYTHON_VERSION="2.7" COVERAGE="true" QUALITY="true" LATEST="true"
+    - PYTHON_VERSION="2.7" COVERAGE="true" LATEST="true"
     - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.18.1"
     - PYTHON_VERSION="3.4" LATEST="true"
     - PYTHON_VERSION="3.5" LATEST="true"
     - PYTHON_VERSION="3.6" LATEST="true"
+    - PYTHON_VERSION="3.7" LATEST="true" QUALITY="true"
 
 install:
   - set -e
