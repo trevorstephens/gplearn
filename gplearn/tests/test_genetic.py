@@ -1011,7 +1011,7 @@ def test_indices():
 
 
 def test_run_details():
-    """Check the warm_start functionality works as expected."""
+    """Check the run_details_ attribute works as expected."""
     est = SymbolicRegressor(generations=5, random_state=415)
     est.fit(boston.data, boston.target)
     # Check generations are indexed as expected without warm_start
