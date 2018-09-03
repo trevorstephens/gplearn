@@ -1010,6 +1010,21 @@ def test_indices():
     assert_array_equal(indices, gp.indices_)
 
 
+def test_run_details():
+    """Check the run_details_ attribute works as expected."""
+    est = SymbolicRegressor(generations=5, random_state=415)
+    est.fit(boston.data, boston.target)
+    # Check generations are indexed as expected without warm_start
+    assert_equal(est.run_details_['generation'], list(range(5)))
+    est.set_params(generations=10, warm_start=True)
+    est.fit(boston.data, boston.target)
+    # Check generations are indexed as expected with warm_start
+    assert_equal(est.run_details_['generation'], list(range(10)))
+    # Check all details have expected number of elements
+    for detail in est.run_details_:
+        assert_equal(len(est.run_details_[detail]), 10)
+
+
 def test_warm_start():
     """Check the warm_start functionality works as expected."""
 

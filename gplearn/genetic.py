@@ -205,32 +205,16 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.random_state = random_state
 
     def _verbose_reporter(self,
-                          start_time=None,
-                          gen=None,
-                          population=None,
-                          fitness=None,
-                          length=None):
+                          run_details=None):
         """A report of the progress of the evolution process.
 
         Parameters
         ----------
-        start_time : float
-            The start time for the current generation.
-
-        gen : int
-            The current generation (0 is the first naive random population).
-
-        population : list
-            The current population.
-
-        fitness : list
-            The current population's raw fitness.
-
-        length : list
-            The current population's lengths.
+        run_details : dict
+            Information about the evolution.
 
         """
-        if start_time is None:
+        if run_details is None:
             print('%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
                                         'Best Individual'.center(42)))
             print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 42 + ' ' + '-' * 10)
@@ -240,29 +224,24 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         else:
             # Estimate remaining time for run
-            remaining_time = ((self.generations - gen - 1) *
-                              (time() - start_time) / float(gen + 1))
+            gen = run_details['generation'][-1]
+            generation_time = run_details['generation_time'][-1]
+            remaining_time = (self.generations - gen - 1) * generation_time
             if remaining_time > 60:
                 remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
             else:
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
-            # Find the current generation's best individual
-            if self._metric.greater_is_better:
-                best_program = population[np.argmax(fitness)]
-            else:
-                best_program = population[np.argmin(fitness)]
-
             oob_fitness = 'N/A'
             if self.max_samples < 1.0:
-                oob_fitness = best_program.oob_fitness_
+                oob_fitness = run_details['best_oob_fitness'][-1]
 
             print('%4s %8s %16s %8s %16s %16s %10s' %
-                  (gen,
-                   np.round(np.mean(length), 2),
-                   np.mean(fitness),
-                   best_program.length_,
-                   best_program.raw_fitness_,
+                  (run_details['generation'][-1],
+                   np.round(run_details['average_length'][-1], 2),
+                   run_details['average_fitness'][-1],
+                   run_details['best_length'][-1],
+                   run_details['best_fitness'][-1],
                    oob_fitness,
                    remaining_time))
 
@@ -382,6 +361,13 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if not self.warm_start or not hasattr(self, "_programs"):
             # Free allocated memory, if any
             self._programs = []
+            self.run_details_ = {'generation': [],
+                                 'average_length': [],
+                                 'average_fitness': [],
+                                 'best_length': [],
+                                 'best_fitness': [],
+                                 'best_oob_fitness': [],
+                                 'generation_time': []}
 
         prior_generations = len(self._programs)
         n_more_generations = self.generations - prior_generations
@@ -393,7 +379,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         elif n_more_generations == 0:
             fitness = [program.raw_fitness_ for program in self._programs[-1]]
             warn("Warm-start fitting without increasing n_estimators does not "
-                 "fit new trees.")
+                 "fit new programs.")
 
         if self.warm_start:
             # Generate and discard seeds that would have been produced on the
@@ -404,9 +390,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if self.verbose:
             # Print header fields
             self._verbose_reporter()
-            start_time = time()
 
         for gen in range(prior_generations, self.generations):
+
+            start_time = time()
 
             if gen == 0:
                 parents = None
@@ -457,9 +444,25 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                     if idx not in indices:
                         self._programs[old_gen - 1][idx] = None
 
+            # Record run details
+            if self._metric.greater_is_better:
+                best_program = population[np.argmax(fitness)]
+            else:
+                best_program = population[np.argmin(fitness)]
+            self.run_details_['generation'].append(gen)
+            self.run_details_['average_length'].append(np.mean(length))
+            self.run_details_['average_fitness'].append(np.mean(fitness))
+            self.run_details_['best_length'].append(best_program.length_)
+            self.run_details_['best_fitness'].append(best_program.raw_fitness_)
+            oob_fitness = np.nan
+            if self.max_samples < 1.0:
+                oob_fitness = best_program.oob_fitness_
+            self.run_details_['best_oob_fitness'].append(oob_fitness)
+            generation_time = time() - start_time
+            self.run_details_['generation_time'].append(generation_time)
+
             if self.verbose:
-                self._verbose_reporter(start_time, gen, population, fitness,
-                                       length)
+                self._verbose_reporter(self.run_details_)
 
             # Check for early stopping
             if self._metric.greater_is_better:
@@ -665,6 +668,20 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
+
+    Attributes
+    ----------
+    run_details_ : dict
+        Details of the evolution process. Includes the following elements:
+
+        - 'generation' : The generation index.
+        - 'average_length' : The average program length of the generation.
+        - 'average_fitness' : The average program fitness of the generation.
+        - 'best_length' : The length of the best program in the generation.
+        - 'best_fitness' : The fitness of the best program in the generation.
+        - 'best_oob_fitness' : The out of bag fitness of the best program in
+          the generation (requires `max_samples` < 1.0).
+        - 'generation_time' : The time it took for the generation to evolve.
 
     See Also
     --------
@@ -921,6 +938,20 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
+
+    Attributes
+    ----------
+    run_details_ : dict
+        Details of the evolution process. Includes the following elements:
+
+        - 'generation' : The generation index.
+        - 'average_length' : The average program length of the generation.
+        - 'average_fitness' : The average program fitness of the generation.
+        - 'best_length' : The length of the best program in the generation.
+        - 'best_fitness' : The fitness of the best program in the generation.
+        - 'best_oob_fitness' : The out of bag fitness of the best program in
+          the generation (requires `max_samples` < 1.0).
+        - 'generation_time' : The time it took for the generation to evolve.
 
     See Also
     --------
