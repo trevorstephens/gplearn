@@ -211,7 +211,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         Parameters
         ----------
         run_details : dict
-            Information about the run.
+            Information about the evolution.
 
         """
         if run_details is None:
@@ -669,6 +669,20 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
+    Attributes
+    ----------
+    run_details_ : dict
+        Details of the evolution process. Includes the following elements:
+
+        - 'generation' : The generation index.
+        - 'average_length' : The average program length of the generation.
+        - 'average_fitness' : The average program fitness of the generation.
+        - 'best_length' : The length of the best program in the generation.
+        - 'best_fitness' : The fitness of the best program in the generation.
+        - 'best_oob_fitness' : The out of bag fitness of the best program in
+          the generation (requires `max_samples` < 1.0).
+        - 'generation_time' : The time it took for the generation to evolve.
+
     See Also
     --------
     SymbolicTransformer
@@ -924,6 +938,20 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
+
+    Attributes
+    ----------
+    run_details_ : dict
+        Details of the evolution process. Includes the following elements:
+
+        - 'generation' : The generation index.
+        - 'average_length' : The average program length of the generation.
+        - 'average_fitness' : The average program fitness of the generation.
+        - 'best_length' : The length of the best program in the generation.
+        - 'best_fitness' : The fitness of the best program in the generation.
+        - 'best_oob_fitness' : The out of bag fitness of the best program in
+          the generation (requires `max_samples` < 1.0).
+        - 'generation_time' : The time it took for the generation to evolve.
 
     See Also
     --------

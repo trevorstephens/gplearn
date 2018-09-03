@@ -10,6 +10,9 @@ Version 0.4.0
 - Allow users to exclude constants from their programs by setting
   ``const_range=None`` in :class:`genetic.SymbolicRegressor` or
   :class:`genetic.SymbolicTransformer`.
+- Record details (similar to the verbose output) of the evolution in the
+  estimator attribute ``run_details_`` dict in
+  :class:`genetic.SymbolicRegressor` and :class:`genetic.SymbolicTransformer`.
 
 Version 0.3.0
 -------------
