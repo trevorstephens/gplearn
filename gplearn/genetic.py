@@ -215,12 +215,12 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         """
         if run_details is None:
-            print('%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(42)))
+            print('    |{:^25}|{:^42}|'.format('Population Average',
+                                               'Best Individual'))
             print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 42 + ' ' + '-' * 10)
-            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                             'OOB Fitness', 'Time Left')
-            print('%4s %8s %16s %8s %16s %16s %10s' % header_fields)
+            line_format = '{:>4} {:>8} {:>16} {:>8} {:>16} {:>16} {:>10}'
+            print(line_format.format('Gen', 'Length', 'Fitness', 'Length',
+                                     'Fitness', 'OOB Fitness', 'Time Left'))
 
         else:
             # Estimate remaining time for run
@@ -233,17 +233,18 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
             oob_fitness = 'N/A'
+            line_format = '{:4d} {:8.2f} {:16g} {:8d} {:16g} {:>16} {:>10}'
             if self.max_samples < 1.0:
                 oob_fitness = run_details['best_oob_fitness'][-1]
+                line_format = '{:4d} {:8.2f} {:16g} {:8d} {:16g} {:16g} {:>10}'
 
-            print('%4s %8s %16s %8s %16s %16s %10s' %
-                  (run_details['generation'][-1],
-                   np.round(run_details['average_length'][-1], 2),
-                   run_details['average_fitness'][-1],
-                   run_details['best_length'][-1],
-                   run_details['best_fitness'][-1],
-                   oob_fitness,
-                   remaining_time))
+            print(line_format.format(run_details['generation'][-1],
+                                     run_details['average_length'][-1],
+                                     run_details['average_fitness'][-1],
+                                     run_details['best_length'][-1],
+                                     run_details['best_fitness'][-1],
+                                     oob_fitness,
+                                     remaining_time))
 
     def fit(self, X, y, sample_weight=None):
         """Fit the Genetic Program according to X, y.

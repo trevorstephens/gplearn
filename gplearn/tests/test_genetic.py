@@ -608,8 +608,8 @@ def test_verbose_output():
     # check output
     verbose_output.seek(0)
     header1 = verbose_output.readline().rstrip()
-    true_header = '%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(42))
+    true_header = '    |{:^25}|{:^42}|'.format('Population Average',
+                                               'Best Individual')
     assert_equal(true_header, header1)
 
     header2 = verbose_output.readline().rstrip()
@@ -617,9 +617,10 @@ def test_verbose_output():
     assert_equal(true_header, header2)
 
     header3 = verbose_output.readline().rstrip()
-    header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                     'OOB Fitness', 'Time Left')
-    true_header = '%4s %8s %16s %8s %16s %16s %10s' % header_fields
+
+    line_format = '{:>4} {:>8} {:>16} {:>8} {:>16} {:>16} {:>10}'
+    true_header = line_format.format('Gen', 'Length', 'Fitness', 'Length',
+                                     'Fitness', 'OOB Fitness', 'Time Left')
     assert_equal(true_header, header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
