@@ -13,6 +13,9 @@ Version 0.4.0
 - Record details (similar to the verbose output) of the evolution in the
   estimator attribute ``run_details_`` dict in
   :class:`genetic.SymbolicRegressor` and :class:`genetic.SymbolicTransformer`.
+- Pearson and Spearman correlation coefficients added as first-class metrics to
+  :class:`genetic.SymbolicRegressor`. These metrics allow for evolution of
+  value-added features for second-stage estimators.
 
 Version 0.3.0
 -------------

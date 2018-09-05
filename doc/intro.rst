@@ -202,6 +202,11 @@ target, these are maximized by the evolution process:
       default), and
     - 'spearman' for Spearman's rank-order correlation coefficient.
 
+These two correlation metrics are also supported by the
+:class:`SymbolicRegressor`, though their output will not directly predict the
+target; they are better used as a value-added feature to a second-stage
+estimator.
+
 .. currentmodule:: gplearn
 
 You can also set up your own fitness measures by using the
