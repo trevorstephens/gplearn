@@ -315,7 +315,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if isinstance(self.metric, _Fitness):
             self._metric = self.metric
         elif isinstance(self, RegressorMixin):
-            if self.metric not in ('mean absolute error', 'mse', 'rmse'):
+            if self.metric not in ('mean absolute error', 'mse', 'rmse',
+                                   'pearson', 'spearman'):
                 raise ValueError('Unsupported metric: %s' % self.metric)
             else:
                 self._metric = _fitness_map[self.metric]
@@ -593,9 +594,17 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     metric : str, optional (default='mean absolute error')
         The name of the raw fitness metric. Available options include:
 
-        - 'mean absolute error',
-        - 'mse' for mean squared error,
+        - 'mean absolute error'.
+        - 'mse' for mean squared error.
         - 'rmse' for root mean squared error.
+        - 'pearson', for Pearson's product-moment correlation coefficient.
+        - 'spearman' for Spearman's rank-order correlation coefficient.
+
+        Note that 'pearson' and 'spearman' will not directly predict the target
+        but could be useful as value-added features in a second-step estimator.
+        This would allow the user to generate one engineered feature at a time,
+        using the SymbolicTransformer would allow creation of multiple features
+        at once.
 
     parsimony_coefficient : float or "auto", optional (default=0.001)
         This constant penalizes large programs by adjusting their fitness to
@@ -864,7 +873,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     metric : str, optional (default='pearson')
         The name of the raw fitness metric. Available options include:
 
-        - 'pearson', for Pearson's product-moment correlation coefficient, and
+        - 'pearson', for Pearson's product-moment correlation coefficient.
         - 'spearman' for Spearman's rank-order correlation coefficient.
 
     parsimony_coefficient : float or "auto", optional (default=0.001)
