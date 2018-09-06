@@ -452,13 +452,12 @@ def test_program_input_validation():
     assert_raises(ValueError, est.fit, boston.data, boston.target)
 
     # Check regressor metrics
-    for m in ['mean absolute error', 'mse', 'rmse']:
+    for m in ['mean absolute error', 'mse', 'rmse', 'pearson', 'spearman']:
         est = SymbolicRegressor(generations=2, metric=m)
         est.fit(boston.data, boston.target)
-    # And check the transformer metrics as well as a fake one
-    for m in ['pearson', 'spearman', 'the larch']:
-        est = SymbolicRegressor(generations=2, metric=m)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+    # And check a fake one
+    est = SymbolicRegressor(generations=2, metric='the larch')
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
     # Check transformer metrics
     for m in ['pearson', 'spearman']:
         est = SymbolicTransformer(generations=2, metric=m)
@@ -1013,6 +1012,7 @@ def test_indices():
 
 def test_run_details():
     """Check the run_details_ attribute works as expected."""
+
     est = SymbolicRegressor(generations=5, random_state=415)
     est.fit(boston.data, boston.target)
     # Check generations are indexed as expected without warm_start
