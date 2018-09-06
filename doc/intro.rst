@@ -205,7 +205,8 @@ target, these are maximized by the evolution process:
 These two correlation metrics are also supported by the
 :class:`SymbolicRegressor`, though their output will not directly predict the
 target; they are better used as a value-added feature to a second-stage
-estimator.
+estimator. Both will equally prefer strongly positively or negatively
+correlated predictions.
 
 .. currentmodule:: gplearn
 
