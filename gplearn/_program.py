@@ -262,18 +262,18 @@ class _Program(object):
         terminals = []
         if fade_nodes is None:
             fade_nodes = []
-        output = "digraph program {\nnode [style=filled]"
+        output = 'digraph program {\nnode [style=filled]'
         for i, node in enumerate(self.program):
-            fill = "#cecece"
+            fill = '#cecece'
             if isinstance(node, _Function):
                 if i not in fade_nodes:
-                    fill = "#136ed4"
+                    fill = '#136ed4'
                 terminals.append([node.arity, i])
                 output += ('%d [label="%s", fillcolor="%s"] ;\n'
                            % (i, node.name, fill))
             else:
                 if i not in fade_nodes:
-                    fill = "#60a6f6"
+                    fill = '#60a6f6'
                 if isinstance(node, int):
                     output += ('%d [label="%s%s", fillcolor="%s"] ;\n'
                                % (i, 'X', node, fill))
@@ -282,7 +282,7 @@ class _Program(object):
                                % (i, node, fill))
                 if i == 0:
                     # A degenerative program of only one node
-                    return output + "}"
+                    return output + '}'
                 terminals[-1][0] -= 1
                 terminals[-1].append(i)
                 while terminals[-1][0] == 0:
@@ -293,7 +293,7 @@ class _Program(object):
                         parent = terminals[-1][-1]
                         terminals.pop()
                         if not terminals:
-                            return output + "}"
+                            return output + '}'
                         terminals[-1].append(parent)
                         terminals[-1][0] -= 1
 
