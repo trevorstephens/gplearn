@@ -204,8 +204,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.verbose = verbose
         self.random_state = random_state
 
-    def _verbose_reporter(self,
-                          run_details=None):
+    def _verbose_reporter(self, run_details=None):
         """A report of the progress of the evolution process.
 
         Parameters
@@ -360,7 +359,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         params['arities'] = self._arities
         params['method_probs'] = self._method_probs
 
-        if not self.warm_start or not hasattr(self, "_programs"):
+        if not self.warm_start or not hasattr(self, '_programs'):
             # Free allocated memory, if any
             self._programs = []
             self.run_details_ = {'generation': [],
@@ -380,8 +379,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              % (self.generations, len(self._programs)))
         elif n_more_generations == 0:
             fitness = [program.raw_fitness_ for program in self._programs[-1]]
-            warn("Warm-start fitting without increasing n_estimators does not "
-                 "fit new programs.")
+            warn('Warm-start fitting without increasing n_estimators does not '
+                 'fit new programs.')
 
         if self.warm_start:
             # Generate and discard seeds that would have been produced on the
@@ -750,7 +749,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
-        if not hasattr(self, "_program"):
+        if not hasattr(self, '_program'):
             return self.__repr__()
         return self._program.__str__()
 
@@ -769,15 +768,15 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             Predicted values for X.
 
         """
-        if not hasattr(self, "_program"):
-            raise NotFittedError("SymbolicRegressor not fitted.")
+        if not hasattr(self, '_program'):
+            raise NotFittedError('SymbolicRegressor not fitted.')
 
         X = check_array(X)
         _, n_features = X.shape
         if self.n_features_ != n_features:
-            raise ValueError("Number of features of the model must match the "
-                             "input. Model n_features is %s and input "
-                             "n_features is %s."
+            raise ValueError('Number of features of the model must match the '
+                             'input. Model n_features is %s and input '
+                             'n_features is %s.'
                              % (self.n_features_, n_features))
 
         y = self._program.execute(X)
@@ -1024,7 +1023,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     def __len__(self):
         """Overloads `len` output to be the number of fitted components."""
-        if not hasattr(self, "_best_programs"):
+        if not hasattr(self, '_best_programs'):
             return 0
         return self.n_components
 
@@ -1036,7 +1035,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble LISP trees."""
-        if not hasattr(self, "_best_programs"):
+        if not hasattr(self, '_best_programs'):
             return self.__repr__()
         output = str([gp.__str__() for gp in self])
         return output.replace("',", ",\n").replace("'", "")
@@ -1056,15 +1055,15 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             Transformed array.
 
         """
-        if not hasattr(self, "_best_programs"):
-            raise NotFittedError("SymbolicTransformer not fitted.")
+        if not hasattr(self, '_best_programs'):
+            raise NotFittedError('SymbolicTransformer not fitted.')
 
         X = check_array(X)
         _, n_features = X.shape
         if self.n_features_ != n_features:
-            raise ValueError("Number of features of the model must match the "
-                             "input. Model n_features is %s and input "
-                             "n_features is %s."
+            raise ValueError('Number of features of the model must match the '
+                             'input. Model n_features is %s and input '
+                             'n_features is %s.'
                              % (self.n_features_, n_features))
 
         X_new = np.array([gp.execute(X) for gp in self._best_programs]).T

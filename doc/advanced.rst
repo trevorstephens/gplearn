@@ -165,7 +165,15 @@ If you want to save your program for later use, you can use the ``pickle`` or
     est = SymbolicRegressor()
     est.fit(X_train, y_train)
 
-Simply dump your model to a file::
+Optionally, you can reduce the file size of the pickled object by removing the
+evolution information contained within the ``_programs`` attribute. Note though
+that while the resulting estimator will be able to do predictions, doing this
+will remove the ability to use ``warm_start`` to continue the evolution, or
+inspection of the final solution's parents::
+
+    delattr(est, '_programs')
+
+Then simply dump your model to a file::
 
     with open('gp_model.pkl', 'wb') as f:
         pickle.dump(est, f)
@@ -173,7 +181,7 @@ Simply dump your model to a file::
 You can then load it at another date easily::
 
     with open('gp_model.pkl', 'rb') as f:
-        est_gp = pickle.load(f)
+        est = pickle.load(f)
 
 And use it as if it was the Python session where you originally trained the
 model.
