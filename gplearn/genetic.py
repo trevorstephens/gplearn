@@ -47,7 +47,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
     max_samples = params['max_samples']
-    slim = params['slim']
+    low_memory = params['low_memory']
 
 
     max_samples = int(max_samples * n_samples)
@@ -124,7 +124,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            program=program)
 
         # Only keep parent references
-        if not slim:
+        if not low_memory:
             program.parents = genome
 
         # Draw samples, using sample weights, and then fit
@@ -181,10 +181,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  p_point_replace=0.05,
                  max_samples=1.0,
                  warm_start=False,
+                 low_memory=False,
                  n_jobs=1,
                  verbose=0,
-                 random_state=None,
-                 slim=False):
+                 random_state=None):
 
         self.population_size = population_size
         self.hall_of_fame = hall_of_fame
@@ -205,21 +205,21 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.p_point_replace = p_point_replace
         self.max_samples = max_samples
         self.warm_start = warm_start
+        self.low_memory = low_memory
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
-        self.slim = slim
         self._parent_generation = None
         self._trained_generations = 0
 
     def get_prior_generation_count(self):
-        if self.slim:
+        if self.low_memory:
             return self._trained_generations
         else:
             return len(self._programs)
 
     def get_prior_generation(self):
-        if self.slim:
+        if self.low_memory:
             return self._parent_generation
         else:
             return self._programs[-1]
@@ -462,13 +462,13 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             for program in population:
                 program.fitness_ = program.fitness(parsimony_coefficient)
 
-            if self.slim:
+            if self.low_memory:
                 self._parent_generation = population
             else:
                 self._programs.append(population)
 
             # Remove old programs that didn't make it into the new population.
-            if not self.slim:
+            if not self.low_memory:
                 for old_gen in np.arange(gen, 0, -1):
                     indices = []
                     for program in self._programs[old_gen]:
@@ -679,6 +679,11 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         and add more generations to the evolution, otherwise, just fit a new
         evolution.
 
+    low_memory : bool, optional (default=False)
+        When set to ``True``, no history of parents is retained, reducing the
+        memory footprint of the evolution to only the last generation and the
+        current generation.
+
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
         of jobs is set to the number of cores.
@@ -691,8 +696,6 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
-
-    slim : bool, optional (default=False)
 
     See Also
     --------
@@ -724,10 +727,10 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  p_point_replace=0.05,
                  max_samples=1.0,
                  warm_start=False,
+                 low_memory=False,
                  n_jobs=1,
                  verbose=0,
-                 random_state=None,
-                 slim=False):
+                 random_state=None):
         super(SymbolicRegressor, self).__init__(
             population_size=population_size,
             generations=generations,
@@ -746,10 +749,10 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             p_point_replace=p_point_replace,
             max_samples=max_samples,
             warm_start=warm_start,
+            low_memory=low_memory,
             n_jobs=n_jobs,
             verbose=verbose,
-            random_state=random_state,
-            slim=slim)
+            random_state=random_state)
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
@@ -938,6 +941,11 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         and add more generations to the evolution, otherwise, just fit a new
         evolution.
 
+    low_memory : bool, optional (default=False)
+        When set to ``True``, no history of parents is retained, reducing the
+        memory footprint of the evolution to only the last generation and the
+        current generation.
+
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
         of jobs is set to the number of cores.
@@ -950,8 +958,6 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
-
-    slim : bool, optional (default=False)
 
     See Also
     --------
@@ -985,10 +991,10 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  p_point_replace=0.05,
                  max_samples=1.0,
                  warm_start=False,
+                 low_memory=False,
                  n_jobs=1,
                  verbose=0,
-                 random_state=None,
-                 slim=False):
+                 random_state=None):
         super(SymbolicTransformer, self).__init__(
             population_size=population_size,
             hall_of_fame=hall_of_fame,
@@ -1009,10 +1015,10 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             p_point_replace=p_point_replace,
             max_samples=max_samples,
             warm_start=warm_start,
+            low_memory=low_memory,
             n_jobs=n_jobs,
             verbose=verbose,
-            random_state=random_state,
-            slim=slim)
+            random_state=random_state)
 
     def __len__(self):
         """Overloads `len` output to be the number of fitted components."""
