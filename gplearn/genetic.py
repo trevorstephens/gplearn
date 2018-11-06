@@ -392,6 +392,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             # Print header fields
             self._verbose_reporter()
 
+        if isinstance(self, RegressorMixin):
+            self._program = None
+
         for gen in range(prior_generations, self.generations):
 
             start_time = time()
@@ -475,12 +478,17 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 if best_fitness <= self.stopping_criteria:
                     break
 
-        if isinstance(self, RegressorMixin):
-            # Find the best individual in the final generation
-            if self._metric.greater_is_better:
-                self._program = self._programs[-1][np.argmax(fitness)]
-            else:
-                self._program = self._programs[-1][np.argmin(fitness)]
+            if isinstance(self, RegressorMixin):
+                # Find the best individual from all generations
+                if self._program is None:
+                    self._program = best_program
+                elif self._metric.greater_is_better:
+                    if(best_program.raw_fitness_ >= self._program.raw_fitness_):
+                        self._program = best_program
+                else:
+                    if(best_program.raw_fitness_ <= self._program.raw_fitness_):
+                        self._program = best_program
+
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
