@@ -161,6 +161,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  population_size=1000,
                  hall_of_fame=None,
                  n_components=None,
+                 _program = None,
                  generations=20,
                  tournament_size=20,
                  stopping_criteria=0.0,
@@ -184,6 +185,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.population_size = population_size
         self.hall_of_fame = hall_of_fame
         self.n_components = n_components
+        self._program = _program
         self.generations = generations
         self.tournament_size = tournament_size
         self.stopping_criteria = stopping_criteria
@@ -391,9 +393,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if self.verbose:
             # Print header fields
             self._verbose_reporter()
-
-        if isinstance(self, RegressorMixin):
-            self._program = None
 
         for gen in range(prior_generations, self.generations):
 
