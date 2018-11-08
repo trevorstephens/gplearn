@@ -448,7 +448,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                         if idx not in indices:
                             self._programs[old_gen - 1][idx] = None
             elif gen > 0:
-                # only remove programs in generation before and set generation before the parents to None
+                # remove old programs and delete everyone in the gen before the parent's gen
                 indices = []
                 for program in self._programs[gen]:
                     if program is not None:
@@ -458,9 +458,9 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 indices = set(indices)
                 for idx in range(self.population_size):
                     if idx not in indices:
-                        self._programs[gen - 1][idx] = None
+                        self._programs[-2][idx] = None
                     if gen > 1:
-                        self._programs[gen - 2][idx] = None
+                        self._programs[-3][idx] = None
 
 
             # Record run details
