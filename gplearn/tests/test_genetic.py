@@ -416,10 +416,12 @@ def test_program_input_validation():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(const_range='ni')
         assert_raises(ValueError, est.fit, boston.data, boston.target)
-        # And check acceptable, but strange, representations of init_depth
-        est = Symbolic(const_range=(2, 2))
+        # And check acceptable, but strange, representations of const_range
+        est = Symbolic(generations=2, const_range=(2, 2))
         est.fit(boston.data, boston.target)
-        est = Symbolic(const_range=(4, 2))
+        est = Symbolic(generations=2, const_range=None)
+        est.fit(boston.data, boston.target)
+        est = Symbolic(generations=2, const_range=(4, 2))
         est.fit(boston.data, boston.target)
 
         # Check invalid init_depth
@@ -436,7 +438,7 @@ def test_program_input_validation():
         est = Symbolic(init_depth=(4, 2))
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         # And check acceptable, but strange, representations of init_depth
-        est = Symbolic(init_depth=(2, 2))
+        est = Symbolic(generations=2, init_depth=(2, 2))
         est.fit(boston.data, boston.target)
 
     # Check hall_of_fame and n_components for transformer
@@ -450,13 +452,12 @@ def test_program_input_validation():
     assert_raises(ValueError, est.fit, boston.data, boston.target)
 
     # Check regressor metrics
-    for m in ['mean absolute error', 'mse', 'rmse']:
+    for m in ['mean absolute error', 'mse', 'rmse', 'pearson', 'spearman']:
         est = SymbolicRegressor(generations=2, metric=m)
         est.fit(boston.data, boston.target)
-    # And check the transformer metrics as well as a fake one
-    for m in ['pearson', 'spearman', 'the larch']:
-        est = SymbolicRegressor(generations=2, metric=m)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+    # And check a fake one
+    est = SymbolicRegressor(generations=2, metric='the larch')
+    assert_raises(ValueError, est.fit, boston.data, boston.target)
     # Check transformer metrics
     for m in ['pearson', 'spearman']:
         est = SymbolicTransformer(generations=2, metric=m)
@@ -465,6 +466,36 @@ def test_program_input_validation():
     for m in ['mean absolute error', 'mse', 'rmse', 'the larch']:
         est = SymbolicTransformer(generations=2, metric=m)
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_none_const_range():
+    """Check that const_range=None produces no constants"""
+
+    # Check with None as const_range
+    est = SymbolicRegressor(const_range=None, generations=2)
+    est.fit(boston.data, boston.target)
+    float_count = 0
+    for generation in est._programs:
+        for program in generation:
+            if program is None:
+                continue
+            for element in program.program:
+                if type(element) == float:
+                    float_count += 1
+    assert_true(float_count == 0)
+
+    # Check with default const_range
+    est = SymbolicRegressor(generations=2)
+    est.fit(boston.data, boston.target)
+    float_count = 0
+    for generation in est._programs:
+        for program in generation:
+            if program is None:
+                continue
+            for element in program.program:
+                if type(element) == float:
+                    float_count += 1
+    assert_true(float_count > 1)
 
 
 def test_sample_weight():
@@ -576,8 +607,8 @@ def test_verbose_output():
     # check output
     verbose_output.seek(0)
     header1 = verbose_output.readline().rstrip()
-    true_header = '%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(42))
+    true_header = '    |{:^25}|{:^42}|'.format('Population Average',
+                                               'Best Individual')
     assert_equal(true_header, header1)
 
     header2 = verbose_output.readline().rstrip()
@@ -585,9 +616,10 @@ def test_verbose_output():
     assert_equal(true_header, header2)
 
     header3 = verbose_output.readline().rstrip()
-    header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                     'OOB Fitness', 'Time Left')
-    true_header = '%4s %8s %16s %8s %16s %16s %10s' % header_fields
+
+    line_format = '{:>4} {:>8} {:>16} {:>8} {:>16} {:>16} {:>10}'
+    true_header = line_format.format('Gen', 'Length', 'Fitness', 'Length',
+                                     'Fitness', 'OOB Fitness', 'Time Left')
     assert_equal(true_header, header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
@@ -976,6 +1008,22 @@ def test_indices():
     assert_array_equal(indices, gp.get_all_indices()[0])
     assert_array_equal(indices, gp._indices())
     assert_array_equal(indices, gp.indices_)
+
+
+def test_run_details():
+    """Check the run_details_ attribute works as expected."""
+
+    est = SymbolicRegressor(generations=5, random_state=415)
+    est.fit(boston.data, boston.target)
+    # Check generations are indexed as expected without warm_start
+    assert_equal(est.run_details_['generation'], list(range(5)))
+    est.set_params(generations=10, warm_start=True)
+    est.fit(boston.data, boston.target)
+    # Check generations are indexed as expected with warm_start
+    assert_equal(est.run_details_['generation'], list(range(10)))
+    # Check all details have expected number of elements
+    for detail in est.run_details_:
+        assert_equal(len(est.run_details_[detail]), 10)
 
 
 def test_warm_start():

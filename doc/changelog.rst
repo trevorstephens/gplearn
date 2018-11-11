@@ -4,6 +4,19 @@
 Release History
 ===============
 
+Version 0.4.0
+-------------
+
+- Allow users to exclude constants from their programs by setting
+  ``const_range=None`` in :class:`genetic.SymbolicRegressor` or
+  :class:`genetic.SymbolicTransformer`.
+- Record details (similar to the verbose output) of the evolution in the
+  estimator attribute ``run_details_`` dict in
+  :class:`genetic.SymbolicRegressor` and :class:`genetic.SymbolicTransformer`.
+- Pearson and Spearman correlation coefficients added as first-class metrics to
+  :class:`genetic.SymbolicRegressor`. These metrics allow for evolution of
+  value-added features for second-stage estimators.
+
 Version 0.3.0
 -------------
 
@@ -63,6 +76,6 @@ Version 0.2.0
 Version 0.1.0
 -------------
 
-Initial public release supporting symbolic regression tasks through the
-:class:`genetic.SymbolicRegressor` class for regression problems and the
-:class:`genetic.SymbolicTransformer` class for automated feature engineering.
+- Initial public release supporting symbolic regression tasks through the
+  :class:`genetic.SymbolicRegressor` class for regression problems and the
+  :class:`genetic.SymbolicTransformer` class for automated feature engineering.

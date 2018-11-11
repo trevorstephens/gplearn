@@ -188,9 +188,16 @@ class _Program(object):
                 terminal_stack.append(function.arity)
             else:
                 # We need a terminal, add a variable or constant
-                terminal = random_state.randint(self.n_features + 1)
+                if self.const_range is not None:
+                    terminal = random_state.randint(self.n_features + 1)
+                else:
+                    terminal = random_state.randint(self.n_features)
                 if terminal == self.n_features:
                     terminal = random_state.uniform(*self.const_range)
+                    if self.const_range is None:
+                        # We should never get here
+                        raise ValueError('A constant was produced with '
+                                         'const_range=None.')
                 program.append(terminal)
                 terminal_stack[-1] -= 1
                 while terminal_stack[-1] == 0:
@@ -255,18 +262,18 @@ class _Program(object):
         terminals = []
         if fade_nodes is None:
             fade_nodes = []
-        output = "digraph program {\nnode [style=filled]"
+        output = 'digraph program {\nnode [style=filled]'
         for i, node in enumerate(self.program):
-            fill = "#cecece"
+            fill = '#cecece'
             if isinstance(node, _Function):
                 if i not in fade_nodes:
-                    fill = "#136ed4"
+                    fill = '#136ed4'
                 terminals.append([node.arity, i])
                 output += ('%d [label="%s", fillcolor="%s"] ;\n'
                            % (i, node.name, fill))
             else:
                 if i not in fade_nodes:
-                    fill = "#60a6f6"
+                    fill = '#60a6f6'
                 if isinstance(node, int):
                     output += ('%d [label="%s%s", fillcolor="%s"] ;\n'
                                % (i, 'X', node, fill))
@@ -275,7 +282,7 @@ class _Program(object):
                                % (i, node, fill))
                 if i == 0:
                     # A degenerative program of only one node
-                    return output + "}"
+                    return output + '}'
                 terminals[-1][0] -= 1
                 terminals[-1].append(i)
                 while terminals[-1][0] == 0:
@@ -286,7 +293,7 @@ class _Program(object):
                         parent = terminals[-1][-1]
                         terminals.pop()
                         if not terminals:
-                            return output + "}"
+                            return output + '}'
                         terminals[-1].append(parent)
                         terminals[-1][0] -= 1
 
@@ -622,9 +629,16 @@ class _Program(object):
                 program[node] = replacement
             else:
                 # We've got a terminal, add a const or variable
-                terminal = random_state.randint(self.n_features + 1)
+                if self.const_range is not None:
+                    terminal = random_state.randint(self.n_features + 1)
+                else:
+                    terminal = random_state.randint(self.n_features)
                 if terminal == self.n_features:
                     terminal = random_state.uniform(*self.const_range)
+                    if self.const_range is None:
+                        # We should never get here
+                        raise ValueError('A constant was produced with '
+                                         'const_range=None.')
                 program[node] = terminal
 
         return program, list(mutate)

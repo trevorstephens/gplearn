@@ -224,67 +224,46 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         else:
             return self._programs[-1]
 
-    def _verbose_reporter(self,
-                          start_time=None,
-                          gen=None,
-                          population=None,
-                          fitness=None,
-                          length=None):
+    def _verbose_reporter(self, run_details=None):
         """A report of the progress of the evolution process.
 
         Parameters
         ----------
-        start_time : float
-            The start time for the current generation.
-
-        gen : int
-            The current generation (0 is the first naive random population).
-
-        population : list
-            The current population.
-
-        fitness : list
-            The current population's raw fitness.
-
-        length : list
-            The current population's lengths.
+        run_details : dict
+            Information about the evolution.
 
         """
-        if start_time is None:
-            print('%4s|%-25s|%-42s|' % (' ', 'Population Average'.center(25),
-                                        'Best Individual'.center(42)))
+        if run_details is None:
+            print('    |{:^25}|{:^42}|'.format('Population Average',
+                                               'Best Individual'))
             print('-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 42 + ' ' + '-' * 10)
-            header_fields = ('Gen', 'Length', 'Fitness', 'Length', 'Fitness',
-                             'OOB Fitness', 'Time Left')
-            print('%4s %8s %16s %8s %16s %16s %10s' % header_fields)
+            line_format = '{:>4} {:>8} {:>16} {:>8} {:>16} {:>16} {:>10}'
+            print(line_format.format('Gen', 'Length', 'Fitness', 'Length',
+                                     'Fitness', 'OOB Fitness', 'Time Left'))
 
         else:
             # Estimate remaining time for run
-            remaining_time = ((self.generations - gen - 1) *
-                              (time() - start_time) / float(gen + 1))
+            gen = run_details['generation'][-1]
+            generation_time = run_details['generation_time'][-1]
+            remaining_time = (self.generations - gen - 1) * generation_time
             if remaining_time > 60:
                 remaining_time = '{0:.2f}m'.format(remaining_time / 60.0)
             else:
                 remaining_time = '{0:.2f}s'.format(remaining_time)
 
-            # Find the current generation's best individual
-            if self._metric.greater_is_better:
-                best_program = population[np.argmax(fitness)]
-            else:
-                best_program = population[np.argmin(fitness)]
-
             oob_fitness = 'N/A'
+            line_format = '{:4d} {:8.2f} {:16g} {:8d} {:16g} {:>16} {:>10}'
             if self.max_samples < 1.0:
-                oob_fitness = best_program.oob_fitness_
+                oob_fitness = run_details['best_oob_fitness'][-1]
+                line_format = '{:4d} {:8.2f} {:16g} {:8d} {:16g} {:16g} {:>10}'
 
-            print('%4s %8s %16s %8s %16s %16s %10s' %
-                  (gen,
-                   np.round(np.mean(length), 2),
-                   np.mean(fitness),
-                   best_program.length_,
-                   best_program.raw_fitness_,
-                   oob_fitness,
-                   remaining_time))
+            print(line_format.format(run_details['generation'][-1],
+                                     run_details['average_length'][-1],
+                                     run_details['average_fitness'][-1],
+                                     run_details['best_length'][-1],
+                                     run_details['best_fitness'][-1],
+                                     oob_fitness,
+                                     remaining_time))
 
     def fit(self, X, y, sample_weight=None):
         """Fit the Genetic Program according to X, y.
@@ -355,7 +334,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if isinstance(self.metric, _Fitness):
             self._metric = self.metric
         elif isinstance(self, RegressorMixin):
-            if self.metric not in ('mean absolute error', 'mse', 'rmse'):
+            if self.metric not in ('mean absolute error', 'mse', 'rmse',
+                                   'pearson', 'spearman'):
                 raise ValueError('Unsupported metric: %s' % self.metric)
             else:
                 self._metric = _fitness_map[self.metric]
@@ -381,9 +361,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              '"grow", "full" and "half and half". Given %s.'
                              % self.init_method)
 
-        if (not isinstance(self.const_range, tuple) or
-                len(self.const_range) != 2):
-            raise ValueError('const_range should be a tuple with length two.')
+        if not((isinstance(self.const_range, tuple) and
+                len(self.const_range) == 2) or self.const_range is None):
+            raise ValueError('const_range should be a tuple with length two, '
+                             'or None.')
 
         if (not isinstance(self.init_depth, tuple) or
                 len(self.init_depth) != 2):
@@ -398,9 +379,16 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         params['arities'] = self._arities
         params['method_probs'] = self._method_probs
 
-        if not self.warm_start or not hasattr(self, "_programs"):
+        if not self.warm_start or not hasattr(self, '_programs'):
             # Free allocated memory, if any
             self._programs = []
+            self.run_details_ = {'generation': [],
+                                 'average_length': [],
+                                 'average_fitness': [],
+                                 'best_length': [],
+                                 'best_fitness': [],
+                                 'best_oob_fitness': [],
+                                 'generation_time': []}
 
         prior_generations = self.get_prior_generation_count()
         n_more_generations = self.generations - prior_generations
@@ -411,6 +399,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                              'len(_programs)=%d when warm_start==True'
                              % (self.generations, self.get_prior_generation_count()))
         elif n_more_generations == 0:
+
             fitness = [program.raw_fitness_ for program in self.get_prior_generation()]
             warn("Warm-start fitting without increasing n_estimators does not "
                  "fit new trees.")
@@ -424,9 +413,10 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         if self.verbose:
             # Print header fields
             self._verbose_reporter()
-            start_time = time()
 
         for gen in range(prior_generations, self.generations):
+
+            start_time = time()
 
             if gen == 0:
                 parents = None
@@ -481,9 +471,25 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                         if idx not in indices:
                             self._programs[old_gen - 1][idx] = None
 
+            # Record run details
+            if self._metric.greater_is_better:
+                best_program = population[np.argmax(fitness)]
+            else:
+                best_program = population[np.argmin(fitness)]
+            self.run_details_['generation'].append(gen)
+            self.run_details_['average_length'].append(np.mean(length))
+            self.run_details_['average_fitness'].append(np.mean(fitness))
+            self.run_details_['best_length'].append(best_program.length_)
+            self.run_details_['best_fitness'].append(best_program.raw_fitness_)
+            oob_fitness = np.nan
+            if self.max_samples < 1.0:
+                oob_fitness = best_program.oob_fitness_
+            self.run_details_['best_oob_fitness'].append(oob_fitness)
+            generation_time = time() - start_time
+            self.run_details_['generation_time'].append(generation_time)
+
             if self.verbose:
-                self._verbose_reporter(start_time, gen, population, fitness,
-                                       length)
+                self._verbose_reporter(self.run_details_)
 
             # Check for early stopping
             if self._metric.greater_is_better:
@@ -567,8 +573,9 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     stopping_criteria : float, optional (default=0.0)
         The required metric value required in order to stop evolution early.
 
-    const_range : tuple of two floats, optional (default=(-1., 1.))
-        The range of constants to include in the formulas.
+    const_range : tuple of two floats, or None, optional (default=(-1., 1.))
+        The range of constants to include in the formulas. If None then no
+        constants will be included in the candidate programs.
 
     init_depth : tuple of two ints, optional (default=(2, 6))
         The range of tree depths for the initial population of naive formulas.
@@ -615,9 +622,17 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     metric : str, optional (default='mean absolute error')
         The name of the raw fitness metric. Available options include:
 
-        - 'mean absolute error',
-        - 'mse' for mean squared error,
+        - 'mean absolute error'.
+        - 'mse' for mean squared error.
         - 'rmse' for root mean squared error.
+        - 'pearson', for Pearson's product-moment correlation coefficient.
+        - 'spearman' for Spearman's rank-order correlation coefficient.
+
+        Note that 'pearson' and 'spearman' will not directly predict the target
+        but could be useful as value-added features in a second-step estimator.
+        This would allow the user to generate one engineered feature at a time,
+        using the SymbolicTransformer would allow creation of multiple features
+        at once.
 
     parsimony_coefficient : float or "auto", optional (default=0.001)
         This constant penalizes large programs by adjusting their fitness to
@@ -697,6 +712,20 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
+    Attributes
+    ----------
+    run_details_ : dict
+        Details of the evolution process. Includes the following elements:
+
+        - 'generation' : The generation index.
+        - 'average_length' : The average program length of the generation.
+        - 'average_fitness' : The average program fitness of the generation.
+        - 'best_length' : The length of the best program in the generation.
+        - 'best_fitness' : The fitness of the best program in the generation.
+        - 'best_oob_fitness' : The out of bag fitness of the best program in
+          the generation (requires `max_samples` < 1.0).
+        - 'generation_time' : The time it took for the generation to evolve.
+
     See Also
     --------
     SymbolicTransformer
@@ -756,7 +785,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
-        if not hasattr(self, "_program"):
+        if not hasattr(self, '_program'):
             return self.__repr__()
         return self._program.__str__()
 
@@ -775,15 +804,15 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             Predicted values for X.
 
         """
-        if not hasattr(self, "_program"):
-            raise NotFittedError("SymbolicRegressor not fitted.")
+        if not hasattr(self, '_program'):
+            raise NotFittedError('SymbolicRegressor not fitted.')
 
         X = check_array(X)
         _, n_features = X.shape
         if self.n_features_ != n_features:
-            raise ValueError("Number of features of the model must match the "
-                             "input. Model n_features is %s and input "
-                             "n_features is %s."
+            raise ValueError('Number of features of the model must match the '
+                             'input. Model n_features is %s and input '
+                             'n_features is %s.'
                              % (self.n_features_, n_features))
 
         y = self._program.execute(X)
@@ -830,8 +859,9 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     stopping_criteria : float, optional (default=1.0)
         The required metric value required in order to stop evolution early.
 
-    const_range : tuple of two floats, optional (default=(-1., 1.))
-        The range of constants to include in the formulas.
+    const_range : tuple of two floats, or None, optional (default=(-1., 1.))
+        The range of constants to include in the formulas. If None then no
+        constants will be included in the candidate programs.
 
     init_depth : tuple of two ints, optional (default=(2, 6))
         The range of tree depths for the initial population of naive formulas.
@@ -878,7 +908,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     metric : str, optional (default='pearson')
         The name of the raw fitness metric. Available options include:
 
-        - 'pearson', for Pearson's product-moment correlation coefficient, and
+        - 'pearson', for Pearson's product-moment correlation coefficient.
         - 'spearman' for Spearman's rank-order correlation coefficient.
 
     parsimony_coefficient : float or "auto", optional (default=0.001)
@@ -959,6 +989,20 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         If None, the random number generator is the RandomState instance used
         by `np.random`.
 
+    Attributes
+    ----------
+    run_details_ : dict
+        Details of the evolution process. Includes the following elements:
+
+        - 'generation' : The generation index.
+        - 'average_length' : The average program length of the generation.
+        - 'average_fitness' : The average program fitness of the generation.
+        - 'best_length' : The length of the best program in the generation.
+        - 'best_fitness' : The fitness of the best program in the generation.
+        - 'best_oob_fitness' : The out of bag fitness of the best program in
+          the generation (requires `max_samples` < 1.0).
+        - 'generation_time' : The time it took for the generation to evolve.
+
     See Also
     --------
     SymbolicRegressor
@@ -1022,7 +1066,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     def __len__(self):
         """Overloads `len` output to be the number of fitted components."""
-        if not hasattr(self, "_best_programs"):
+        if not hasattr(self, '_best_programs'):
             return 0
         return self.n_components
 
@@ -1034,7 +1078,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble LISP trees."""
-        if not hasattr(self, "_best_programs"):
+        if not hasattr(self, '_best_programs'):
             return self.__repr__()
         output = str([gp.__str__() for gp in self])
         return output.replace("',", ",\n").replace("'", "")
@@ -1054,15 +1098,15 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             Transformed array.
 
         """
-        if not hasattr(self, "_best_programs"):
-            raise NotFittedError("SymbolicTransformer not fitted.")
+        if not hasattr(self, '_best_programs'):
+            raise NotFittedError('SymbolicTransformer not fitted.')
 
         X = check_array(X)
         _, n_features = X.shape
         if self.n_features_ != n_features:
-            raise ValueError("Number of features of the model must match the "
-                             "input. Model n_features is %s and input "
-                             "n_features is %s."
+            raise ValueError('Number of features of the model must match the '
+                             'input. Model n_features is %s and input '
+                             'n_features is %s.'
                              % (self.n_features_, n_features))
 
         X_new = np.array([gp.execute(X) for gp in self._best_programs]).T

@@ -47,10 +47,17 @@ individuals from the population to undergo genetic operations.
 ``gplearn`` retains the familiar scikit-learn ``fit``/``predict`` API and
 works with the existing scikit-learn `pipeline <http://scikit-learn.org/stable/modules/pipeline.html>`_
 and `grid search <http://scikit-learn.org/stable/modules/grid_search.html>`_
-modules. The package attempts to squeeze a lot of functionality into a
-scikit-learn-style API. While there are a lot of parameters to tweak, reading
-the documentation here should make the more relevant ones clear for your
-problem.
+modules. You can get started with ``gplearn`` as simply as::
+
+    est = SymbolicRegressor()
+    est.fit(X_train, y_train)
+    y_pred = est_gp.predict(X_test, y_test)
+
+However, don't let that stop you from exploring all the ways that the evolution
+can be tailored to your problem. The package attempts to squeeze a lot of
+functionality into a scikit-learn-style API. While there are a lot of
+parameters to tweak, reading the documentation here should make the more
+relevant ones clear for your problem.
 
 ``gplearn`` currently supports regression through the :class:`SymbolicRegressor`
 as well as transformation for automated feature engineering with the
