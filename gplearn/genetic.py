@@ -471,17 +471,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             else:
                 best_program = population[np.argmin(fitness)]
 
-            if isinstance(self, RegressorMixin):
-                # Find the best individual from all generations
-                if gen == 0:
-                    self._program = best_program
-                elif self._metric.greater_is_better:
-                    if best_program.raw_fitness_ > self._program.raw_fitness_:
-                        self._program = best_program
-                else:
-                    if best_program.raw_fitness_ < self._program.raw_fitness_:
-                        self._program = best_program
-
             self.run_details_['generation'].append(gen)
             self.run_details_['average_length'].append(np.mean(length))
             self.run_details_['average_fitness'].append(np.mean(fitness))
@@ -507,6 +496,12 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 if best_fitness <= self.stopping_criteria:
                     break
 
+        if isinstance(self, RegressorMixin):
+            # Find the best individual in the final generation
+            if self._metric.greater_is_better:
+                self._program = self._programs[-1][np.argmax(fitness)]
+            else:
+                self._program = self._programs[-1][np.argmin(fitness)]
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
