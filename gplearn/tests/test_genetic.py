@@ -1053,39 +1053,47 @@ def test_warm_start():
     assert_equal(cold_program, warm_program)
 
 
-def test_slim_parameter():
-    est = SymbolicRegressor(population_size=50,
-                            generations=5,
-                            tournament_size=5,
-                            random_state=0,
-                            slim=True)
-    est.fit(boston.data, boston.target)
-    assert_equal(len(est._programs), 0)
-    assert_equal(est._program.parents, None)
+def test_low_memory():
+    """Check the low_memory functionality works as expected."""
+    est = SymbolicRegressor(generations=10,
+                            random_state=56,
+                            low_memory=True)
+    
+    # Check there are no parents of parents
+    est.fit(boston.data, boston.target)  
+    idx = est._program.parents['parent_idx']
+    assert_false(est._programs[-2][idx] is None)
+    assert_true(est._programs[-2][idx].parents is None)
 
-    est = SymbolicTransformer(population_size=50,
-                              generations=5,
-                              tournament_size=5,
-                              hall_of_fame=20,
-                              random_state=0,
-                              slim=True)
+    # Check parent's existence when low_memory off
+    est = SymbolicRegressor(generations=10,
+                            random_state=56,
+                            low_memory=False)
     est.fit(boston.data, boston.target)
-    assert_equal(len(est._programs), 0)
-    assert_equal(est._best_programs[0].parents, None)
+
+    program = est._program
+    assert_true(program is not None)
+    for gen in np.arange(est.generations, 0, -1):
+        assert_true(program.parents is not None)
+        idx = program.parents['parent_idx']
+        program = est._programs[gen - 1][idx]
+        assert_true(program is not None)
 
 
 def test_low_memory_warm_start():
-    """Check the warm_start functionality works as expected."""
+    """Check the warm_start functionality works as expected together with low_memory."""
 
     est = SymbolicRegressor(generations=20,
                             random_state=415,
-                            slim=True)
+                            low_memory=True)
     est.fit(boston.data, boston.target)
     cold_fitness = est._program.fitness_
     cold_program = est._program.__str__()
 
-    # Check warm starts get the same result
-    est = SymbolicRegressor(generations=10, random_state=415)
+    # Check warm start with low memory gets the same result
+    est = SymbolicRegressor(generations=10,
+                            random_state=415, 
+                            low_memory=True)
     est.fit(boston.data, boston.target)
     est.set_params(generations=20, warm_start=True)
     est.fit(boston.data, boston.target)
@@ -1094,8 +1102,6 @@ def test_low_memory_warm_start():
     assert_almost_equal(cold_fitness, warm_fitness)
     assert_equal(cold_program, warm_program)
 
-
-
 if __name__ == "__main__":
     import nose
-    nose.runmodule()
+    nose.runmodule()   

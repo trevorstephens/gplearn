@@ -47,8 +47,6 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
     max_samples = params['max_samples']
-    low_memory = params['low_memory']
-
 
     max_samples = int(max_samples * n_samples)
 
@@ -123,9 +121,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            random_state=random_state,
                            program=program)
 
-        # Only keep parent references
-        if not low_memory:
-            program.parents = genome
+        program.parents = genome
 
         # Draw samples, using sample weights, and then fit
         if sample_weight is None:
@@ -209,20 +205,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
-        self._parent_generation = None
-        self._trained_generations = 0
-
-    def get_prior_generation_count(self):
-        if self.low_memory:
-            return self._trained_generations
-        else:
-            return len(self._programs)
-
-    def get_prior_generation(self):
-        if self.low_memory:
-            return self._parent_generation
-        else:
-            return self._programs[-1]
 
     def _verbose_reporter(self, run_details=None):
         """A report of the progress of the evolution process.
@@ -390,24 +372,22 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                                  'best_oob_fitness': [],
                                  'generation_time': []}
 
-        prior_generations = self.get_prior_generation_count()
+        prior_generations = len(self._programs)
         n_more_generations = self.generations - prior_generations
-        population = None
 
         if n_more_generations < 0:
             raise ValueError('generations=%d must be larger or equal to '
                              'len(_programs)=%d when warm_start==True'
-                             % (self.generations, self.get_prior_generation_count()))
+                             % (self.generations, len(self._programs)))
         elif n_more_generations == 0:
-
-            fitness = [program.raw_fitness_ for program in self.get_prior_generation()]
-            warn("Warm-start fitting without increasing n_estimators does not "
-                 "fit new trees.")
+            fitness = [program.raw_fitness_ for program in self._programs[-1]]
+            warn('Warm-start fitting without increasing n_estimators does not '
+                 'fit new programs.')
 
         if self.warm_start:
             # Generate and discard seeds that would have been produced on the
             # initial fit call.
-            for i in range(self.get_prior_generation_count()):
+            for i in range(len(self._programs)):
                 _ = random_state.randint(MAX_INT, size=self.population_size)
 
         if self.verbose:
@@ -421,7 +401,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             if gen == 0:
                 parents = None
             else:
-                parents = self.get_prior_generation()
+                parents = self._programs[gen - 1]
 
             # Parallel loop
             n_jobs, n_programs, starts = _partition_estimators(
@@ -452,10 +432,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             for program in population:
                 program.fitness_ = program.fitness(parsimony_coefficient)
 
-            if self.low_memory:
-                self._parent_generation = population
-            else:
-                self._programs.append(population)
+            self._programs.append(population)
 
             # Remove old programs that didn't make it into the new population.
             if not self.low_memory:
@@ -470,12 +447,41 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                     for idx in range(self.population_size):
                         if idx not in indices:
                             self._programs[old_gen - 1][idx] = None
+            elif gen > 0:
+                # remove old programs and delete everyone in the gen before the parent's gen
+                indices = []
+                for program in self._programs[gen]:
+                    if program is not None:
+                        for idx in program.parents:
+                            if 'idx' in idx:
+                                indices.append(program.parents[idx])
+                indices = set(indices)
+                for idx in range(self.population_size):
+                    if idx not in indices:
+                        self._programs[-2][idx] = None
+                    else:
+                        self._programs[-2][idx].parents = None
+                    if gen > 1:
+                        self._programs[-3][idx] = None
+
 
             # Record run details
             if self._metric.greater_is_better:
                 best_program = population[np.argmax(fitness)]
             else:
                 best_program = population[np.argmin(fitness)]
+
+            if isinstance(self, RegressorMixin):
+                # Find the best individual from all generations
+                if gen == 0:
+                    self._program = best_program
+                elif self._metric.greater_is_better:
+                    if best_program.raw_fitness_ > self._program.raw_fitness_:
+                        self._program = best_program
+                else:
+                    if best_program.raw_fitness_ < self._program.raw_fitness_:
+                        self._program = best_program
+
             self.run_details_['generation'].append(gen)
             self.run_details_['average_length'].append(np.mean(length))
             self.run_details_['average_fitness'].append(np.mean(fitness))
@@ -501,15 +507,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 if best_fitness <= self.stopping_criteria:
                     break
 
-        if population is None:
-            population = self.get_prior_generation()
-
-        if isinstance(self, RegressorMixin):
-            # Find the best individual in the final generation
-            if self._metric.greater_is_better:
-                self._program = population[np.argmax(fitness)]
-            else:
-                self._program = population[np.argmin(fitness)]
 
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
@@ -519,7 +516,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             else:
                 hall_of_fame = fitness.argsort()[:self.hall_of_fame]
             evaluation = np.array([gp.execute(X) for gp in
-                                   [population[i] for
+                                   [self._programs[-1][i] for
                                     i in hall_of_fame]])
             if self.metric == 'spearman':
                 evaluation = np.apply_along_axis(rankdata, 1, evaluation)
@@ -540,7 +537,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 indices.remove(worst)
                 correlations = correlations[:, indices][indices, :]
                 indices = list(range(len(components)))
-            self._best_programs = [population[i] for i in
+            self._best_programs = [self._programs[-1][i] for i in
                                    hall_of_fame[components]]
 
         return self
@@ -693,11 +690,10 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         When set to ``True``, reuse the solution of the previous call to fit
         and add more generations to the evolution, otherwise, just fit a new
         evolution.
-
+    
     low_memory : bool, optional (default=False)
-        When set to ``True``, no history of parents is retained, reducing the
-        memory footprint of the evolution to only the last generation and the
-        current generation.
+        When set to ``True``, only the parents of the current generation are
+        retained.
 
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
@@ -972,9 +968,8 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         evolution.
 
     low_memory : bool, optional (default=False)
-        When set to ``True``, no history of parents is retained, reducing the
-        memory footprint of the evolution to only the last generation and the
-        current generation.
+        When set to ``True``, only the parents of the current generation are
+        retained.
 
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
