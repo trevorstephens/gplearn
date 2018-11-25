@@ -177,6 +177,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  p_point_replace=0.05,
                  max_samples=1.0,
                  warm_start=False,
+                 low_memory=False,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -200,6 +201,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.p_point_replace = p_point_replace
         self.max_samples = max_samples
         self.warm_start = warm_start
+        self.low_memory = low_memory
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
@@ -433,9 +435,22 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             self._programs.append(population)
 
             # Remove old programs that didn't make it into the new population.
-            for old_gen in np.arange(gen, 0, -1):
+            if not self.low_memory:
+                for old_gen in np.arange(gen, 0, -1):
+                    indices = []
+                    for program in self._programs[old_gen]:
+                        if program is not None:
+                            for idx in program.parents:
+                                if 'idx' in idx:
+                                    indices.append(program.parents[idx])
+                    indices = set(indices)
+                    for idx in range(self.population_size):
+                        if idx not in indices:
+                            self._programs[old_gen - 1][idx] = None
+            elif gen > 0:
+                # remove old programs and delete everyone in the gen before the parent's gen
                 indices = []
-                for program in self._programs[old_gen]:
+                for program in self._programs[gen]:
                     if program is not None:
                         for idx in program.parents:
                             if 'idx' in idx:
@@ -443,13 +458,19 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 indices = set(indices)
                 for idx in range(self.population_size):
                     if idx not in indices:
-                        self._programs[old_gen - 1][idx] = None
+                        self._programs[-2][idx] = None
+                    else:
+                        self._programs[-2][idx].parents = None
+                    if gen > 1:
+                        self._programs[-3][idx] = None
+
 
             # Record run details
             if self._metric.greater_is_better:
                 best_program = population[np.argmax(fitness)]
             else:
                 best_program = population[np.argmin(fitness)]
+
             self.run_details_['generation'].append(gen)
             self.run_details_['average_length'].append(np.mean(length))
             self.run_details_['average_fitness'].append(np.mean(fitness))
@@ -664,6 +685,10 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         When set to ``True``, reuse the solution of the previous call to fit
         and add more generations to the evolution, otherwise, just fit a new
         evolution.
+    
+    low_memory : bool, optional (default=False)
+        When set to ``True``, only the parents of the current generation are
+        retained.
 
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
@@ -722,6 +747,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  p_point_replace=0.05,
                  max_samples=1.0,
                  warm_start=False,
+                 low_memory=False,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -743,6 +769,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             p_point_replace=p_point_replace,
             max_samples=max_samples,
             warm_start=warm_start,
+            low_memory=low_memory,
             n_jobs=n_jobs,
             verbose=verbose,
             random_state=random_state)
@@ -935,6 +962,10 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         and add more generations to the evolution, otherwise, just fit a new
         evolution.
 
+    low_memory : bool, optional (default=False)
+        When set to ``True``, only the parents of the current generation are
+        retained.
+
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
         of jobs is set to the number of cores.
@@ -994,6 +1025,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  p_point_replace=0.05,
                  max_samples=1.0,
                  warm_start=False,
+                 low_memory=False,
                  n_jobs=1,
                  verbose=0,
                  random_state=None):
@@ -1017,6 +1049,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             p_point_replace=p_point_replace,
             max_samples=max_samples,
             warm_start=warm_start,
+            low_memory=low_memory,
             n_jobs=n_jobs,
             verbose=verbose,
             random_state=random_state)
