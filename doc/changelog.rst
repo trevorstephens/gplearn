@@ -16,6 +16,12 @@ Version 0.4.0
 - Pearson and Spearman correlation coefficients added as first-class metrics to
   :class:`genetic.SymbolicRegressor`. These metrics allow for evolution of
   value-added features for second-stage estimators.
+- Added a `low_memory` parameter in :class:`genetic.SymbolicRegressor` and
+  :class:`genetic.SymbolicTransformer` which can reduce memory use for cases
+  where there are large populations or many generations by removing early
+  generation program information. By
+  `Bartol Karuza <https://github.com/bartolkaruza>`_ and
+  `wulfihm <https://github.com/wulfihm>`_.
 
 Version 0.3.0
 -------------
