@@ -448,22 +448,8 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                         if idx not in indices:
                             self._programs[old_gen - 1][idx] = None
             elif gen > 0:
-                # remove old programs and delete everyone in the gen before the parent's gen
-                indices = []
-                for program in self._programs[gen]:
-                    if program is not None:
-                        for idx in program.parents:
-                            if 'idx' in idx:
-                                indices.append(program.parents[idx])
-                indices = set(indices)
-                for idx in range(self.population_size):
-                    if idx not in indices:
-                        self._programs[-2][idx] = None
-                    else:
-                        self._programs[-2][idx].parents = None
-                    if gen > 1:
-                        self._programs[-3][idx] = None
-
+                # Remove old generations
+                self._programs[gen - 1] = None
 
             # Record run details
             if self._metric.greater_is_better:
@@ -687,8 +673,9 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         evolution.
     
     low_memory : bool, optional (default=False)
-        When set to ``True``, only the parents of the current generation are
-        retained.
+        When set to ``True``, only the current generation is retained. Parent
+        information is discarded. For very large populations or runs with many
+        generations, this can result in substantial memory use reduction.
 
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
@@ -963,8 +950,9 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         evolution.
 
     low_memory : bool, optional (default=False)
-        When set to ``True``, only the parents of the current generation are
-        retained.
+        When set to ``True``, only the current generation is retained. Parent
+        information is discarded. For very large populations or runs with many
+        generations, this can result in substantial memory use reduction.
 
     n_jobs : integer, optional (default=1)
         The number of jobs to run in parallel for `fit`. If -1, then the number
