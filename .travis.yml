@@ -2,9 +2,7 @@ language: python
 
 env:
   matrix:
-    - PYTHON_VERSION="2.7" COVERAGE="true" LATEST="true"
-    - PYTHON_VERSION="2.7" SKLEARN_VERSION="0.18.1"
-    - PYTHON_VERSION="3.4" LATEST="true"
+    - PYTHON_VERSION="3.4" COVERAGE="true" LATEST="true"
     - PYTHON_VERSION="3.5" LATEST="true"
     - PYTHON_VERSION="3.6" SKLEARN_VERSION="0.18.1"
     - PYTHON_VERSION="3.6" LATEST="true"
@@ -14,11 +12,7 @@ install:
   - set -e
   - deactivate
   - sudo apt-get update
-  - if [[ "$PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r

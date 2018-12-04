@@ -2,7 +2,6 @@ build: false
 
 environment:
   matrix:
-    - PYTHON: C:\Miniconda-x64
     - PYTHON: C:\Miniconda3-x64
 
 install:
