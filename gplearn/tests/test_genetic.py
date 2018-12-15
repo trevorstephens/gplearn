@@ -808,7 +808,8 @@ def test_gridsearch():
     parameters = {'parsimony_coefficient': [0.001, 0.1, 'auto']}
     clf = SymbolicRegressor(population_size=50, generations=5,
                             tournament_size=5, random_state=0)
-    grid = GridSearchCV(clf, parameters, scoring='neg_mean_absolute_error')
+    grid = GridSearchCV(clf, parameters, cv=3,
+                        scoring='neg_mean_absolute_error')
     grid.fit(boston.data, boston.target)
     expected = {'parsimony_coefficient': 0.001}
     assert_equal(grid.best_params_, expected)

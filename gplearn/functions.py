@@ -128,6 +128,7 @@ def _protected_inverse(x1):
     with np.errstate(divide='ignore', invalid='ignore'):
         return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
 
+
 add2 = make_function(function=np.add, name='add', arity=2)
 sub2 = make_function(function=np.subtract, name='sub', arity=2)
 mul2 = make_function(function=np.multiply, name='mul', arity=2)
