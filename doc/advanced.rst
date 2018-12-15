@@ -25,13 +25,15 @@ the underlying ``_Program`` objects which contains several attributes and
 methods that can yield more information about them.
 
 :class:`SymbolicRegressor` has a private attribute ``_program`` which is a
-single ``_Program`` object that was the fittest found during evolution.
+single ``_Program`` object that was the fittest program found in the final
+generation of the evolution.
 
 :class:`SymbolicTransformer` on the other hand has a private attribute
 ``_best_programs`` which is a list of ``_Program`` objects of length
-``n_components`` being the least-correlated and fittest programs found during
-evolution. :class:`SymbolicTransformer` is also iterable so you can loop
-through the estimator itself to access each underlying ``_Program`` object.
+``n_components`` being the least-correlated and fittest programs found in the
+final generation of the evolution. :class:`SymbolicTransformer` is also
+iterable so you can loop through the estimator itself to access each underlying
+``_Program`` object.
 
 Each ``_Program`` object can also be printed as with the estimator themselves
 to get a readable representation of the programs. They also have several
