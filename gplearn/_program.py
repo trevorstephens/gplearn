@@ -72,11 +72,6 @@ class _Program(object):
         a less understandable final result. This parameter may need to be tuned
         over successive runs.
 
-    feature_names : list, optional (default=None)
-        Optional list of feature names, used purely for representations in
-        the `print` operation or `export_graphviz`. If None, then X0, X1, etc
-        will be used for representations.
-
     random_state : RandomState instance
         The random number generator. Note that ints, or None are not allowed.
         The reason for this being passed is that during parallel evolution the
@@ -85,6 +80,11 @@ class _Program(object):
     program : list, optional (default=None)
         The flattened tree representation of the program. If None, a new naive
         random tree will be grown. If provided, it will be validated.
+
+    feature_names : list, optional (default=None)
+        Optional list of feature names, used purely for representations in
+        the `print` operation or `export_graphviz`. If None, then X0, X1, etc
+        will be used for representations.
 
     Attributes
     ----------
@@ -126,9 +126,9 @@ class _Program(object):
                  metric,
                  p_point_replace,
                  parsimony_coefficient,
-                 feature_names,
                  random_state,
-                 program=None):
+                 program=None,
+                 feature_names=None):
 
         self.function_set = function_set
         self.arities = arities
@@ -140,12 +140,6 @@ class _Program(object):
         self.p_point_replace = p_point_replace
         self.parsimony_coefficient = parsimony_coefficient
         self.feature_names = feature_names
-
-        if self.feature_names is not None:
-            if self.n_features != len(self.feature_names):
-                raise ValueError('The supplied `feature_names` has different '
-                                 'length to n_features.')
-
         self.program = program
 
         if self.program is not None:
@@ -154,6 +148,11 @@ class _Program(object):
         else:
             # Create a naive random program
             self.program = self.build_program(random_state)
+
+        if self.feature_names is not None:
+            if self.n_features != len(self.feature_names):
+                raise ValueError('The supplied `feature_names` has different '
+                                 'length to n_features.')
 
         self.raw_fitness_ = None
         self.fitness_ = None
