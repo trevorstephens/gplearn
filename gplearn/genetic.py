@@ -47,6 +47,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
     max_samples = params['max_samples']
+    feature_names = params['feature_names']
 
     max_samples = int(max_samples * n_samples)
 
@@ -118,6 +119,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            const_range=const_range,
                            p_point_replace=p_point_replace,
                            parsimony_coefficient=parsimony_coefficient,
+                           feature_names=feature_names,
                            random_state=random_state,
                            program=program)
 
@@ -176,6 +178,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 feature_names=None,
                  warm_start=False,
                  low_memory=False,
                  n_jobs=1,
@@ -200,6 +203,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.p_point_mutation = p_point_mutation
         self.p_point_replace = p_point_replace
         self.max_samples = max_samples
+        self.feature_names = feature_names
         self.warm_start = warm_start
         self.low_memory = low_memory
         self.n_jobs = n_jobs
@@ -667,6 +671,11 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
+    feature_names : list, optional (default=None)
+        Optional list of feature names, used purely for representations in
+        the `print` operation or `export_graphviz`. If None, then X0, X1, etc
+        will be used for representations.
+
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more generations to the evolution, otherwise, just fit a new
@@ -733,6 +742,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 feature_names=None,
                  warm_start=False,
                  low_memory=False,
                  n_jobs=1,
@@ -755,6 +765,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
             max_samples=max_samples,
+            feature_names=feature_names,
             warm_start=warm_start,
             low_memory=low_memory,
             n_jobs=n_jobs,
@@ -944,6 +955,11 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
+    feature_names : list, optional (default=None)
+        Optional list of feature names, used purely for representations in
+        the `print` operation or `export_graphviz`. If None, then X0, X1, etc
+        will be used for representations.
+
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more generations to the evolution, otherwise, just fit a new
@@ -1012,6 +1028,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 feature_names=None,
                  warm_start=False,
                  low_memory=False,
                  n_jobs=1,
@@ -1036,6 +1053,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
             max_samples=max_samples,
+            feature_names=feature_names,
             warm_start=warm_start,
             low_memory=low_memory,
             n_jobs=n_jobs,

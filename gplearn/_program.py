@@ -72,6 +72,11 @@ class _Program(object):
         a less understandable final result. This parameter may need to be tuned
         over successive runs.
 
+    feature_names : list, optional (default=None)
+        Optional list of feature names, used purely for representations in
+        the `print` operation or `export_graphviz`. If None, then X0, X1, etc
+        will be used for representations.
+
     random_state : RandomState instance
         The random number generator. Note that ints, or None are not allowed.
         The reason for this being passed is that during parallel evolution the
@@ -121,6 +126,7 @@ class _Program(object):
                  metric,
                  p_point_replace,
                  parsimony_coefficient,
+                 feature_names,
                  random_state,
                  program=None):
 
@@ -133,11 +139,18 @@ class _Program(object):
         self.metric = metric
         self.p_point_replace = p_point_replace
         self.parsimony_coefficient = parsimony_coefficient
+        self.feature_names = feature_names
+
+        if self.feature_names is not None:
+            if self.n_features != len(self.feature_names):
+                raise ValueError('The supplied `feature_names` has different '
+                                 'length to n_features.')
+
         self.program = program
 
         if self.program is not None:
             if not self.validate_program():
-                raise ValueError('The supplied program is incomplete')
+                raise ValueError('The supplied program is incomplete.')
         else:
             # Create a naive random program
             self.program = self.build_program(random_state)
@@ -232,7 +245,10 @@ class _Program(object):
                 output += node.name + '('
             else:
                 if isinstance(node, int):
-                    output += 'X%s' % node
+                    if self.feature_names is None:
+                        output += 'X%s' % node
+                    else:
+                        output += self.feature_names[node]
                 else:
                     output += '%.3f' % node
                 terminals[-1] -= 1
@@ -275,8 +291,12 @@ class _Program(object):
                 if i not in fade_nodes:
                     fill = '#60a6f6'
                 if isinstance(node, int):
-                    output += ('%d [label="%s%s", fillcolor="%s"] ;\n'
-                               % (i, 'X', node, fill))
+                    if self.feature_names is None:
+                        feature_name = 'X%s' % node
+                    else:
+                        feature_name = self.feature_names[node]
+                    output += ('%d [label="%s", fillcolor="%s"] ;\n'
+                               % (i, feature_name, fill))
                 else:
                     output += ('%d [label="%.3f", fillcolor="%s"] ;\n'
                                % (i, node, fill))
