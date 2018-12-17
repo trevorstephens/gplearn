@@ -222,6 +222,27 @@ def test_print_overloading():
     lisp = "mul(div(X8, X1), sub(X9, 0.500))"
     assert_true(output == lisp)
 
+    # Test with feature names
+    params['feature_names'] = [str(n) for n in range(10)]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(gp)
+        output = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    lisp = "mul(div(8, 1), sub(9, 0.500))"
+    assert_true(output == lisp)
+
+    # Check with invalid feature names
+    params['feature_names'] = ['foo', 'bar']
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    assert_warns(UserWarning, print, gp)
+
 
 def test_export_graphviz():
     """Check output of a simple program to Graphviz"""
@@ -267,8 +288,22 @@ def test_export_graphviz():
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
     assert_true(output == tree)
 
+    # Test with feature names
+    params['feature_names'] = [str(n) for n in range(10)]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    output = gp.export_graphviz()
+    tree = tree.replace('X', '')
+    assert_true(output == tree)
+
+    # Check with invalid feature names
+    params['feature_names'] = ['foo', 'bar']
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    with assert_warns(UserWarning):
+        gp.export_graphviz()
+
     # Test a degenerative single-node program
     test_gp = [1]
+    params['feature_names'] = None
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \

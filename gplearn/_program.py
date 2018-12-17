@@ -232,10 +232,11 @@ class _Program(object):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
+        invalid_names = False
         if self.feature_names is not None:
             if self.n_features != len(self.feature_names):
-                raise warn('The supplied `feature_names` has different length '
-                           'to n_features. Failing back to generic names.')
+                warn('The supplied `feature_names` has different length to '
+                     'n_features. Failing back to generic names.')
                 invalid_names = True
         terminals = [0]
         output = ''
@@ -275,10 +276,11 @@ class _Program(object):
             The Graphviz script to plot the tree representation of the program.
 
         """
+        invalid_names = False
         if self.feature_names is not None:
             if self.n_features != len(self.feature_names):
-                raise warn('The supplied `feature_names` has different length '
-                           'to n_features. Failing back to generic names.')
+                warn('The supplied `feature_names` has different length to '
+                     'n_features. Failing back to generic names.')
                 invalid_names = True
         terminals = []
         if fade_nodes is None:
