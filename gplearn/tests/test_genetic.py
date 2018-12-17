@@ -274,20 +274,6 @@ def test_export_graphviz():
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
     assert_true(output == tree)
 
-    # Test with fade_nodes
-    output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
-    tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
-           '1 [label="div", fillcolor="#cecece"] ;\n' \
-           '2 [label="X8", fillcolor="#cecece"] ;\n' \
-           '3 [label="X1", fillcolor="#cecece"] ;\n' \
-           '1 -> 3 ;\n1 -> 2 ;\n' \
-           '4 [label="sub", fillcolor="#136ed4"] ;\n' \
-           '5 [label="X9", fillcolor="#60a6f6"] ;\n' \
-           '6 [label="0.500", fillcolor="#60a6f6"] ;\n' \
-           '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
-    assert_true(output == tree)
-
     # Test with feature names
     params['feature_names'] = [str(n) for n in range(10)]
     gp = _Program(random_state=random_state, program=test_gp, **params)
@@ -301,9 +287,23 @@ def test_export_graphviz():
     with assert_warns(UserWarning):
         gp.export_graphviz()
 
+    # Test with fade_nodes
+    params['feature_names'] = None
+    output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
+    tree = 'digraph program {\n' \
+           'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
+           '1 [label="div", fillcolor="#cecece"] ;\n' \
+           '2 [label="X8", fillcolor="#cecece"] ;\n' \
+           '3 [label="X1", fillcolor="#cecece"] ;\n' \
+           '1 -> 3 ;\n1 -> 2 ;\n' \
+           '4 [label="sub", fillcolor="#136ed4"] ;\n' \
+           '5 [label="X9", fillcolor="#60a6f6"] ;\n' \
+           '6 [label="0.500", fillcolor="#60a6f6"] ;\n' \
+           '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
+    assert_true(output == tree)
+
     # Test a degenerative single-node program
     test_gp = [1]
-    params['feature_names'] = None
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
