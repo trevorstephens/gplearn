@@ -179,17 +179,17 @@ def test_validate_program():
     # This one should be fine
     _ = _Program(function_set, arities, init_depth, init_method, n_features,
                  const_range, metric, p_point_replace, parsimony_coefficient,
-                 random_state, test_gp)
+                 random_state, None, test_gp)
 
     # Now try a couple that shouldn't be
     assert_raises(ValueError, _Program, function_set, arities, init_depth,
                   init_method, n_features, const_range, metric,
                   p_point_replace, parsimony_coefficient, random_state,
-                  test_gp[:-1])
+                  None, test_gp[:-1])
     assert_raises(ValueError, _Program, function_set, arities, init_depth,
                   init_method, n_features, const_range, metric,
                   p_point_replace, parsimony_coefficient, random_state,
-                  test_gp + [1])
+                  None, test_gp + [1])
 
 
 def test_print_overloading():
