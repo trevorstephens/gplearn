@@ -10,6 +10,7 @@ computer program. It is used for creating and evolving programs used in the
 # License: BSD 3 clause
 
 from copy import deepcopy
+from warnings import warn
 
 import numpy as np
 from sklearn.utils.random import sample_without_replacement
@@ -77,14 +78,14 @@ class _Program(object):
         The reason for this being passed is that during parallel evolution the
         same program object may be accessed by multiple parallel processes.
 
-    program : list, optional (default=None)
-        The flattened tree representation of the program. If None, a new naive
-        random tree will be grown. If provided, it will be validated.
-
     feature_names : list, optional (default=None)
         Optional list of feature names, used purely for representations in
         the `print` operation or `export_graphviz`. If None, then X0, X1, etc
         will be used for representations.
+
+    program : list, optional (default=None)
+        The flattened tree representation of the program. If None, a new naive
+        random tree will be grown. If provided, it will be validated.
 
     Attributes
     ----------
@@ -127,8 +128,8 @@ class _Program(object):
                  p_point_replace,
                  parsimony_coefficient,
                  random_state,
-                 program=None,
-                 feature_names=None):
+                 feature_names=None,
+                 program=None):
 
         self.function_set = function_set
         self.arities = arities
@@ -148,11 +149,6 @@ class _Program(object):
         else:
             # Create a naive random program
             self.program = self.build_program(random_state)
-
-        if self.feature_names is not None:
-            if self.n_features != len(self.feature_names):
-                raise ValueError('The supplied `feature_names` has different '
-                                 'length to n_features.')
 
         self.raw_fitness_ = None
         self.fitness_ = None
@@ -236,6 +232,11 @@ class _Program(object):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
+        if self.feature_names is not None:
+            if self.n_features != len(self.feature_names):
+                raise warn('The supplied `feature_names` has different length '
+                           'to n_features. Failing back to generic names.')
+                invalid_names = True
         terminals = [0]
         output = ''
         for i, node in enumerate(self.program):
@@ -244,7 +245,7 @@ class _Program(object):
                 output += node.name + '('
             else:
                 if isinstance(node, int):
-                    if self.feature_names is None:
+                    if self.feature_names is None or invalid_names:
                         output += 'X%s' % node
                     else:
                         output += self.feature_names[node]
@@ -274,6 +275,11 @@ class _Program(object):
             The Graphviz script to plot the tree representation of the program.
 
         """
+        if self.feature_names is not None:
+            if self.n_features != len(self.feature_names):
+                raise warn('The supplied `feature_names` has different length '
+                           'to n_features. Failing back to generic names.')
+                invalid_names = True
         terminals = []
         if fade_nodes is None:
             fade_nodes = []
@@ -290,7 +296,7 @@ class _Program(object):
                 if i not in fade_nodes:
                     fill = '#60a6f6'
                 if isinstance(node, int):
-                    if self.feature_names is None:
+                    if self.feature_names is None or invalid_names:
                         feature_name = 'X%s' % node
                     else:
                         feature_name = self.feature_names[node]
@@ -665,4 +671,3 @@ class _Program(object):
     depth_ = property(_depth)
     length_ = property(_length)
     indices_ = property(_indices)
-
