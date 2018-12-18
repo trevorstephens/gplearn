@@ -179,17 +179,17 @@ def test_validate_program():
     # This one should be fine
     _ = _Program(function_set, arities, init_depth, init_method, n_features,
                  const_range, metric, p_point_replace, parsimony_coefficient,
-                 random_state, test_gp)
+                 random_state, None, test_gp)
 
     # Now try a couple that shouldn't be
     assert_raises(ValueError, _Program, function_set, arities, init_depth,
                   init_method, n_features, const_range, metric,
                   p_point_replace, parsimony_coefficient, random_state,
-                  test_gp[:-1])
+                  None, test_gp[:-1])
     assert_raises(ValueError, _Program, function_set, arities, init_depth,
                   init_method, n_features, const_range, metric,
                   p_point_replace, parsimony_coefficient, random_state,
-                  test_gp + [1])
+                  None, test_gp + [1])
 
 
 def test_print_overloading():
@@ -220,6 +220,22 @@ def test_print_overloading():
         sys.stdout = orig_stdout
 
     lisp = "mul(div(X8, X1), sub(X9, 0.500))"
+    assert_true(output == lisp)
+
+    # Test with feature names
+    params['feature_names'] = [str(n) for n in range(10)]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(gp)
+        output = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    lisp = "mul(div(8, 1), sub(9, 0.500))"
     assert_true(output == lisp)
 
 
@@ -253,7 +269,16 @@ def test_export_graphviz():
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
     assert_true(output == tree)
 
+    # Test with feature names
+    params['feature_names'] = [str(n) for n in range(10)]
+    gp = _Program(random_state=random_state, program=test_gp, **params)
+    output = gp.export_graphviz()
+    tree = tree.replace('X', '')
+    assert_true(output == tree)
+
     # Test with fade_nodes
+    params['feature_names'] = None
+    gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
     tree = 'digraph program {\n' \
            'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
@@ -274,6 +299,21 @@ def test_export_graphviz():
     tree = 'digraph program {\n' \
            'node [style=filled]0 [label="X1", fillcolor="#60a6f6"] ;\n}'
     assert_true(output == tree)
+
+
+def test_invalid_feature_names():
+    """Check invalid feature names raise errors"""
+
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+
+        # Check invalid length feature_names
+        est = Symbolic(feature_names=['foo', 'bar'])
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+        # Check invalid type feature_name
+        feature_names = [str(n) for n in range(12)] + [0]
+        est = Symbolic(feature_names=feature_names)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
 
 
 def test_execute():
