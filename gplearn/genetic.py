@@ -359,6 +359,16 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             raise ValueError('init_depth should be in increasing numerical '
                              'order: (min_depth, max_depth).')
 
+        if self.feature_names is not None:
+            if self.n_features_ != len(self.feature_names):
+                raise ValueError('The supplied `feature_names` has different '
+                                 'length to n_features. Expected %d, got %d.'
+                                 % (self.n_features_, len(self.feature_names)))
+            for feature_name in self.feature_names:
+                if not isinstance(feature_name, six.string_types):
+                    raise ValueError('invalid type %s found in '
+                                     '`feature_names`.' % type(feature_name))
+
         params = self.get_params()
         params['_metric'] = self._metric
         params['function_set'] = self._function_set

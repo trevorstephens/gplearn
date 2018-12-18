@@ -10,7 +10,6 @@ computer program. It is used for creating and evolving programs used in the
 # License: BSD 3 clause
 
 from copy import deepcopy
-from warnings import warn
 
 import numpy as np
 from sklearn.utils.random import sample_without_replacement
@@ -232,12 +231,6 @@ class _Program(object):
 
     def __str__(self):
         """Overloads `print` output of the object to resemble a LISP tree."""
-        invalid_names = False
-        if self.feature_names is not None:
-            if self.n_features != len(self.feature_names):
-                warn('The supplied `feature_names` has different length to '
-                     'n_features. Failing back to generic names.')
-                invalid_names = True
         terminals = [0]
         output = ''
         for i, node in enumerate(self.program):
@@ -246,7 +239,7 @@ class _Program(object):
                 output += node.name + '('
             else:
                 if isinstance(node, int):
-                    if self.feature_names is None or invalid_names:
+                    if self.feature_names is None:
                         output += 'X%s' % node
                     else:
                         output += self.feature_names[node]
@@ -276,12 +269,6 @@ class _Program(object):
             The Graphviz script to plot the tree representation of the program.
 
         """
-        invalid_names = False
-        if self.feature_names is not None:
-            if self.n_features != len(self.feature_names):
-                warn('The supplied `feature_names` has different length to '
-                     'n_features. Failing back to generic names.')
-                invalid_names = True
         terminals = []
         if fade_nodes is None:
             fade_nodes = []
@@ -298,7 +285,7 @@ class _Program(object):
                 if i not in fade_nodes:
                     fill = '#60a6f6'
                 if isinstance(node, int):
-                    if self.feature_names is None or invalid_names:
+                    if self.feature_names is None:
                         feature_name = 'X%s' % node
                     else:
                         feature_name = self.feature_names[node]

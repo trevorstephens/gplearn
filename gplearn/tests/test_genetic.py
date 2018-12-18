@@ -238,11 +238,6 @@ def test_print_overloading():
     lisp = "mul(div(8, 1), sub(9, 0.500))"
     assert_true(output == lisp)
 
-    # Check with invalid feature names
-    params['feature_names'] = ['foo', 'bar']
-    gp = _Program(random_state=random_state, program=test_gp, **params)
-    assert_warns(UserWarning, print, gp)
-
 
 def test_export_graphviz():
     """Check output of a simple program to Graphviz"""
@@ -281,11 +276,6 @@ def test_export_graphviz():
     tree = tree.replace('X', '')
     assert_true(output == tree)
 
-    # Check with invalid feature names
-    params['feature_names'] = ['foo', 'bar']
-    gp = _Program(random_state=random_state, program=test_gp, **params)
-    assert_warns(UserWarning, gp.export_graphviz)
-
     # Test with fade_nodes
     params['feature_names'] = None
     output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
@@ -308,6 +298,21 @@ def test_export_graphviz():
     tree = 'digraph program {\n' \
            'node [style=filled]0 [label="X1", fillcolor="#60a6f6"] ;\n}'
     assert_true(output == tree)
+
+
+def test_invalid_feature_names():
+    """Check invalid feature names raise errors"""
+
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+
+        # Check invalid length feature_names
+        est = Symbolic(feature_names=['foo', 'bar'])
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+        # Check invalid type feature_name
+        feature_names = [str(n) for n in range(12)] + [0]
+        est = Symbolic(feature_names=feature_names)
+        assert_raises(ValueError, est.fit, boston.data, boston.target)
 
 
 def test_execute():
