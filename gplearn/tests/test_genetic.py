@@ -284,8 +284,7 @@ def test_export_graphviz():
     # Check with invalid feature names
     params['feature_names'] = ['foo', 'bar']
     gp = _Program(random_state=random_state, program=test_gp, **params)
-    with assert_warns(UserWarning):
-        gp.export_graphviz()
+    assert_warns(UserWarning, gp.export_graphviz)
 
     # Test with fade_nodes
     params['feature_names'] = None
