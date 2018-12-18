@@ -278,6 +278,7 @@ def test_export_graphviz():
 
     # Test with fade_nodes
     params['feature_names'] = None
+    gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
     tree = 'digraph program {\n' \
            'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
