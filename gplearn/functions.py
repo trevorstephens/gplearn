@@ -14,13 +14,61 @@ from sklearn.externals import six
 
 __all__ = ['make_function']
 
+def remainder(x1,x2):
+    return np.remainder(x1,x2)
+def heaviside(x1,x2):
+    return np.heaviside(x1,x2)
+def hypot(x1,x2):
+    return np.hypot(x1,x2)
+def cbrt(x):
+    return np.cbrt(x)
+def ceil(x):
+    return np.ceil(x)
+def fabs(x):
+    return np.fabs(x)
+def factorial(x):
+    return np.factorial(x)
+def floor(x):
+    return np.floor(x)
+def frexp(x):
+    return np.frexp(x)
+def trunc(x):
+    return np.trunc(x)
+def exp(x):
+    return np.exp(x)
+def expm1(x):
+    return np.expm1(x)
+def arccos(x):
+    return np.arccos(x)
+def arcsin(x):
+    return np.arcsin(x)
+def arctan(x):
+    return np.arctan(x)
+def degrees(x):
+    return np.degrees(x)
+def radians(x):
+    return np.radians(x)
+def cosh(x):
+    return np.cosh(x)
+def sinh(x):
+    return np.sinh(x)
+def tanh(x):
+    return np.tanh(x)
+def gamma(x):
+    return np.gamma(x)
+def lgamma(x):
+    return np.lgamma(x)
+
+from scipy.stats import logistic
+def sigmoid(x):
+  return logistic.cdf(x)
 
 class _Function(object):
 
-    """A representation of a mathematical relationship, a node in a program.
+    """A representation of a npematical relationship, a node in a program.
 
     This object is able to be called with NumPy vectorized arguments and return
-    a resulting vector based on a mathematical relationship.
+    a resulting vector based on a npematical relationship.
 
     Parameters
     ----------
@@ -47,11 +95,11 @@ class _Function(object):
 
 
 def make_function(function, name, arity):
-    """Make a function node, a representation of a mathematical relationship.
+    """Make a function node, a representation of a npematical relationship.
 
     This factory function creates a function node, one of the core nodes in any
     program. The resulting object is able to be called with NumPy vectorized
-    arguments and return a resulting vector based on a mathematical
+    arguments and return a resulting vector based on a npematical
     relationship.
 
     Parameters
@@ -128,7 +176,6 @@ def _protected_inverse(x1):
     with np.errstate(divide='ignore', invalid='ignore'):
         return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
 
-
 add2 = make_function(function=np.add, name='add', arity=2)
 sub2 = make_function(function=np.subtract, name='sub', arity=2)
 mul2 = make_function(function=np.multiply, name='mul', arity=2)
@@ -144,6 +191,22 @@ sin1 = make_function(function=np.sin, name='sin', arity=1)
 cos1 = make_function(function=np.cos, name='cos', arity=1)
 tan1 = make_function(function=np.tan, name='tan', arity=1)
 
+sigmoid1 = make_function(function=sigmoid, name='sigmoid', arity=1)
+ceil1 = make_function(function=ceil, name='ceil', arity=1)
+fabs1 = make_function(function=fabs, name='fabs', arity=1)
+floor1 = make_function(function=floor, name='floor', arity=1)
+trunc1 = make_function(function=trunc, name='trunc', arity=1)
+exp1 = make_function(function=exp, name='exp', arity=1)
+expm11 = make_function(function=expm1, name='expm1', arity=1)
+arccos1 = make_function(function=arccos, name='arccos', arity=1)
+arcsin1 = make_function(function=arcsin, name='arcsin', arity=1)
+arctan1 = make_function(function=arctan, name='arctan', arity=1)
+cosh1 = make_function(function=cosh, name='cosh', arity=1)
+sinh1 = make_function(function=sinh, name='sinh', arity=1)
+tanh1 = make_function(function=tanh, name='tanh', arity=1)
+cbrt1 = make_function(function=cbrt, name='cbrt', arity=1)
+hypot1 = make_function(function=hypot, name='hypot', arity=2)
+heaviside1 = make_function(function=heaviside, name='heaviside', arity=2)
 _function_map = {'add': add2,
                  'sub': sub2,
                  'mul': mul2,
@@ -157,4 +220,12 @@ _function_map = {'add': add2,
                  'min': min2,
                  'sin': sin1,
                  'cos': cos1,
-                 'tan': tan1}
+                 'tan': tan1,
+                 'sigmoid': sigmoid1,
+                 'ceil': ceil1,
+                 'fabs': fabs1,
+                 'floor': floor1,
+                 'trunc': trunc1,
+                 'cbrt': cbrt1,
+                 'hypot': hypot1,
+                 'heaviside': heaviside1 }

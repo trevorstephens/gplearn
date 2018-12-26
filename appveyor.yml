@@ -9,7 +9,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n testenv -y nose scikit-learn pandas cython
+  - conda create -q -n testenv -y nose scikit-learn cython
   - activate testenv
   - python --version
   - python setup.py install
