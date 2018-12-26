@@ -33,7 +33,9 @@
 
 Welcome to gplearn(NewMath version)!
 ===================
-NewMath GPLearn : By Rick Sanchez
+
+#NewMath GPLearn : By Rick Sanchez
+
 `gplearn` implements Genetic Programming in Python, with a `scikit-learn <http://scikit-learn.org>`_ inspired and compatible API.
 
 While Genetic Programming (GP) can be used to perform a `very wide variety of tasks <http://www.genetic-programming.org/combined.php>`_, gplearn is purposefully constrained to solving symbolic regression problems. This is motivated by the scikit-learn ethos, of having powerful estimators that are straight-forward to implement.
