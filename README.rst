@@ -34,7 +34,11 @@
 Welcome to gplearn(NewMath version)!
 ===================
 
-#NewMath GPLearn : By Rick Sanchez
+NewMath GPLearn : By Rick Sanchez
+
+NEW: GP.py(is a POO interface for work easy)
+===================
+NEXT: Documentation for this
 
 `gplearn` implements Genetic Programming in Python, with a `scikit-learn <http://scikit-learn.org>`_ inspired and compatible API.
 
