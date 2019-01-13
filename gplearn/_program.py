@@ -632,6 +632,9 @@ class _Program(object):
                                     self.p_point_replace)
                            else False
                            for _ in range(len(program))])[0]
+        
+        if len(mutate) == 0 and self.p_point_replace > 0:
+            mutate = [np.random.randint(len(program))]
 
         for node in mutate:
             if isinstance(program[node], _Function):
