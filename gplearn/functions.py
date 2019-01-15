@@ -13,6 +13,20 @@ import numpy as np
 from sklearn.externals import six
 
 __all__ = ['make_function']
+from sympy import *
+import sympy.mpmath as gg
+#m, n = 2, 5.9
+def func1(a,b):
+    return abs(a) * abs(b) #* (cos(a)+cos(b))
+    #lambda x: legendre(m,x)*legendre(n,x)
+def zegax(m,n):
+    return quak(m,n)
+
+def quak(m,n):
+    q = []
+    for x in np.arange(-1,1,.0001):
+        q.append(func1(m,x)*func1(n,x))
+    return sum(q)/10000
 
 def remainder(x1,x2):
     return np.remainder(x1,x2)
@@ -205,6 +219,7 @@ cosh1 = make_function(function=cosh, name='cosh', arity=1)
 sinh1 = make_function(function=sinh, name='sinh', arity=1)
 tanh1 = make_function(function=tanh, name='tanh', arity=1)
 cbrt1 = make_function(function=cbrt, name='cbrt', arity=1)
+zegax1 = make_function(function=zegax, name='zegax', arity=2)
 hypot1 = make_function(function=hypot, name='hypot', arity=2)
 heaviside1 = make_function(function=heaviside, name='heaviside', arity=2)
 _function_map = {'add': add2,
@@ -228,4 +243,5 @@ _function_map = {'add': add2,
                  'trunc': trunc1,
                  'cbrt': cbrt1,
                  'hypot': hypot1,
-                 'heaviside': heaviside1 }
+                 'heaviside': heaviside1,
+                 'zegax': zegax1 }
