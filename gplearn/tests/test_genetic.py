@@ -431,7 +431,7 @@ def test_genetic_operations():
     assert_equal(gp.program, test_gp)
     assert_equal([f.name if isinstance(f, _Function) else f
                   for f in gp.point_mutation(random_state)[0]],
-                 ['mul', 'div', 8, 1, 'sub', 9, 0.5])
+                 ['mul', 'div', 1, 1, 'sub', 9, 0.5])
     assert_equal(gp.program, test_gp)
 
 
