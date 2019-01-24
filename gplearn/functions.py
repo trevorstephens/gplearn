@@ -11,6 +11,8 @@ own custom functions.
 
 import numpy as np
 from sklearn.externals import six
+import operator
+import math
 
 __all__ = ['make_function']
 from sympy import *
@@ -72,6 +74,23 @@ def gamma(x):
     return np.gamma(x)
 def lgamma(x):
     return np.lgamma(x)
+
+def nnnfunc0(x1, x2):
+    return np.maximum(np.maximum(x1, x1), (x1/x1)), np.maximum(np.maximum(x2, x2), (x2/x2))
+
+def nnnfunc(x1):
+    try:
+        return np.maximum(abs(np.negative(x1)), math.sqrt(math.cos(math.log(x1))))
+    except:
+        return (x1-x1)+1
+"""
+import GP as IAMANHPI
+proggenetic = IAMANHPI(500,100,0.1)
+proggenetic.load("nonnulpass.model")
+"""
+def modulox(x1, x2):
+    return operator.mod(nnnfunc(x1),nnnfunc(x2))
+    #abs(nonzero(nonnegativ(x1)) % nonzero(nonnegativ(x2)))
 
 from scipy.stats import logistic
 def sigmoid(x):
@@ -221,6 +240,7 @@ tanh1 = make_function(function=tanh, name='tanh', arity=1)
 cbrt1 = make_function(function=cbrt, name='cbrt', arity=1)
 zegax1 = make_function(function=zegax, name='zegax', arity=2)
 hypot1 = make_function(function=hypot, name='hypot', arity=2)
+modulo1 = make_function(function=modulox, name='modulo', arity=2)
 heaviside1 = make_function(function=heaviside, name='heaviside', arity=2)
 _function_map = {'add': add2,
                  'sub': sub2,
@@ -236,7 +256,6 @@ _function_map = {'add': add2,
                  'sin': sin1,
                  'cos': cos1,
                  'tan': tan1,
-                 'sigmoid': sigmoid1,
                  'ceil': ceil1,
                  'fabs': fabs1,
                  'floor': floor1,
@@ -244,4 +263,6 @@ _function_map = {'add': add2,
                  'cbrt': cbrt1,
                  'hypot': hypot1,
                  'heaviside': heaviside1,
-                 'zegax': zegax1 }
+                 'zegax': zegax1,
+                 'modulox': modulo1,
+                 'sigmoid': sigmoid1 }#'modulo': modulo1,

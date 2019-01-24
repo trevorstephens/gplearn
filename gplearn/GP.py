@@ -130,6 +130,9 @@ def cos(a):
 def tan(a):
 	return "tan("+str(a)+")"
 
+def modulo(a,b):
+	return "modulo("+str(a)+","+str(b)+")"
+
 def string_to_float(x):
     z = ""
     for i in x:
@@ -289,7 +292,6 @@ class GP_SymReg(object):
 	def approx_stat(self,x):
 		a,b=self.predict(X=x,scale=1),self.predict(X=x,scale=1/1000.)
 		return mean([a,b])
-
 
 	def make_from_csv_for_corrector(self,filepath="newcorrect.csv"):
 		f = open(filepath,"w+b")
