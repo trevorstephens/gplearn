@@ -240,7 +240,7 @@ tanh1 = make_function(function=tanh, name='tanh', arity=1)
 cbrt1 = make_function(function=cbrt, name='cbrt', arity=1)
 zegax1 = make_function(function=zegax, name='zegax', arity=2)
 hypot1 = make_function(function=hypot, name='hypot', arity=2)
-modulo1 = make_function(function=modulox, name='modulo', arity=2)
+modulo1 = make_function(function=modulox, name='modulox', arity=2)
 heaviside1 = make_function(function=heaviside, name='heaviside', arity=2)
 _function_map = {'add': add2,
                  'sub': sub2,
