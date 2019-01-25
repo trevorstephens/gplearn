@@ -116,10 +116,10 @@ def inv(a):
 	return "inv("+str(a)+")"
 
 def max(*args):
-	return "max(["+",".join(map(str,args))+"])"
+	return "max("+",".join(map(str,args))+")"
 
 def min(*args):
-	return "min(["+",".join(map(str,args))+"])"
+	return "min("+",".join(map(str,args))+")"
 
 def sin(a):
 	return "sin("+str(a)+")"
@@ -130,8 +130,8 @@ def cos(a):
 def tan(a):
 	return "tan("+str(a)+")"
 
-def modulo(a,b):
-	return "modulo("+str(a)+","+str(b)+")"
+def modulox(a,b):
+	return "modulox("+str(a)+","+str(b)+")"
 
 def string_to_float(x):
     z = ""
@@ -236,7 +236,7 @@ class GP_SymReg(object):
 		self.y_ = None
 		#('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','sin','cos','tan')
 		if function_set == "all":
-			function_set = ('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','inv','max','min','sin','cos','tan','sigmoid','ceil','fabs','floor','trunc','cbrt','hypot')
+			function_set = ('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','inv','max','min','sin','cos','tan','sigmoid','ceil','fabs','floor','trunc','cbrt','hypot',"modulox")
 		self.est_gp = SymbolicRegressor(population_size=population_size,
 						generations=generations, stopping_criteria=stopping_criteria,
 						function_set=function_set,
