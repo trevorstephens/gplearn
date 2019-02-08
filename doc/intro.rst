@@ -138,10 +138,10 @@ lists to store the functions and terminals. Constants are represented by
 floating point numbers, variables by integers and functions by a custom
 ``Function`` object.
 
-In ``gplearn``, the available function set is controlled by an arguments that
+In ``gplearn``, the available function set is controlled by an argument that
 is set when initializing an estimator. The default set is the arithmetic
 operators: addition, subtraction, division and multiplication. But you can also
-add in some transformers, comparison functions or trigonometric identities that
+add in some transformers, comparison functions or trigonometric functions that
 are all built-in. These strings are put into the ``function_set`` argument to
 include them in your programs.
 
@@ -236,10 +236,10 @@ near-zero division in a computer program, the result happens to be an infinite
 quantity. So there goes your error for the entire test set, even if all other
 fitness samples were evaluated almost perfectly!
 
-Thus, a critical component of rugged GP becomes apparent, we need to protect
+Thus, a critical component of rugged GP becomes apparent: we need to protect
 against such cases for functions that might break for certain arguments.
 Functions like division must be modified to be able to accept any input
-argument that could turn up to return a valid number at evaluation so that
+argument and still return a valid number at evaluation so that
 nodes higher up the tree can successfully evaluate their output.
 
 In ``gplearn``, several protected functions are used:
@@ -252,7 +252,7 @@ In ``gplearn``, several protected functions are used:
       for very small values less than 0.001, it returns 0.0.
     - inverse, if the argument lies between -0.001 and 0.001, returns 0.0.
 
-In this way, no matter the layout of the input data or structure of the evolved
+In this way, no matter the value of the input data or structure of the evolved
 program, a valid numerical output can be guaranteed, even if we must sacrifice
 some interpretability to get there.
 
@@ -267,17 +267,18 @@ Sufficiency
 -----------
 
 Another requirement of a successful GP run is called sufficiency. Basically,
-can this problem be solved to an adequate level with the functions and
-variables available.
+can this problem be solved to an adequate degree with the functions and
+variables available (i.e., are the functions and inputs *sufficient* for
+the given problem).
 
-For toy symbolic regression tasks like that solved in example 1, this is easy
+For toy symbolic regression tasks, like that solved in example 1, this is easy
 to ascertain. But in real life, things are less easy to quantify. It may be
-that there is a good solution lurking in that multi-dimensional space, but
+that there is a good solution lurking in the given multi-dimensional space, but
 there were insufficient generations evolved, or bad luck turned the evolution
 process in the wrong direction. It may also be possible that no good
 relationship can be found through symbolic combinations of your variables.
 
-In application, try to set the constant range to a value that will be helpful
+In practice, try to set the constant range to a value that will be helpful
 to get close to the target. For example, if you are trying to regress on a
 target with values from 500 – 1000 using variables in a range of 0 – 1, a
 constant of 0.5 is unlikely to help, and the “best” solution is probably just
@@ -287,16 +288,16 @@ or `scaling <http://scikit-learn.org/stable/modules/generated/sklearn.preprocess
 your variables and targets can make the problem much easier to learn in some
 cases.
 
-If you are using the trigonometric functions, make sure to convert any degree
-angles into radians as well. If you don't have any angles to convert, consider
-if these functions are useful for your problem, though a seasonal relationship
-might be discoverable if there is a temporal element in the data.
+If you are using trigonometric functions, make sure all angles are measured in
+radians and that these functions are useful for your problem. (Do you
+expect inputs to have a periodic or oscillatory effect on the target?
+Perhaps temporal variables have a seasonal effect?)
 
-If you think that the problem requires a very large formula to approach a
-solution, start with a larger program depth. And if your dataset has a lot of
-variables, perhaps the “full” initialization method makes more sense to kick
-start the initial population with bigger programs that encompass more of the
-data than "grow" might yield.
+If you think that the problem requires a very large formula to solve,
+start with a larger program depth. And if your dataset has many variables, 
+perhaps the “full” initialization method (intializing the population with
+full-size programs) makes more sense than waiting for programs to grow
+large enough to make use of all variables.
 
 .. _initilization:
 
