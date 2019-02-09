@@ -305,54 +305,53 @@ Initialization
 --------------
 
 When starting a GP run, the first generation is blissfully unaware that there
-is any fitness function that needs to be maximized. These initial naive
-programs are a totally random mix of the available functions and variables. But
-the user might know a little bit more about the problem before hand and give
-the evolution process a kick in the right direction in terms of the complexity
-of the problem at hand. Probably the biggest aspect that goes into this
-decision is the number of features in your dataset.
+is any fitness function that needs to be maximized. These naive
+programs are a random mix of the available functions and variables and will
+generally perform poorly. But the user might be able to "strengthen" the 
+initial population by providing good initialization parameters. While these
+parameters may be of some help, bear in mind that one of the most significant
+factors impacting performance is the number of features in your dataset.
 
 The first parameter to look at is the ``init_depth`` of the programs in the
-initial population. This controls the range of program sizes to initialize in
-the first generation (after that it's up to evolution). ``init_depth`` accepts
-a tuple of two integers. When generating the initial population, a random
-maximum depth is chosen within this range for each individual, and the program
-is grown to satisfy this requirement. The default range of 2 – 6 is generally a
-good starting point, but if your dataset has a lot of variables, you may wish
-to make larger programs at first, if only to have more of them included in the
-initial population.
+first generation. ``init_depth`` is a tuple of two integers which specify
+the range of initial depths that the first generation of programs can have.
+(Though, depending on the ``init_method`` used, first generation programs
+may be smaller than this range specifies; see below for more information.)
+Each program in the first generation is randomly assigned a depth from this
+range, and this range *only applies to the first generation*. The default range
+of 2 – 6 is generally a good starting point, but if your dataset has many
+variables, you may want to shift the range to the right so that the first
+generation contains larger programs.
 
 Next, you should consider ``population_size``. This controls the number of
-programs generated in both the initial population and every generation
-following it. If you have very few variables, and have a limited function set,
+programs competing in the first generation and every generation thereafter.
+If you have very few variables, and have a limited function set,
 a smaller population size may suffice. If you have a lot of variables, or
-expect a very large program is required you may want to start with larger
-programs. More likely, the number of programs you wish to maintain will be
+expect a very large program is required, you may want to start with a larger
+population. More likely, the number of programs you wish to maintain will be
 constrained by the amount of time you want to spend evaluating them.
 
 Finally, you need to decide on the ``init_method`` appropriate for your data.
-For all options, the root node is a function to avoid having degenerative
-programs representing only a single variable or constant in the initial
-population.
+This can be one of ``'grow'``, ``'full'``, or ``'half and half'``. For all
+options, the root node must be a function (as opposed to a variable or a
+constant).
 
-For the 'grow' method, nodes are chosen at random from both functions and
-terminals, allowing for smaller trees than ``init_depth`` allows. This tends to
-grow asymmetrical trees as terminals can be chosen before the max depth is
+For the ``'grow'`` method, nodes are chosen at random from both functions and
+terminals, allowing for smaller trees than ``init_depth`` specifies. This tends
+to grow asymmetrical trees as terminals can be chosen before the max depth is
 reached. If your dataset has a lot of variables, this will likely result in
-much smaller programs that the ``init_depth`` range requests. Similarly, if you
-have very few variables and have chosen a lot of function sets, you will likely
-see programs approaching the maximum depth range in the population.
+*much smaller* programs than ``init_depth``  specifies. Similarly, if you
+have very few variables and have chosen a large function set, you will likely
+see programs approaching the maximum depth specified by ``init_depth``.
 
-The 'full' method chooses nodes from the function set until the max depth is
-reached, and then terminals are chosen. This tends to grow 'bushy' symmetrical
+The ``'full'`` method chooses nodes from the function set until the max depth is
+reached, and then terminals are chosen. This tends to grow "bushy", symmetrical
 trees.
 
-The default is the 'half and half' method. Program trees are grown through a
-50/50 mix of 'full' and 'grow', making for a mix of tree shapes in the initial
-population. When combined with ``init_method='half and half'`` this yields the
-well-known 'ramped half and half' initialization method which seeds the
-population with lots of programs of different sizes and shapes, leading to a
-diverse mix of representations.
+The default is the ``'half and half'`` method. Program trees are grown through a
+50/50 mix of ``'full'`` and ``'grow'`` (i.e., half the population has 
+``init_method`` set to ``'full'``, and the other half is set to ``'grow'``). 
+This makes for a mix of tree shapes in the initial population. 
 
 .. _selection:
 
