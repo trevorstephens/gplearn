@@ -379,14 +379,14 @@ Evolution
 
 As discussed in the selection section, we use the fitness measure to find the
 fittest individual in the tournament to survive. But this individual does not
-just graduate unaltered to the next generation, genetic operations are
+just graduate unaltered to the next generation: first, genetic operations are
 performed on them. Several common genetic operations are supported by
 ``gplearn``.
 
 **Crossover**
 
 Crossover is the principle method of mixing genetic material between
-individuals and is controlled by the p_crossover parameter. Unlike other
+individuals and is controlled by the ``p_crossover`` parameter. Unlike other
 genetic operations, it requires two tournaments to be run in order to find a
 parent and a donor.
 
@@ -400,15 +400,15 @@ parent to form an offspring in the next generation.
 
 **Subtree Mutation**
 
-Subtree mutation is one of the more aggressive mutation operators and is
-controlled by the p_subtree_mutation parameter. The reason it is more
+Subtree mutation is one of the more aggressive mutation operations and is
+controlled by the ``p_subtree_mutation`` parameter. The reason it is more
 aggressive is that more genetic material can be replaced by totally naive
-random components. This can reintroduce lost functions and operators into the
+random components. This can reintroduce extinct functions and operators into the
 population to maintain diversity.
 
 Subtree mutation takes the winner of a tournament and selects a random subtree
 from it to be replaced. A donor subtree is generated at random and this is
-inserted into the original parent to form an offspring in the next generation.
+inserted into the parent to form an offspring in the next generation.
 
 .. image:: images/gp_ops_subtree.png
     :align: center
@@ -416,12 +416,12 @@ inserted into the original parent to form an offspring in the next generation.
 **Hoist Mutation**
 
 Hoist mutation is a bloat-fighting mutation operation. It is controlled by the
-p_hoist_mutation parameter and solely removes genetic material from tournament
-winners.
+``p_hoist_mutation`` parameter. The sole purpose of this mutation is to remove
+genetic material from tournament winners.
 
 Hoist mutation takes the winner of a tournament and selects a random subtree
 from it. A random subtree of that subtree is then selected and this is
-'hoisted' into the original subtrees location to form an offspring in the next
+"hoisted" into the original subtree's location to form an offspring in the next
 generation.
 
 .. image:: images/gp_ops_hoist.png
@@ -429,9 +429,9 @@ generation.
 
 **Point Mutation**
 
-Point mutation is probably the most common form of mutation operations in
-genetic programming. It can reintroduce lost functions and operators into the
-population to maintain diversity.
+Point mutation is probably the most common form of mutation in
+genetic programming. Like subtree mutation, it can also reintroduce extinct
+functions and operators into the population to maintain diversity.
 
 Point mutation takes the winner of a tournament and selects random nodes from
 it to be replaced. Terminals are replaced by other terminals and functions are
@@ -439,18 +439,17 @@ replaced by other functions that require the same number of arguments as the
 original node. The resulting tree forms an offspring in the next generation.
 
 Functions and terminals are randomly chosen for replacement as controlled by
-the p_point_replace parameter which guides the average amount of replacement to
-perform.
+the ``p_point_replace`` parameter which guides the average amount of replacement
+to perform.
 
 .. image:: images/gp_ops_point.png
     :align: center
 
 **Reproduction**
 
-Should the sum of the above genetic operations' probabilities, as set by their
-independent probabilities, be less than one, the balance of genetic operations
-shall fall back on reproduction. That is, a tournament winner is cloned and
-enters the next generation unmodified.
+Should the sum of the above genetic operations' probabilities be less than one,
+the balance of genetic operations shall fall back on reproduction. That is, a
+tournament winner is cloned and enters the next generation unmodified.
 
 .. _termination:
 
