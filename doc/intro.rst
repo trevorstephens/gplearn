@@ -470,12 +470,12 @@ Bloat
 -----
 
 A program's size can be measured in two ways: its depth and length. The depth
-of a program is the maximum distance from its root node to the furthest leaf
-node. A degenerative program with only a single value, ie y = X0, has a depth
-of zero. The length of a program is simply the number of elements in the
-formula, or the count of the number of nodes.
+of a program is the distance from its root node to the furthest leaf
+node. A degenerative program with only a single value (i.e., y = X0) has a depth
+of zero. The length of a program is the number of elements in the
+formula which is equal to the total number of nodes.
 
-An interesting phenomena is often encountered in GP where the population sizes
+An interesting phenomenon is often encountered in GP where the program sizes
 grow larger and larger with no significant improvement in fitness. This is
 known as bloat and leads to longer and longer computation times with little
 benefit to the solution.
@@ -498,10 +498,10 @@ depending on the relationship between program fitness and size in the
 population and will change from generation to generation.
 
 Another method to fight bloat is by using genetic operations that make programs
-smaller. ``gplearn`` has hoist mutation which removes parts of programs during
-evolution. It can be controlled by the  ``p_hoist_mutation`` parameter.
+smaller. ``gplearn`` provides hoist mutation which removes parts of programs
+during evolution. It can be controlled by the  ``p_hoist_mutation`` parameter.
 
-Finally, you could increase the amount of subsampling performed on your data to
+Finally, you can increase the amount of subsampling performed on your data to
 get more diverse looks at individual programs from smaller portions of the
 data. ``max_samples`` controls this rate and defaults to no subsampling. As a
 bonus, if you choose to subsample, you also get to see the “out of bag” fitness
@@ -532,7 +532,7 @@ absolute value of the correlation is maximized in order to accept strongly
 negatively correlated programs.
 
 The Spearman correlation is appropriate if your next estimator is going to be
-tree-based estimator such as a Random Forest or Gradient Boosting Machine. If
+tree-based, such as a Random Forest or Gradient Boosting Machine. If
 you plan to send the new transformed variables into a linear model, it is
 probably better to stick with the default Pearson correlation.
 
