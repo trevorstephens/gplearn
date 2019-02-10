@@ -14,6 +14,8 @@ from sklearn.externals import six
 
 __all__ = ['make_function']
 
+_EPS = np.finfo(np.float64).eps # Used by protected functions
+
 class _Function(object):
 
     """A representation of a mathematical relationship, a node in a program.
@@ -107,9 +109,8 @@ def make_function(function, name, arity):
 
 def _protected_division(x1, x2):
     """Closure of division (x1/x2) for zero denominator."""
-    abs_x2 = np.abs(x2)
-    eps = np.finfo(abs_x2.dtype).eps
-    return np.sign(x2) * np.divide(x1, abs_x2 + eps)
+    abs_x2 = np.abs(x2, dtype=np.float64)
+    return np.sign(x2) * np.divide(x1, abs_x2 + _EPS)
 
 
 def _protected_sqrt(x1):
@@ -119,16 +120,13 @@ def _protected_sqrt(x1):
 
 def _protected_log(x1):
     """Closure of log for zero arguments."""
-    abs_x1 = np.abs(x1)
-    eps = np.finfo(abs_x1.dtype).eps
-    return np.log(abs_x1 + eps)
+    abs_x1 = np.abs(x1, dtype=np.float64)
+    return np.log(abs_x1 + _EPS)
 
 
 def _protected_inverse(x1):
-    """Closure of log for zero arguments."""
-    abs_x1 = np.abs(x1)
-    eps = np.finfo(abs_x1.dtype).eps
-    return np.sign(x1) * 1. / (abs_x1 + eps)
+    """Closure of reciprocal for zero arguments."""
+    return _protected_division(1.0, x1)
 
 
 add2 = make_function(function=np.add, name='add', arity=2)
