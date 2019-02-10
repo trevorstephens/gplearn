@@ -107,10 +107,9 @@ def make_function(function, name, arity):
 
 def _protected_division(x1, x2):
     """Closure of division (x1/x2) for zero denominator."""
-    with np.errstate(divide='ignore', invalid='ignore'):
-        abs_x2 = np.abs(x2)
-        eps = np.finfo(abs_x2.dtype).eps
-        return np.sign(x2) * np.divide(x1, abs_x2 + eps)
+    abs_x2 = np.abs(x2)
+    eps = np.finfo(abs_x2.dtype).eps
+    return np.sign(x2) * np.divide(x1, abs_x2 + eps)
 
 
 def _protected_sqrt(x1):
@@ -120,18 +119,16 @@ def _protected_sqrt(x1):
 
 def _protected_log(x1):
     """Closure of log for zero arguments."""
-    with np.errstate(divide='ignore', invalid='ignore'):
-        abs_x1 = np.abs(x1)
-        eps = np.finfo(abs_x1.dtype).eps
-        return np.log(abs_x1 + eps)
+    abs_x1 = np.abs(x1)
+    eps = np.finfo(abs_x1.dtype).eps
+    return np.log(abs_x1 + eps)
 
 
 def _protected_inverse(x1):
     """Closure of log for zero arguments."""
-    with np.errstate(divide='ignore', invalid='ignore'):
-        abs_x1 = np.abs(x1)
-        eps = np.finfo(abs_x1.dtype).eps
-        return np.sign(x1) * 1. / (abs_x1 + eps)
+    abs_x1 = np.abs(x1)
+    eps = np.finfo(abs_x1.dtype).eps
+    return np.sign(x1) * 1. / (abs_x1 + eps)
 
 
 add2 = make_function(function=np.add, name='add', arity=2)
