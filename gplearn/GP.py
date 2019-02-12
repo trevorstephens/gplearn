@@ -235,6 +235,8 @@ class GP_SymReg(object):
 					parsimony_coefficient=0.01, random_state=0, n_jobs=1):
 		self.y_ = None
 		#('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','sin','cos','tan')
+		if function_set == "logic":
+			function_set = ("and","or","xor")
 		if function_set == "all":
 			function_set = ('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','inv','max','min','sin','cos','tan','sigmoid','ceil','fabs','floor','trunc','cbrt','hypot',"modulox")
 		self.est_gp = SymbolicRegressor(population_size=population_size,

@@ -83,6 +83,17 @@ def nnnfunc(x1):
         return np.maximum(abs(np.negative(x1)), math.sqrt(math.cos(math.log(x1))))
     except:
         return (x1-x1)+1
+
+
+
+def andB(a,b):
+    return a and b 
+def orB(a,b):
+    return a or b
+def xorB(a,b):
+    return operator.xor(a,b)
+
+
 """
 import GP as IAMANHPI
 proggenetic = IAMANHPI(500,100,0.1)
@@ -242,6 +253,10 @@ zegax1 = make_function(function=zegax, name='zegax', arity=2)
 hypot1 = make_function(function=hypot, name='hypot', arity=2)
 modulo1 = make_function(function=modulox, name='modulox', arity=2)
 heaviside1 = make_function(function=heaviside, name='heaviside', arity=2)
+
+and1 = make_function(function=andB, name='and', arity=2)
+or1 = make_function(function=orB, name='or', arity=2)
+xor1 = make_function(function=xorB, name='xor', arity=2)
 _function_map = {'add': add2,
                  'sub': sub2,
                  'mul': mul2,
@@ -265,4 +280,7 @@ _function_map = {'add': add2,
                  'heaviside': heaviside1,
                  'zegax': zegax1,
                  'modulox': modulo1,
-                 'sigmoid': sigmoid1 }#'modulo': modulo1,
+                 'sigmoid': sigmoid1,
+                 'and': and1,
+                 'or': or1,
+                 'xor': xor1 }#'modulo': modulo1,
