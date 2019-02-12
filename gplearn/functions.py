@@ -85,13 +85,12 @@ def nnnfunc(x1):
         return (x1-x1)+1
 
 
-
 def andB(a,b):
-    return a and b 
+    return -b+a+np.float32(np.logical_and(a,b))-a+b
 def orB(a,b):
-    return a or b
+    return -b+a+np.float32(np.logical_or(a,b))-a+b
 def xorB(a,b):
-    return operator.xor(a,b)
+    return -b+a+np.float32(np.logical_xor(a,b))-a+b
 
 
 """
@@ -254,9 +253,9 @@ hypot1 = make_function(function=hypot, name='hypot', arity=2)
 modulo1 = make_function(function=modulox, name='modulox', arity=2)
 heaviside1 = make_function(function=heaviside, name='heaviside', arity=2)
 
-and1 = make_function(function=andB, name='and', arity=2)
-or1 = make_function(function=orB, name='or', arity=2)
-xor1 = make_function(function=xorB, name='xor', arity=2)
+and1 = make_function(function=andB, name='AnD', arity=2)
+or1 = make_function(function=orB, name='Or', arity=2)
+xor1 = make_function(function=xorB, name='XoR', arity=2)
 _function_map = {'add': add2,
                  'sub': sub2,
                  'mul': mul2,
