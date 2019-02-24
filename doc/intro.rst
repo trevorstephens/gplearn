@@ -138,10 +138,10 @@ lists to store the functions and terminals. Constants are represented by
 floating point numbers, variables by integers and functions by a custom
 ``Function`` object.
 
-In ``gplearn``, the available function set is controlled by an arguments that
+In ``gplearn``, the available function set is controlled by an argument that
 is set when initializing an estimator. The default set is the arithmetic
 operators: addition, subtraction, division and multiplication. But you can also
-add in some transformers, comparison functions or trigonometric identities that
+add in some transformers, comparison functions or trigonometric functions that
 are all built-in. These strings are put into the ``function_set`` argument to
 include them in your programs.
 
@@ -236,10 +236,10 @@ near-zero division in a computer program, the result happens to be an infinite
 quantity. So there goes your error for the entire test set, even if all other
 fitness samples were evaluated almost perfectly!
 
-Thus, a critical component of rugged GP becomes apparent, we need to protect
+Thus, a critical component of rugged GP becomes apparent: we need to protect
 against such cases for functions that might break for certain arguments.
 Functions like division must be modified to be able to accept any input
-argument that could turn up to return a valid number at evaluation so that
+argument and still return a valid number at evaluation so that
 nodes higher up the tree can successfully evaluate their output.
 
 In ``gplearn``, several protected functions are used:
@@ -252,7 +252,7 @@ In ``gplearn``, several protected functions are used:
       for very small values less than 0.001, it returns 0.0.
     - inverse, if the argument lies between -0.001 and 0.001, returns 0.0.
 
-In this way, no matter the layout of the input data or structure of the evolved
+In this way, no matter the value of the input data or structure of the evolved
 program, a valid numerical output can be guaranteed, even if we must sacrifice
 some interpretability to get there.
 
@@ -267,17 +267,18 @@ Sufficiency
 -----------
 
 Another requirement of a successful GP run is called sufficiency. Basically,
-can this problem be solved to an adequate level with the functions and
-variables available.
+can this problem be solved to an adequate degree with the functions and
+variables available (i.e., are the functions and inputs *sufficient* for
+the given problem).
 
-For toy symbolic regression tasks like that solved in example 1, this is easy
+For toy symbolic regression tasks, like that solved in example 1, this is easy
 to ascertain. But in real life, things are less easy to quantify. It may be
-that there is a good solution lurking in that multi-dimensional space, but
+that there is a good solution lurking in the given multi-dimensional space, but
 there were insufficient generations evolved, or bad luck turned the evolution
 process in the wrong direction. It may also be possible that no good
 relationship can be found through symbolic combinations of your variables.
 
-In application, try to set the constant range to a value that will be helpful
+In practice, try to set the constant range to a value that will be helpful
 to get close to the target. For example, if you are trying to regress on a
 target with values from 500 – 1000 using variables in a range of 0 – 1, a
 constant of 0.5 is unlikely to help, and the “best” solution is probably just
@@ -287,16 +288,16 @@ or `scaling <http://scikit-learn.org/stable/modules/generated/sklearn.preprocess
 your variables and targets can make the problem much easier to learn in some
 cases.
 
-If you are using the trigonometric functions, make sure to convert any degree
-angles into radians as well. If you don't have any angles to convert, consider
-if these functions are useful for your problem, though a seasonal relationship
-might be discoverable if there is a temporal element in the data.
+If you are using trigonometric functions, make sure all angles are measured in
+radians and that these functions are useful for your problem. (Do you
+expect inputs to have a periodic or oscillatory effect on the target?
+Perhaps temporal variables have a seasonal effect?)
 
-If you think that the problem requires a very large formula to approach a
-solution, start with a larger program depth. And if your dataset has a lot of
-variables, perhaps the “full” initialization method makes more sense to kick
-start the initial population with bigger programs that encompass more of the
-data than "grow" might yield.
+If you think that the problem requires a very large formula to solve,
+start with a larger program depth. And if your dataset has many variables, 
+perhaps the “full” initialization method (intializing the population with
+full-size programs) makes more sense than waiting for programs to grow
+large enough to make use of all variables.
 
 .. _initilization:
 
@@ -304,54 +305,53 @@ Initialization
 --------------
 
 When starting a GP run, the first generation is blissfully unaware that there
-is any fitness function that needs to be maximized. These initial naive
-programs are a totally random mix of the available functions and variables. But
-the user might know a little bit more about the problem before hand and give
-the evolution process a kick in the right direction in terms of the complexity
-of the problem at hand. Probably the biggest aspect that goes into this
-decision is the number of features in your dataset.
+is any fitness function that needs to be maximized. These naive
+programs are a random mix of the available functions and variables and will
+generally perform poorly. But the user might be able to "strengthen" the 
+initial population by providing good initialization parameters. While these
+parameters may be of some help, bear in mind that one of the most significant
+factors impacting performance is the number of features in your dataset.
 
 The first parameter to look at is the ``init_depth`` of the programs in the
-initial population. This controls the range of program sizes to initialize in
-the first generation (after that it's up to evolution). ``init_depth`` accepts
-a tuple of two integers. When generating the initial population, a random
-maximum depth is chosen within this range for each individual, and the program
-is grown to satisfy this requirement. The default range of 2 – 6 is generally a
-good starting point, but if your dataset has a lot of variables, you may wish
-to make larger programs at first, if only to have more of them included in the
-initial population.
+first generation. ``init_depth`` is a tuple of two integers which specify
+the range of initial depths that the first generation of programs can have.
+(Though, depending on the ``init_method`` used, first generation programs
+may be smaller than this range specifies; see below for more information.)
+Each program in the first generation is randomly assigned a depth from this
+range, and this range *only applies to the first generation*. The default range
+of 2 – 6 is generally a good starting point, but if your dataset has many
+variables, you may want to shift the range to the right so that the first
+generation contains larger programs.
 
 Next, you should consider ``population_size``. This controls the number of
-programs generated in both the initial population and every generation
-following it. If you have very few variables, and have a limited function set,
+programs competing in the first generation and every generation thereafter.
+If you have very few variables, and have a limited function set,
 a smaller population size may suffice. If you have a lot of variables, or
-expect a very large program is required you may want to start with larger
-programs. More likely, the number of programs you wish to maintain will be
+expect a very large program is required, you may want to start with a larger
+population. More likely, the number of programs you wish to maintain will be
 constrained by the amount of time you want to spend evaluating them.
 
 Finally, you need to decide on the ``init_method`` appropriate for your data.
-For all options, the root node is a function to avoid having degenerative
-programs representing only a single variable or constant in the initial
-population.
+This can be one of ``'grow'``, ``'full'``, or ``'half and half'``. For all
+options, the root node must be a function (as opposed to a variable or a
+constant).
 
-For the 'grow' method, nodes are chosen at random from both functions and
-terminals, allowing for smaller trees than ``init_depth`` allows. This tends to
-grow asymmetrical trees as terminals can be chosen before the max depth is
+For the ``'grow'`` method, nodes are chosen at random from both functions and
+terminals, allowing for smaller trees than ``init_depth`` specifies. This tends
+to grow asymmetrical trees as terminals can be chosen before the max depth is
 reached. If your dataset has a lot of variables, this will likely result in
-much smaller programs that the ``init_depth`` range requests. Similarly, if you
-have very few variables and have chosen a lot of function sets, you will likely
-see programs approaching the maximum depth range in the population.
+*much smaller* programs than ``init_depth``  specifies. Similarly, if you
+have very few variables and have chosen a large function set, you will likely
+see programs approaching the maximum depth specified by ``init_depth``.
 
-The 'full' method chooses nodes from the function set until the max depth is
-reached, and then terminals are chosen. This tends to grow 'bushy' symmetrical
+The ``'full'`` method chooses nodes from the function set until the max depth is
+reached, and then terminals are chosen. This tends to grow "bushy", symmetrical
 trees.
 
-The default is the 'half and half' method. Program trees are grown through a
-50/50 mix of 'full' and 'grow', making for a mix of tree shapes in the initial
-population. When combined with ``init_method='half and half'`` this yields the
-well-known 'ramped half and half' initialization method which seeds the
-population with lots of programs of different sizes and shapes, leading to a
-diverse mix of representations.
+The default is the ``'half and half'`` method. Program trees are grown through a
+50/50 mix of ``'full'`` and ``'grow'`` (i.e., half the population has 
+``init_method`` set to ``'full'``, and the other half is set to ``'grow'``). 
+This makes for a mix of tree shapes in the initial population. 
 
 .. _selection:
 
@@ -379,14 +379,14 @@ Evolution
 
 As discussed in the selection section, we use the fitness measure to find the
 fittest individual in the tournament to survive. But this individual does not
-just graduate unaltered to the next generation, genetic operations are
+just graduate unaltered to the next generation: first, genetic operations are
 performed on them. Several common genetic operations are supported by
 ``gplearn``.
 
 **Crossover**
 
 Crossover is the principle method of mixing genetic material between
-individuals and is controlled by the p_crossover parameter. Unlike other
+individuals and is controlled by the ``p_crossover`` parameter. Unlike other
 genetic operations, it requires two tournaments to be run in order to find a
 parent and a donor.
 
@@ -400,15 +400,15 @@ parent to form an offspring in the next generation.
 
 **Subtree Mutation**
 
-Subtree mutation is one of the more aggressive mutation operators and is
-controlled by the p_subtree_mutation parameter. The reason it is more
+Subtree mutation is one of the more aggressive mutation operations and is
+controlled by the ``p_subtree_mutation`` parameter. The reason it is more
 aggressive is that more genetic material can be replaced by totally naive
-random components. This can reintroduce lost functions and operators into the
+random components. This can reintroduce extinct functions and operators into the
 population to maintain diversity.
 
 Subtree mutation takes the winner of a tournament and selects a random subtree
 from it to be replaced. A donor subtree is generated at random and this is
-inserted into the original parent to form an offspring in the next generation.
+inserted into the parent to form an offspring in the next generation.
 
 .. image:: images/gp_ops_subtree.png
     :align: center
@@ -416,12 +416,12 @@ inserted into the original parent to form an offspring in the next generation.
 **Hoist Mutation**
 
 Hoist mutation is a bloat-fighting mutation operation. It is controlled by the
-p_hoist_mutation parameter and solely removes genetic material from tournament
-winners.
+``p_hoist_mutation`` parameter. The sole purpose of this mutation is to remove
+genetic material from tournament winners.
 
 Hoist mutation takes the winner of a tournament and selects a random subtree
 from it. A random subtree of that subtree is then selected and this is
-'hoisted' into the original subtrees location to form an offspring in the next
+"hoisted" into the original subtree's location to form an offspring in the next
 generation.
 
 .. image:: images/gp_ops_hoist.png
@@ -429,9 +429,9 @@ generation.
 
 **Point Mutation**
 
-Point mutation is probably the most common form of mutation operations in
-genetic programming. It can reintroduce lost functions and operators into the
-population to maintain diversity.
+Point mutation is probably the most common form of mutation in
+genetic programming. Like subtree mutation, it can also reintroduce extinct
+functions and operators into the population to maintain diversity.
 
 Point mutation takes the winner of a tournament and selects random nodes from
 it to be replaced. Terminals are replaced by other terminals and functions are
@@ -439,18 +439,17 @@ replaced by other functions that require the same number of arguments as the
 original node. The resulting tree forms an offspring in the next generation.
 
 Functions and terminals are randomly chosen for replacement as controlled by
-the p_point_replace parameter which guides the average amount of replacement to
-perform.
+the ``p_point_replace`` parameter which guides the average amount of replacement
+to perform.
 
 .. image:: images/gp_ops_point.png
     :align: center
 
 **Reproduction**
 
-Should the sum of the above genetic operations' probabilities, as set by their
-independent probabilities, be less than one, the balance of genetic operations
-shall fall back on reproduction. That is, a tournament winner is cloned and
-enters the next generation unmodified.
+Should the sum of the above genetic operations' probabilities be less than one,
+the balance of genetic operations shall fall back on reproduction. That is, a
+tournament winner is cloned and enters the next generation unmodified.
 
 .. _termination:
 
@@ -471,12 +470,12 @@ Bloat
 -----
 
 A program's size can be measured in two ways: its depth and length. The depth
-of a program is the maximum distance from its root node to the furthest leaf
-node. A degenerative program with only a single value, ie y = X0, has a depth
-of zero. The length of a program is simply the number of elements in the
-formula, or the count of the number of nodes.
+of a program is the distance from its root node to the furthest leaf
+node. A degenerative program with only a single value (i.e., y = X0) has a depth
+of zero. The length of a program is the number of elements in the
+formula which is equal to the total number of nodes.
 
-An interesting phenomena is often encountered in GP where the population sizes
+An interesting phenomenon is often encountered in GP where the program sizes
 grow larger and larger with no significant improvement in fitness. This is
 known as bloat and leads to longer and longer computation times with little
 benefit to the solution.
@@ -499,10 +498,10 @@ depending on the relationship between program fitness and size in the
 population and will change from generation to generation.
 
 Another method to fight bloat is by using genetic operations that make programs
-smaller. ``gplearn`` has hoist mutation which removes parts of programs during
-evolution. It can be controlled by the  ``p_hoist_mutation`` parameter.
+smaller. ``gplearn`` provides hoist mutation which removes parts of programs
+during evolution. It can be controlled by the  ``p_hoist_mutation`` parameter.
 
-Finally, you could increase the amount of subsampling performed on your data to
+Finally, you can increase the amount of subsampling performed on your data to
 get more diverse looks at individual programs from smaller portions of the
 data. ``max_samples`` controls this rate and defaults to no subsampling. As a
 bonus, if you choose to subsample, you also get to see the “out of bag” fitness
@@ -533,7 +532,7 @@ absolute value of the correlation is maximized in order to accept strongly
 negatively correlated programs.
 
 The Spearman correlation is appropriate if your next estimator is going to be
-tree-based estimator such as a Random Forest or Gradient Boosting Machine. If
+tree-based, such as a Random Forest or Gradient Boosting Machine. If
 you plan to send the new transformed variables into a linear model, it is
 probably better to stick with the default Pearson correlation.
 
