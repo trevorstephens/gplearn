@@ -25,8 +25,8 @@ Version 0.4.0
   `Bartol Karuza <https://github.com/bartolkaruza>`_ and
   `wulfihm <https://github.com/wulfihm>`_.
 
-Version 0.3.0
--------------
+Version 0.3.0 - 23 Nov 2017
+---------------------------
 
 - Fixed two bugs in :class:`genetic.SymbolicTransformer` where the final
   solution selection logic was incorrect and suboptimal. This fix will change
@@ -48,8 +48,8 @@ Version 0.3.0
   to support the latest release of ``scikit-learn`` 0.19 and avoid future test
   failures. By `hugovk <https://github.com/hugovk>`_.
 
-Version 0.2.0
--------------
+Version 0.2.0 - 30 Mar 2017
+---------------------------
 
 - Allow more generations to be evolved on top of those already trained using a
   previous call to fit. The :class:`genetic.SymbolicRegressor` and
@@ -81,8 +81,8 @@ Version 0.2.0
   programs stored in the estimator which helps for large populations, high
   number of generations, as well as for runs with significant bloat.
 
-Version 0.1.0
--------------
+Version 0.1.0 - 6 May 2015
+--------------------------
 
 - Initial public release supporting symbolic regression tasks through the
   :class:`genetic.SymbolicRegressor` class for regression problems and the
