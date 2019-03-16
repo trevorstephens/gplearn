@@ -2,10 +2,10 @@ language: python
 
 env:
   matrix:
-    - PYTHON_VERSION="3.5" COVERAGE="true" LATEST="true"
-    - PYTHON_VERSION="3.6" SKLEARN_VERSION="0.18.1"
-    - PYTHON_VERSION="3.6" LATEST="true"
-    - PYTHON_VERSION="3.7" LATEST="true" QUALITY="true"
+    - PYTHON="3.5" SKLEARN="LATEST" COVERAGE="true"
+    - PYTHON="3.6" SKLEARN="0.18.1"
+    - PYTHON="3.6" SKLEARN="LATEST"
+    - PYTHON="3.7" SKLEARN="LATEST"
 
 install:
   - set -e
@@ -18,17 +18,14 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - if [[ "$LATEST" == "true" ]]; then
-      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose scikit-learn pandas cython;
+  - if [[ "$SKLEARN" == "LATEST" ]]; then
+      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn pandas cython;
     else
-      conda create -q -n testenv -y python=$PYTHON_VERSION pip nose scikit-learn=$SKLEARN_VERSION pandas cython;
+      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn=$SKLEARN pandas cython;
     fi
   - source activate testenv
   - if [[ "$COVERAGE" == "true" ]]; then
       pip install coverage coveralls;
-    fi
-  - if [[ "$QUALITY" == "true" ]]; then
-      pip install prospector;
     fi
   - python --version
   - python -c "import numpy; print('numpy %s' % numpy.__version__)"
@@ -38,9 +35,6 @@ install:
 
 script:
   - set -e
-  - if [[ "$QUALITY" == "true" ]]; then
-      prospector --profile $TRAVIS_BUILD_DIR/.landscape gplearn || true;
-    fi
   - if [[ "$COVERAGE" == "true" ]]; then
       nosetests -s -v --with-coverage --cover-package=gplearn;
     else
