@@ -690,7 +690,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         When set to ``True``, reuse the solution of the previous call to fit
         and add more generations to the evolution, otherwise, just fit a new
         evolution.
-    
+
     low_memory : bool, optional (default=False)
         When set to ``True``, only the current generation is retained. Parent
         information is discarded. For very large populations or runs with many

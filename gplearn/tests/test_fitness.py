@@ -25,7 +25,7 @@ def test_validate_fitness():
     """Check that valid fitness measures are accepted & invalid raise error"""
 
     # Check arg count checks
-    fun = make_fitness(function=_mean_square_error, greater_is_better=True)
+    _ = make_fitness(function=_mean_square_error, greater_is_better=True)
     # non-bool greater_is_better
     assert_raises(ValueError, make_fitness, _mean_square_error, 'Sure')
     assert_raises(ValueError, make_fitness, _mean_square_error, 1)
@@ -39,10 +39,6 @@ def test_validate_fitness():
     def bad_fun2(x1, x2, w):
         return 'ni'
     assert_raises(ValueError, make_fitness, bad_fun2, True)
-
-
-def test_validate_fitness():
-    """Check that custom fitness functions are accepted"""
 
     def _custom_metric(y, y_pred, w):
         """Calculate the root mean square error."""

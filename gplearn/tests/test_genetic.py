@@ -143,7 +143,7 @@ def test_program_init_depth():
                                  random_state=random_state, **params))
     full_depth = np.bincount([gp.depth_ for gp in programs])
     programs = []
-    for i in range(20):
+    for _ in range(20):
         programs.append(_Program(init_method='half and half',
                                  random_state=random_state, **params))
     hnh_depth = np.bincount([gp.depth_ for gp in programs])
@@ -533,7 +533,7 @@ def test_none_const_range():
             if program is None:
                 continue
             for element in program.program:
-                if type(element) == float:
+                if isinstance(element, float):
                     float_count += 1
     assert_true(float_count > 1)
 
@@ -678,9 +678,10 @@ def test_verbose_with_oob():
 
     # check output
     verbose_output.seek(0)
-    header1 = verbose_output.readline().rstrip()
-    header2 = verbose_output.readline().rstrip()
-    header3 = verbose_output.readline().rstrip()
+    # Ignore header rows
+    _ = verbose_output.readline().rstrip()
+    _ = verbose_output.readline().rstrip()
+    _ = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
     assert_equal(20, n_lines)
@@ -702,16 +703,17 @@ def test_more_verbose_output():
 
     # check output
     verbose_output.seek(0)
-    header1 = verbose_output.readline().rstrip()
-    header2 = verbose_output.readline().rstrip()
-    header3 = verbose_output.readline().rstrip()
+    # Ignore header rows
+    _ = verbose_output.readline().rstrip()
+    _ = verbose_output.readline().rstrip()
+    _ = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
     assert_equal(20, n_lines)
 
     joblib_output.seek(0)
     n_lines = sum(1 for l in joblib_output.readlines())
-    # New version of joblib appears to output sys.stderr 
+    # New version of joblib appears to output sys.stderr
     assert_equal(0, n_lines % 10)
 
 
@@ -996,10 +998,6 @@ def test_print_overloading_estimator():
 def test_validate_functions():
     """Check that valid functions are accepted & invalid ones raise error"""
 
-    random_state = check_random_state(415)
-    X = np.reshape(random_state.uniform(size=50), (5, 10))
-    y = random_state.uniform(size=5)
-
     for Symbolic in (SymbolicRegressor, SymbolicTransformer):
         # These should be fine
         est = Symbolic(generations=2, random_state=0,
@@ -1117,7 +1115,7 @@ def test_low_memory_warm_start():
 
     # Check warm start with low memory gets the same result
     est = SymbolicRegressor(generations=10,
-                            random_state=415, 
+                            random_state=415,
                             low_memory=True)
     est.fit(boston.data, boston.target)
     est.set_params(generations=20, warm_start=True)

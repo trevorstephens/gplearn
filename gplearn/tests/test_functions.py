@@ -25,7 +25,7 @@ def test_validate_function():
     """Check that valid functions are accepted & invalid ones raise error"""
 
     # Check arity tests
-    fun = make_function(function=_protected_sqrt, name='sqrt', arity=1)
+    _ = make_function(function=_protected_sqrt, name='sqrt', arity=1)
     # non-integer arity
     assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', '1')
     assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 1.0)
