@@ -628,10 +628,8 @@ class _Program(object):
         program = copy(self.program)
 
         # Get the nodes to modify
-        mutate = np.where([True if (random_state.uniform() <
-                                    self.p_point_replace)
-                           else False
-                           for _ in range(len(program))])[0]
+        mutate = np.where(random_state.uniform(size=len(program)) <
+                          self.p_point_replace)[0]
 
         for node in mutate:
             if isinstance(program[node], _Function):
