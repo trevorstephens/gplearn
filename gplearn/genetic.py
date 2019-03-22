@@ -552,10 +552,10 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
 
     Parameters
     ----------
-    population_size : integer, optional (default=500)
+    population_size : integer, optional (default=1000)
         The number of programs in each generation.
 
-    generations : integer, optional (default=10)
+    generations : integer, optional (default=20)
         The number of generations to evolve.
 
     tournament_size : integer, optional (default=20)
@@ -835,7 +835,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
 
     Parameters
     ----------
-    population_size : integer, optional (default=500)
+    population_size : integer, optional (default=1000)
         The number of programs in each generation.
 
     hall_of_fame : integer, or None, optional (default=100)
@@ -848,7 +848,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         for the least-correlated individuals. If `None`, the entire
         hall_of_fame will be used.
 
-    generations : integer, optional (default=10)
+    generations : integer, optional (default=20)
         The number of generations to evolve.
 
     tournament_size : integer, optional (default=20)
