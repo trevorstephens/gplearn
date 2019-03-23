@@ -13,6 +13,7 @@ import numbers
 import numpy as np
 from scipy.stats import rankdata
 from sklearn.externals import six
+from sklearn.metrics import log_loss
 
 __all__ = ['make_fitness']
 
@@ -124,6 +125,17 @@ def _root_mean_square_error(y, y_pred, w):
     return np.sqrt(np.average(((y_pred - y) ** 2), weights=w))
 
 
+def _sigmoid(x):
+    return np.where(x >= 0, 1 / (1 + np.exp(-x) + 1e-8), np.exp(x) / (1 + np.exp(x) + 1e-8))
+
+def _binary_crossentropy_loss(y, y_pred, w):
+    """Calculate the binary classification error."""
+    y_pred_sigmoid = _sigmoid(y_pred)
+    labels = np.zeros((len(y), 2))
+    labels[np.arange(len(y)), y.astype(int)] = 1
+    return log_loss(labels, y_pred_sigmoid, sample_weight=w)
+
+
 weighted_pearson = make_fitness(function=_weighted_pearson,
                                 greater_is_better=True)
 weighted_spearman = make_fitness(function=_weighted_spearman,
@@ -134,9 +146,12 @@ mean_square_error = make_fitness(function=_mean_square_error,
                                  greater_is_better=False)
 root_mean_square_error = make_fitness(function=_root_mean_square_error,
                                       greater_is_better=False)
+binary_crossentropy_loss = make_fitness(function=_binary_crossentropy_loss,
+                                      greater_is_better=False)
 
 _fitness_map = {'pearson': weighted_pearson,
                 'spearman': weighted_spearman,
                 'mean absolute error': mean_absolute_error,
                 'mse': mean_square_error,
-                'rmse': root_mean_square_error}
+                'rmse': root_mean_square_error,
+                'binary classification': binary_crossentropy_loss}
