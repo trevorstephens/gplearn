@@ -126,7 +126,15 @@ def _root_mean_square_error(y, y_pred, w):
 
 
 def _sigmoid(x):
-    return np.where(x >= 0, 1 / (1 + np.exp(-x) + 1e-8), np.exp(x) / (1 + np.exp(x) + 1e-8))
+    "Numerically stable sigmoid function."
+    if x >= 0:
+        z = np.exp(-x)
+        return 1 / (1 + z)
+    else:
+        # if x is less than zero then z will be small, denom can't be
+        # zero because it's 1+z.
+        z = np.exp(x)
+        return z / (1 + z)
 
 def _binary_crossentropy_loss(y, y_pred, w):
     """Calculate the binary classification error."""
