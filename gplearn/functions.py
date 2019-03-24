@@ -131,7 +131,8 @@ def _protected_inverse(x1):
 
 def _sigmoid(x1):
     """Special case of logistic function to transform to probabilities."""
-    return 1 / (1 + np.exp(-x1))
+    with np.errstate(over='ignore', under='ignore'):
+        return 1 / (1 + np.exp(-x1))
 
 
 add2 = make_function(function=np.add, name='add', arity=2)
