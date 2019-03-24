@@ -1107,7 +1107,7 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
         return self._program.__str__()
 
     def decision_function(self, X):
-        """Perform regression on test vectors X.
+        """Predict decision function on test vectors X.
 
         Parameters
         ----------
@@ -1118,11 +1118,11 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
         Returns
         -------
         scores : array, shape = [n_samples]
-            Predicted values for X.
+            Predicted scores for X.
 
         """
         if not hasattr(self, '_program'):
-            raise NotFittedError('SymbolicRegressor not fitted.')
+            raise NotFittedError('SymbolicClassifier not fitted.')
 
         X = check_array(X)
         _, n_features = X.shape
@@ -1132,9 +1132,48 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
                              'n_features is %s.'
                              % (self.n_features_, n_features))
 
-        score = self._program.execute(X)
+        scores = self._program.execute(X)
 
-        return score
+        return scores
+
+    def predict_proba(self, X):
+        """Predict probabilities on test vectors X.
+
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            Input vectors, where n_samples is the number of samples
+            and n_features is the number of features.
+
+        Returns
+        -------
+        proba : array, shape = [n_samples, n_classes]
+            The class probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+
+        """
+        scores = self.decision_function(X)
+        proba = self._transformer(scores)
+        proba = np.vstack([1 - proba, proba]).T
+        return proba
+
+    def predict(self, X):
+        """Predict classes on test vectors X.
+
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            Input vectors, where n_samples is the number of samples
+            and n_features is the number of features.
+
+        Returns
+        -------
+        y : array, shape = [n_samples,]
+            The predicted classes of the input samples.
+
+        """
+        proba = self.predict_proba(X)
+        return self.classes_.take(np.argmax(proba, axis=1), axis=0)
 
 
 class SymbolicTransformer(BaseSymbolic, TransformerMixin):
