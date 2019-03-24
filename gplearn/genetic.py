@@ -376,18 +376,17 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                     raise ValueError('invalid type %s found in '
                                      '`feature_names`.' % type(feature_name))
 
-        if self.transform is not None:
-            if isinstance(self.transform, _Function):
-                self._transform = self.transform
-            elif self.transform == 'sigmoid':
-                self._transform = sigmoid
-            else:
-                raise ValueError('Invalid `transform`. Expected either '
-                                 '"sigmoid" or _Function object, got %s' %
-                                 type(self.transform))
-            if self._transform.arity != 1:
-                raise ValueError('Invalid arity for `transform`. Expected 1, '
-                                 'got %d.' % (self._transform.arity))
+        if isinstance(self.transform, _Function) or self.transform is None:
+            self._transform = self.transform
+        elif self.transform == 'sigmoid':
+            self._transform = sigmoid
+        else:
+            raise ValueError('Invalid `transform`. Expected either '
+                             '"sigmoid" or _Function object, got %s' %
+                             type(self.transform))
+        if self._transform.arity != 1:
+            raise ValueError('Invalid arity for `transform`. Expected 1, '
+                             'got %d.' % (self._transform.arity))
 
         params = self.get_params()
         params['_metric'] = self._metric
