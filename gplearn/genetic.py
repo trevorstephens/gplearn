@@ -44,7 +44,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     init_method = params['init_method']
     const_range = params['const_range']
     metric = params['_metric']
-    transform = params['_transform']
+    transformer = params['_transformer']
     parsimony_coefficient = params['parsimony_coefficient']
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
@@ -118,7 +118,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            init_method=init_method,
                            n_features=n_features,
                            metric=metric,
-                           transform=transform,
+                           transformer=transformer,
                            const_range=const_range,
                            p_point_replace=p_point_replace,
                            parsimony_coefficient=parsimony_coefficient,
@@ -174,7 +174,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  init_method='half and half',
                  function_set=('add', 'sub', 'mul', 'div'),
                  metric='mean absolute error',
-                 transform=None,
+                 transformer=None,
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
                  p_subtree_mutation=0.01,
@@ -200,7 +200,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.init_method = init_method
         self.function_set = function_set
         self.metric = metric
-        self.transform = transform
+        self.transformer = transformer
         self.parsimony_coefficient = parsimony_coefficient
         self.p_crossover = p_crossover
         self.p_subtree_mutation = p_subtree_mutation
@@ -376,21 +376,25 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                     raise ValueError('invalid type %s found in '
                                      '`feature_names`.' % type(feature_name))
 
-        if isinstance(self.transform, _Function) or self.transform is None:
-            self._transform = self.transform
-        elif self.transform == 'sigmoid':
-            self._transform = sigmoid
-        else:
-            raise ValueError('Invalid `transform`. Expected either '
-                             '"sigmoid" or _Function object, got %s' %
-                             type(self.transform))
-        if self._transform.arity != 1:
-            raise ValueError('Invalid arity for `transform`. Expected 1, '
-                             'got %d.' % (self._transform.arity))
+        if self.transformer is not None:
+            if isinstance(self.transformer, _Function):
+                self._transformer = self.transformer
+            elif self.transformer == 'sigmoid':
+                self._transformer = sigmoid
+            else:
+                raise ValueError('Invalid `transformer`. Expected either '
+                                 '"sigmoid" or _Function object, got %s' %
+                                 type(self.transformer))
+            if self._transformer.arity != 1:
+                raise ValueError('Invalid arity for `transformer`. Expected 1, '
+                                 'got %d.' % (self._transformer.arity))
 
         params = self.get_params()
         params['_metric'] = self._metric
-        params['_transform'] = self._transform
+        if hasattr(self, '_transformer'):
+            params['_transformer'] = self._transformer
+        else:
+            params['_transformer'] = None
         params['function_set'] = self._function_set
         params['arities'] = self._arities
         params['method_probs'] = self._method_probs
