@@ -124,6 +124,14 @@ def _root_mean_square_error(y, y_pred, w):
     return np.sqrt(np.average(((y_pred - y) ** 2), weights=w))
 
 
+def _log_loss(y, y_pred, w):
+    """Calculate the log loss."""
+    eps = 1e-15
+    y_pred = np.clip(y_pred, eps, 1 - eps)
+    score = y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred)
+    return np.average(-score, weights=w)
+
+
 weighted_pearson = make_fitness(function=_weighted_pearson,
                                 greater_is_better=True)
 weighted_spearman = make_fitness(function=_weighted_spearman,
@@ -134,9 +142,11 @@ mean_square_error = make_fitness(function=_mean_square_error,
                                  greater_is_better=False)
 root_mean_square_error = make_fitness(function=_root_mean_square_error,
                                       greater_is_better=False)
+log_loss = make_fitness(function=_log_loss, greater_is_better=False)
 
 _fitness_map = {'pearson': weighted_pearson,
                 'spearman': weighted_spearman,
                 'mean absolute error': mean_absolute_error,
                 'mse': mean_square_error,
-                'rmse': root_mean_square_error}
+                'rmse': root_mean_square_error,
+                'log loss': log_loss}

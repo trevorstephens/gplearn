@@ -77,6 +77,10 @@ class _Program(object):
         The reason for this being passed is that during parallel evolution the
         same program object may be accessed by multiple parallel processes.
 
+    transform : _Function object, optional (default=None)
+        The function to transform the output of the program to probabilities,
+        only used for the SymbolicClassifier.
+
     feature_names : list, optional (default=None)
         Optional list of feature names, used purely for representations in
         the `print` operation or `export_graphviz`. If None, then X0, X1, etc
@@ -127,6 +131,7 @@ class _Program(object):
                  p_point_replace,
                  parsimony_coefficient,
                  random_state,
+                 transform=None,
                  feature_names=None,
                  program=None):
 
@@ -139,6 +144,7 @@ class _Program(object):
         self.metric = metric
         self.p_point_replace = p_point_replace
         self.parsimony_coefficient = parsimony_coefficient
+        self.transform = transform
         self.feature_names = feature_names
         self.program = program
 
@@ -454,6 +460,8 @@ class _Program(object):
 
         """
         y_pred = self.execute(X)
+        if self.transform:
+            y_pred = self.transform(y_pred)
         raw_fitness = self.metric(y, y_pred, sample_weight)
 
         return raw_fitness

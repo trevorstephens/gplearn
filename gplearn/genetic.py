@@ -16,14 +16,15 @@ from warnings import warn
 
 import numpy as np
 from scipy.stats import rankdata
-from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
+from sklearn.base import BaseEstimator
+from sklearn.base import RegressorMixin, TransformerMixin, ClassifierMixin
 from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.validation import check_X_y, check_array
 
 from ._program import _Program
 from .fitness import _fitness_map, _Fitness
-from .functions import _function_map, _Function
+from .functions import _function_map, _Function, sig1 as sigmoid
 from .utils import _partition_estimators
 from .utils import check_random_state, NotFittedError
 
@@ -43,6 +44,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     init_method = params['init_method']
     const_range = params['const_range']
     metric = params['_metric']
+    transform = params['_transform']
     parsimony_coefficient = params['parsimony_coefficient']
     method_probs = params['method_probs']
     p_point_replace = params['p_point_replace']
@@ -116,6 +118,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
                            init_method=init_method,
                            n_features=n_features,
                            metric=metric,
+                           transform=transform,
                            const_range=const_range,
                            p_point_replace=p_point_replace,
                            parsimony_coefficient=parsimony_coefficient,
@@ -171,6 +174,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                  init_method='half and half',
                  function_set=('add', 'sub', 'mul', 'div'),
                  metric='mean absolute error',
+                 transform=None,
                  parsimony_coefficient=0.001,
                  p_crossover=0.9,
                  p_subtree_mutation=0.01,
@@ -196,6 +200,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
         self.init_method = init_method
         self.function_set = function_set
         self.metric = metric
+        self.transform = transform
         self.parsimony_coefficient = parsimony_coefficient
         self.p_crossover = p_crossover
         self.p_subtree_mutation = p_subtree_mutation
@@ -323,13 +328,15 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
             if self.metric not in ('mean absolute error', 'mse', 'rmse',
                                    'pearson', 'spearman'):
                 raise ValueError('Unsupported metric: %s' % self.metric)
-            else:
-                self._metric = _fitness_map[self.metric]
+            self._metric = _fitness_map[self.metric]
+        elif isinstance(self, ClassifierMixin):
+            if self.metric != 'log loss':
+                raise ValueError('Unsupported metric: %s' % self.metric)
+            self._metric = _fitness_map[self.metric]
         elif isinstance(self, TransformerMixin):
             if self.metric not in ('pearson', 'spearman'):
                 raise ValueError('Unsupported metric: %s' % self.metric)
-            else:
-                self._metric = _fitness_map[self.metric]
+            self._metric = _fitness_map[self.metric]
 
         self._method_probs = np.array([self.p_crossover,
                                        self.p_subtree_mutation,
@@ -369,8 +376,22 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                     raise ValueError('invalid type %s found in '
                                      '`feature_names`.' % type(feature_name))
 
+        if self.transform is not None:
+            if isinstance(self.transform, _Function):
+                self._transform = self.transform
+            elif self.transform == 'sigmoid':
+                self._transform = sigmoid
+            else:
+                raise ValueError('Invalid `transform`. Expected either '
+                                 '"sigmoid" or _Function object, got %s' %
+                                 type(self.transform))
+            if self._transform.arity != 1:
+                raise ValueError('Invalid arity for `transform`. Expected 1, '
+                                 'got %d.' % (self._transform.arity))
+
         params = self.get_params()
         params['_metric'] = self._metric
+        params['_transform'] = self._transform
         params['function_set'] = self._function_set
         params['arities'] = self._arities
         params['method_probs'] = self._method_probs
@@ -496,13 +517,6 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 if best_fitness <= self.stopping_criteria:
                     break
 
-        if isinstance(self, RegressorMixin):
-            # Find the best individual in the final generation
-            if self._metric.greater_is_better:
-                self._program = self._programs[-1][np.argmax(fitness)]
-            else:
-                self._program = self._programs[-1][np.argmin(fitness)]
-
         if isinstance(self, TransformerMixin):
             # Find the best individuals in the final generation
             fitness = np.array(fitness)
@@ -534,6 +548,13 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                 indices = list(range(len(components)))
             self._best_programs = [self._programs[-1][i] for i in
                                    hall_of_fame[components]]
+
+        else:
+            # Find the best individual in the final generation
+            if self._metric.greater_is_better:
+                self._program = self._programs[-1][np.argmax(fitness)]
+            else:
+                self._program = self._programs[-1][np.argmin(fitness)]
 
         return self
 
