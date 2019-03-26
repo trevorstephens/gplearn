@@ -335,7 +335,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     for (X, y) in [(X_b, y_b)]:
         classes = np.unique(y)
         n_classes = len(classes)
-        n_samples, n_features = X.shape
+        _, n_features = X.shape
         classifier = clone(classifier_orig)
         X = pairwise_estimator_convert_X(X, classifier)
         y = multioutput_estimator_convert_y_2d(classifier, y)
@@ -363,9 +363,6 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
         assert_greater(accuracy_score(y, y_pred), 0.83)
 
         # raises error on malformed input for predict
-        msg_pairwise = (
-            "The classifier {} does not raise an error when shape of X in "
-            " {} is not equal to (n_test_samples, n_training_samples)")
         msg = ("The classifier {} does not raise an error when the number of "
                "features in {} is different from the number of features in "
                "fit.")
@@ -450,32 +447,6 @@ def check_supervised_y_2d(name, estimator_orig):
     y_pred_2d = estimator.predict(X)
     msg = "expected 1 DataConversionWarning, got: %s" % (
         ", ".join([str(w_x) for w_x in w]))
-    assert_greater(len(w), 0, msg)
-    assert "DataConversionWarning('A column-vector y" \
-           " was passed when a 1d array was expected" in msg
-    assert_allclose(y_pred.ravel(), y_pred_2d.ravel())
-
-
-def check_supervised_y_2d(name, estimator_orig):
-    rnd = np.random.RandomState(0)
-    X = pairwise_estimator_convert_X(rnd.uniform(size=(10, 3)), estimator_orig)
-    y = np.arange(10) % 2
-    estimator = clone(estimator_orig)
-    set_random_state(estimator)
-    # fit
-    estimator.fit(X, y)
-    y_pred = estimator.predict(X)
-
-    set_random_state(estimator)
-    # Check that when a 2D y is given, a DataConversionWarning is
-    # raised
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always", DataConversionWarning)
-        warnings.simplefilter("ignore", RuntimeWarning)
-        estimator.fit(X, y[:, np.newaxis])
-    y_pred_2d = estimator.predict(X)
-    msg = "expected 1 DataConversionWarning, got: %s" % (
-        ", ".join([str(w_x) for w_x in w]))
     # check that we warned if we don't support multi-output
     assert_greater(len(w), 0, msg)
     assert "DataConversionWarning('A column-vector y" \
@@ -498,7 +469,6 @@ def check_classifiers_classes(name, classifier_orig):
 
     X_binary = pairwise_estimator_convert_X(X_binary, classifier_orig)
 
-    labels_multiclass = ["one", "two", "three"]
     labels_binary = ["one", "two"]
 
     y_names_binary = np.take(labels_binary, y_binary)
