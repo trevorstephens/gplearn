@@ -1106,36 +1106,6 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
             return self.__repr__()
         return self._program.__str__()
 
-    def decision_function(self, X):
-        """Predict decision function on test vectors X.
-
-        Parameters
-        ----------
-        X : array-like, shape = [n_samples, n_features]
-            Input vectors, where n_samples is the number of samples
-            and n_features is the number of features.
-
-        Returns
-        -------
-        scores : array, shape = [n_samples]
-            Predicted scores for X.
-
-        """
-        if not hasattr(self, '_program'):
-            raise NotFittedError('SymbolicClassifier not fitted.')
-
-        X = check_array(X)
-        _, n_features = X.shape
-        if self.n_features_ != n_features:
-            raise ValueError('Number of features of the model must match the '
-                             'input. Model n_features is %s and input '
-                             'n_features is %s.'
-                             % (self.n_features_, n_features))
-
-        scores = self._program.execute(X)
-
-        return scores
-
     def predict_proba(self, X):
         """Predict probabilities on test vectors X.
 
@@ -1152,7 +1122,18 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
             classes corresponds to that in the attribute `classes_`.
 
         """
-        scores = self.decision_function(X)
+        if not hasattr(self, '_program'):
+            raise NotFittedError('SymbolicClassifier not fitted.')
+
+        X = check_array(X)
+        _, n_features = X.shape
+        if self.n_features_ != n_features:
+            raise ValueError('Number of features of the model must match the '
+                             'input. Model n_features is %s and input '
+                             'n_features is %s.'
+                             % (self.n_features_, n_features))
+
+        scores = self._program.execute(X)
         proba = self._transformer(scores)
         proba = np.vstack([1 - proba, proba]).T
         return proba

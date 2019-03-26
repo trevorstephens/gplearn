@@ -28,13 +28,16 @@ from sklearn.utils.testing import assert_raises
 from sklearn.utils.testing import assert_warns
 from sklearn.utils.validation import check_random_state
 
-from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
+from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
+from gplearn.genetic import SymbolicTransformer
 from gplearn.fitness import weighted_pearson, weighted_spearman
 from gplearn._program import _Program
 from gplearn.fitness import _fitness_map
 from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2)
 from gplearn.functions import _Function
+from gplearn.tests.check_estimator import custom_check_estimator
+from gplearn.tests.check_estimator import rewritten_check_estimator
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -48,6 +51,13 @@ def test_sklearn_estimator_checks_regressor():
     """Run the sklearn estimator validation checks on SymbolicRegressor"""
 
     check_estimator(SymbolicRegressor)
+
+
+def test_sklearn_estimator_checks_classifier():
+    """Run the sklearn estimator validation checks on SymbolicClassifierr"""
+
+    custom_check_estimator(SymbolicClassifier)
+    rewritten_check_estimator(SymbolicClassifier)
 
 
 def test_sklearn_estimator_checks_transformer():
