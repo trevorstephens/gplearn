@@ -41,7 +41,7 @@ gplearn retains the familiar scikit-learn `fit/predict` API and works with the e
 
 gplearn currently supports regression through the SymbolicRegressor as well as transformation for automated feature engineering with the SymbolicTransformer, which is designed to support regression problems, but should also work for binary classification. Future versions of the package will expand this class to support more complicated multi-target classification problems, and much more is planned too.
 
-gplearn is built on scikit-learn and a fairly recent copy (0.18.1+) is required for `installation <http://gplearn.readthedocs.io/en/stable/installation.html>`_. If you come across any issues in running or installing the package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
+gplearn is built on scikit-learn and a fairly recent copy (0.20.0+) is required for `installation <http://gplearn.readthedocs.io/en/stable/installation.html>`_. If you come across any issues in running or installing the package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
 
 I hope you get some excellent results from using gplearn! If you do, please `drop me a line on my blog <http://trevorstephens.com>`_ about how you used it.
 
