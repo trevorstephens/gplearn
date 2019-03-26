@@ -335,7 +335,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     for (X, y) in [(X_b, y_b)]:
         classes = np.unique(y)
         n_classes = len(classes)
-        _, n_features = X.shape
+        n_samples, _ = X.shape
         classifier = clone(classifier_orig)
         X = pairwise_estimator_convert_X(X, classifier)
         y = multioutput_estimator_convert_y_2d(classifier, y)
