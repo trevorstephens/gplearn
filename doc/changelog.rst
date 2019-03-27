@@ -8,7 +8,8 @@ Version 0.4.0
 -------------
 
 - Drop support for Python 2.7 and Python 3.4 to ensure compatibility with
-  ``scikit-learn``.
+  ``scikit-learn``. ``scikit-learn`` 0.20.0 or newer will also be required due
+  to recent changes in their testing suite.
 - Allow users to express feature names as strings rather than X0, X1, etc.
   Graphviz and ``print()`` output can now be customized by setting
   ``feature_names=[...]`` in :class:`genetic.SymbolicRegressor` or
