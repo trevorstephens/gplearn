@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from sklearn.externals.six.moves import StringIO
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
@@ -45,6 +45,13 @@ boston = load_boston()
 perm = rng.permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
+
+# load the breast cancer dataset and randomly permute it
+rng = check_random_state(0)
+cancer = load_breast_cancer()
+perm = rng.permutation(cancer.target.size)
+cancer.data = cancer.data[perm]
+cancer.target = cancer.target[perm]
 
 
 def test_sklearn_estimator_checks_regressor():
@@ -516,6 +523,68 @@ def test_program_input_validation():
     for m in ['mean absolute error', 'mse', 'rmse', 'the larch']:
         est = SymbolicTransformer(generations=2, metric=m)
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+
+def test_program_input_validation_classifier():
+    """Check that guarded input validation raises errors"""
+
+    # Check too much proba
+    est = SymbolicClassifier(p_point_mutation=.5)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+    # Check invalid init_method
+    est = SymbolicClassifier(init_method='ni')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+    # Check invalid const_ranges
+    est = SymbolicClassifier(const_range=2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(const_range=[2, 2])
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(const_range=(2, 2, 2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(const_range='ni')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    # And check acceptable, but strange, representations of const_range
+    est = SymbolicClassifier(generations=2, const_range=(2, 2))
+    est.fit(cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, const_range=None)
+    est.fit(cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, const_range=(4, 2))
+    est.fit(cancer.data, cancer.target)
+
+    # Check invalid init_depth
+    est = SymbolicClassifier(init_depth=2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=[2, 2])
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=(2, 2, 2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth='ni')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=(4, 2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    # And check acceptable, but strange, representations of init_depth
+    est = SymbolicClassifier(generations=2, init_depth=(2, 2))
+    est.fit(cancer.data, cancer.target)
+
+    # Check classifier metrics
+    for m in ['log loss']:
+        est = SymbolicClassifier(generations=2, metric=m)
+        est.fit(cancer.data, cancer.target)
+    # And check a fake one
+    est = SymbolicClassifier(generations=2, metric='the larch')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+    # Check classifier transformers
+    for t in ['sigmoid']:
+        est = SymbolicClassifier(generations=2, transformer=t)
+        est.fit(cancer.data, cancer.target)
+    # And check a fake one
+    est = SymbolicClassifier(generations=2, transformer='the larch')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
 
 
 def test_none_const_range():
@@ -996,6 +1065,44 @@ def test_print_overloading_estimator():
         sys.stdout = out
         output = str([gp.__str__() for gp in est])
         print(output.replace("',", ",\n").replace("'", ""))
+        output_program = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    assert_true(output_unfitted != output_fitted)
+    assert_true(output_unfitted == est.__repr__())
+    assert_true(output_fitted == output_program)
+
+    # Check the classifier
+    y = (y > .5).astype(int)
+    est = SymbolicClassifier(generations=2, random_state=0)
+
+    # Unfitted
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_unfitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    # Fitted
+    est.fit(X, y)
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_fitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est._program)
         output_program = out.getvalue().strip()
     finally:
         sys.stdout = orig_stdout
