@@ -14,19 +14,19 @@ from gplearn.genetic import SymbolicRegressor, SymbolicClassifier
 from gplearn.genetic import SymbolicTransformer
 from gplearn.fitness import make_fitness, _mean_square_error
 
-# load the boston dataset and randomly permute it
-rng = check_random_state(0)
-boston = load_boston()
-perm = rng.permutation(boston.target.size)
-boston.data = boston.data[perm]
-boston.target = boston.target[perm]
-
 # load the breast cancer dataset and randomly permute it
 rng = check_random_state(0)
 cancer = load_breast_cancer()
 perm = rng.permutation(cancer.target.size)
 cancer.data = cancer.data[perm]
 cancer.target = cancer.target[perm]
+
+# load the boston dataset and randomly permute it
+rng = check_random_state(0)
+boston = load_boston()
+perm = rng.permutation(boston.target.size)
+boston.data = boston.data[perm]
+boston.target = boston.target[perm]
 
 
 def test_validate_fitness():
