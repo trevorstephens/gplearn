@@ -582,6 +582,9 @@ def test_program_input_validation_classifier():
     for t in ['sigmoid']:
         est = SymbolicClassifier(generations=2, transformer=t)
         est.fit(cancer.data, cancer.target)
+    # And check an incompatible one with wrong arity
+    est = SymbolicClassifier(generations=2, transformer=sub2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
     # And check a fake one
     est = SymbolicClassifier(generations=2, transformer='the larch')
     assert_raises(ValueError, est.fit, cancer.data, cancer.target)
