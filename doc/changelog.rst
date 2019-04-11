@@ -7,8 +7,12 @@ Release History
 Version 0.4.0
 -------------
 
-- Following scikit-learn's lead, gplearn will no longer support Python 2.7 or
-  Python 3.4.
+- Drop support for Python 2.7 and Python 3.4 to ensure compatibility with
+  ``scikit-learn``.
+- Allow users to express feature names as strings rather than X0, X1, etc.
+  Graphviz and ``print()`` output can now be customized by setting
+  ``feature_names=[...]`` in :class:`genetic.SymbolicRegressor` or
+  :class:`genetic.SymbolicTransformer`.
 - Allow users to exclude constants from their programs by setting
   ``const_range=None`` in :class:`genetic.SymbolicRegressor` or
   :class:`genetic.SymbolicTransformer`.
