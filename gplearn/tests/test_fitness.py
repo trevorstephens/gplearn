@@ -15,16 +15,14 @@ from gplearn.genetic import SymbolicTransformer
 from gplearn.fitness import make_fitness, _mean_square_error
 
 # load the breast cancer dataset and randomly permute it
-rng = check_random_state(0)
 cancer = load_breast_cancer()
-perm = rng.permutation(cancer.target.size)
+perm = check_random_state(0).permutation(cancer.target.size)
 cancer.data = cancer.data[perm]
 cancer.target = cancer.target[perm]
 
 # load the boston dataset and randomly permute it
-rng = check_random_state(0)
 boston = load_boston()
-perm = rng.permutation(boston.target.size)
+perm = check_random_state(0).permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
 
@@ -64,7 +62,7 @@ def test_validate_fitness():
 def test_customized_regressor_metrics():
     """Check whether greater_is_better works for SymbolicRegressor."""
 
-    x_data = rng.uniform(-1, 1, 100).reshape(50, 2)
+    x_data = check_random_state(0).uniform(-1, 1, 100).reshape(50, 2)
     y_true = x_data[:, 0] ** 2 + x_data[:, 1] ** 2
 
     est_gp = SymbolicRegressor(metric='mean absolute error',
@@ -73,7 +71,7 @@ def test_customized_regressor_metrics():
                                init_depth=(2, 4))
     est_gp.fit(x_data, y_true)
     formula = est_gp.__str__()
-    assert_equal('add(mul(X1, X1), mul(X0, X0))', formula, True)
+    assert_equal('add(mul(X0, X0), mul(X1, X1))', formula, True)
 
     def neg_mean_absolute_error(y, y_pred, sample_weight):
         return -1 * mean_absolute_error(y, y_pred, sample_weight)
@@ -87,7 +85,7 @@ def test_customized_regressor_metrics():
                                  init_method='full', init_depth=(2, 4))
     c_est_gp.fit(x_data, y_true)
     c_formula = c_est_gp.__str__()
-    assert_equal('add(mul(X1, X1), mul(X0, X0))', c_formula, True)
+    assert_equal('add(mul(X0, X0), mul(X1, X1))', c_formula, True)
 
 
 def test_customized_transformer_metrics():
@@ -133,7 +131,7 @@ def test_customized_transformer_metrics():
 def test_customized_classifier_metrics():
     """Check whether greater_is_better works for SymbolicClassifier."""
 
-    x_data = rng.uniform(-1, 1, 100).reshape(50, 2)
+    x_data = check_random_state(0).uniform(-1, 1, 100).reshape(50, 2)
     y_true = x_data[:, 0] ** 2 + x_data[:, 1] ** 2
     y_true = (y_true < y_true.mean()).astype(int)
 
@@ -145,8 +143,7 @@ def test_customized_classifier_metrics():
                                 init_depth=(2, 4))
     est_gp.fit(x_data, y_true)
     formula = est_gp.__str__()
-    expected_formula = ('sub(div(X1, X1), mul(div(X1, 0.387), '
-                        'div(add(0.387, X1), 0.465)))')
+    expected_formula = 'sub(0.364, mul(add(X0, X0), add(X0, X0)))'
     assert_equal(expected_formula, formula, True)
 
     def negative_log_loss(y, y_pred, w):
