@@ -1176,9 +1176,7 @@ def test_print_overloading_estimator():
 def test_validate_functions():
     """Check that valid functions are accepted & invalid ones raise error"""
 
-    for Symbolic in (SymbolicRegressor,
-                     SymbolicTransformer,
-                     SymbolicClassifier):
+    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
         # These should be fine
         est = Symbolic(generations=2, random_state=0,
                        function_set=(add2, sub2, mul2, div2))
@@ -1196,6 +1194,24 @@ def test_validate_functions():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+    # Now for the classifier... These should be fine
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=(add2, sub2, mul2, div2))
+    est.fit(cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=('add', 'sub', 'mul', div2))
+    est.fit(cancer.data, cancer.target)
+
+    # These should fail
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=('ni', 'sub', 'mul', div2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=(7, 'sub', 'mul', div2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, random_state=0, function_set=())
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
 
 
 def test_indices():
