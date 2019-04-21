@@ -636,6 +636,19 @@ def test_sample_weight():
     assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
     assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
 
+    # And again for the classifier
+    sample_weight = np.ones(cancer.target.shape[0])
+    est1 = SymbolicClassifier(generations=2, random_state=0)
+    est1.fit(cancer.data, cancer.target)
+    est2 = SymbolicClassifier(generations=2, random_state=0)
+    est2.fit(cancer.data, cancer.target, sample_weight=sample_weight)
+    # And again with a scaled sample_weight
+    est3 = SymbolicClassifier(generations=2, random_state=0)
+    est3.fit(cancer.data, cancer.target, sample_weight=sample_weight * 1.1)
+
+    assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
+    assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
+
     # And again for the transformer
     sample_weight = np.ones(boston.target.shape[0])
     est1 = SymbolicTransformer(generations=2, random_state=0)
@@ -713,6 +726,10 @@ def test_early_stopping():
 
     est1 = SymbolicTransformer(stopping_criteria=0.5, random_state=0)
     est1.fit(boston.data[:400, :], boston.target[:400])
+    assert_true(len(est1._programs) == 1)
+
+    est1 = SymbolicClassifier(stopping_criteria=.9, random_state=0)
+    est1.fit(cancer.data[:400, :], cancer.target[:400])
     assert_true(len(est1._programs) == 1)
 
 
@@ -833,6 +850,21 @@ def test_parallel_train():
     for len1, len2 in zip(lengths, lengths[1:]):
         assert_array_almost_equal(len1, len2)
 
+    # Check the classifier
+    ests = [
+        SymbolicClassifier(population_size=100, generations=4, n_jobs=n_jobs,
+                           random_state=0).fit(cancer.data[:100, :],
+                                               cancer.target[:100])
+        for n_jobs in [1, 2, 3, 8, 16]
+    ]
+
+    preds = [e.predict(cancer.data[500:, :]) for e in ests]
+    for pred1, pred2 in zip(preds, preds[1:]):
+        assert_array_almost_equal(pred1, pred2)
+    lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
+    for len1, len2 in zip(lengths, lengths[1:]):
+        assert_array_almost_equal(len1, len2)
+
 
 def test_pickle():
     """Check pickability"""
@@ -858,6 +890,17 @@ def test_pickle():
     assert_equal(type(est2), est.__class__)
     X_new2 = est2.transform(boston.data[500:, :])
     assert_array_almost_equal(X_new, X_new2)
+
+    # Check the classifier
+    est = SymbolicClassifier(generations=2, random_state=0)
+    est.fit(cancer.data[:100, :], cancer.target[:100])
+    score = est.score(cancer.data[500:, :], cancer.target[500:])
+    pickle_object = pickle.dumps(est)
+
+    est2 = pickle.loads(pickle_object)
+    assert_equal(type(est2), est.__class__)
+    score2 = est2.score(cancer.data[500:, :], cancer.target[500:])
+    assert_equal(score, score2)
 
 
 def test_memory_layout():
@@ -899,6 +942,7 @@ def test_input_shape():
     random_state = check_random_state(415)
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
+    yc = np.asarray(['foo', 'bar', 'foo', 'foo', 'bar'])
     X2 = np.reshape(random_state.uniform(size=45), (5, 9))
 
     # Check the regressor
@@ -910,6 +954,11 @@ def test_input_shape():
     est = SymbolicTransformer(generations=2, random_state=0)
     est.fit(X, y)
     assert_raises(ValueError, est.transform, X2)
+
+    # Check the classifier
+    est = SymbolicClassifier(generations=2, random_state=0)
+    est.fit(X, yc)
+    assert_raises(ValueError, est.predict, X2)
 
 
 def test_output_shape():
@@ -950,6 +999,15 @@ def test_pipeline():
                                           random_state=0))
     est.fit(boston.data, boston.target)
     assert_almost_equal(est.score(boston.data, boston.target), -4.00270923)
+
+    # Check the classifier
+    est = make_pipeline(StandardScaler(),
+                        SymbolicClassifier(population_size=50,
+                                           generations=5,
+                                           tournament_size=5,
+                                           random_state=0))
+    est.fit(cancer.data, cancer.target)
+    assert_almost_equal(est.score(cancer.data, cancer.target), 0.934973637961)
 
     # Check the transformer
     est = make_pipeline(SymbolicTransformer(population_size=50,
@@ -1118,7 +1176,9 @@ def test_print_overloading_estimator():
 def test_validate_functions():
     """Check that valid functions are accepted & invalid ones raise error"""
 
-    for Symbolic in (SymbolicRegressor, SymbolicTransformer):
+    for Symbolic in (SymbolicRegressor,
+                     SymbolicTransformer,
+                     SymbolicClassifier):
         # These should be fine
         est = Symbolic(generations=2, random_state=0,
                        function_set=(add2, sub2, mul2, div2))
