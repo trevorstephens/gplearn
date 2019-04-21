@@ -127,8 +127,9 @@ def _root_mean_square_error(y, y_pred, w):
 def _log_loss(y, y_pred, w):
     """Calculate the log loss."""
     eps = 1e-15
+    inv_y_pred = np.clip(1 - y_pred, eps, 1 - eps)
     y_pred = np.clip(y_pred, eps, 1 - eps)
-    score = y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred)
+    score = y * np.log(y_pred) + (1 - y) * np.log(inv_y_pred)
     return np.average(-score, weights=w)
 
 

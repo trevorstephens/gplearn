@@ -61,9 +61,14 @@ def test_sklearn_estimator_checks_regressor():
 
 
 def test_sklearn_estimator_checks_classifier():
-    """Run the sklearn estimator validation checks on SymbolicClassifierr"""
+    """Run the sklearn estimator validation checks on SymbolicClassifier"""
 
     custom_check_estimator(SymbolicClassifier)
+
+
+def test_sklearn_estimator_checks_classifier_binary():
+    """Run custom binary estimator validation checks on SymbolicClassifier"""
+
     rewritten_check_estimator(SymbolicClassifier)
 
 
