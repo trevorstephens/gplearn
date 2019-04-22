@@ -280,7 +280,8 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="mul", fillcolor="#136ed4"] ;\n' \
+           'node [style=filled]\n' \
+           '0 [label="mul", fillcolor="#136ed4"] ;\n' \
            '1 [label="div", fillcolor="#136ed4"] ;\n' \
            '2 [label="X8", fillcolor="#60a6f6"] ;\n' \
            '3 [label="X1", fillcolor="#60a6f6"] ;\n' \
@@ -303,7 +304,8 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
+           'node [style=filled]\n' \
+           '0 [label="mul", fillcolor="#cecece"] ;\n' \
            '1 [label="div", fillcolor="#cecece"] ;\n' \
            '2 [label="X8", fillcolor="#cecece"] ;\n' \
            '3 [label="X1", fillcolor="#cecece"] ;\n' \
@@ -319,7 +321,8 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="X1", fillcolor="#60a6f6"] ;\n}'
+           'node [style=filled]\n' \
+           '0 [label="X1", fillcolor="#60a6f6"] ;\n}'
     assert_true(output == tree)
 
 
