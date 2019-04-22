@@ -69,9 +69,6 @@ classification.
 for installation. If you come across any issues in running or installing the
 package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
 
-I hope you get some excellent results from using ``gplearn``! If you do, please
-`drop me a line on my blog <http://trevorstephens.com>`_ about how you used it.
-
 Next up, read some more details about :ref:`what Genetic Programming is <intro>`,
 and how it works...
 

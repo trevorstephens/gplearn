@@ -263,7 +263,7 @@ at that, let's load the Wisconsin breast cancer dataset and shuffle it::
     cancer.target = cancer.target[perm]
 
 We will use the base function sets and increase the parsimony in order to find
-a small solution to the problem, and fir to the first 400 samples::
+a small solution to the problem, and fit to the first 400 samples::
 
     est = SymbolicClassifier(parsimony_coefficient=.01,
                              feature_names=cancer.feature_names,
