@@ -4,13 +4,13 @@ Examples
 ========
 
 The code used to generate these examples can be
-`found here <http://nbviewer.ipython.org/github/trevorstephens/gplearn/blob/master/doc/gp_examples.ipynb>`_
+`found here <https://github.com/trevorstephens/gplearn/blob/master/doc/gp_examples.ipynb>`_
 as an iPython Notebook.
 
 .. currentmodule:: gplearn.genetic
 
-Example 1: Symbolic Regressor
------------------------------
+Symbolic Regressor
+------------------
 
 This example demonstrates using the :class:`SymbolicRegressor` to fit a
 symbolic relationship.
@@ -174,8 +174,8 @@ our winning program::
 .. image:: images/ex1_fig3.png
     :align: center
 
-Example 2: Symbolic Transformer
--------------------------------
+Symbolic Transformer
+--------------------
 
 This example demonstrates using the :class:`SymbolicTransformer` to generate
 new non-linear features automatically.
@@ -237,6 +237,58 @@ dataset and see how it performs on the final 200 again::
 Great! We have improved the :math:`R^{2}` score by a significant margin. It
 looks like the linear model was able to take advantage of some new non-linear
 features to fit the data even better.
+
+Symbolic Classifier
+-------------------
+
+Continuing the scikit-learn `classifier comparison <https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html>`_
+example to include the :class:`SymbolicClassifier` we can see what types of
+decision boundaries could be found using genetic programming.
+
+.. image:: images/ex4_comparison.png
+    :align: center
+
+As we can see, the :class:`SymbolicClassifier` was able to find non-linear
+decision boundaries. Individual tweaks to the function sets and other
+parameters to better suit each dataset may also improve the fits.
+
+As with scikit-learn's disclaimer, this should be taken with a grain of salt
+for use with real-world datasets in multi-dimensional spaces. In order to look
+at that, let's load the Wisconsin breast cancer dataset and shuffle it::
+
+    rng = check_random_state(0)
+    cancer = load_breast_cancer()
+    perm = rng.permutation(cancer.target.size)
+    cancer.data = cancer.data[perm]
+    cancer.target = cancer.target[perm]
+
+We will use the base function sets and increase the parsimony in order to find
+a small solution to the problem, and fir to the first 400 samples::
+
+    est = SymbolicClassifier(parsimony_coefficient=.01,
+                             feature_names=cancer.feature_names,
+                             random_state=0)
+    est.fit(cancer.data[:400], cancer.target[:400])
+
+Testing the estimator on the remaining samples shows that it found a very good
+solution::
+
+    y_true = cancer.target[400:]
+    y_score = est.predict_proba(cancer.data[400:])[:,1]
+    roc_auc_score(y_true, y_score)
+
+    0.9927514792899409
+
+We can then also visualise the solution with Graphviz::
+
+    graph = pydotplus.graphviz.graph_from_dot_data(est._program.export_graphviz())
+    Image(graph.create_png())
+
+.. image:: images/ex4_tree.png
+    :align: center
+
+It is important to note that the results of this formula are passed through the
+sigmoid function in order to transform the solution into class probabilities.
 
 Next up, :ref:`explore the full API reference <reference>` or just skip ahead
 :ref:`install the package <installation>`!

@@ -278,7 +278,7 @@ class _Program(object):
         terminals = []
         if fade_nodes is None:
             fade_nodes = []
-        output = 'digraph program {\nnode [style=filled]'
+        output = 'digraph program {\nnode [style=filled]\n'
         for i, node in enumerate(self.program):
             fill = '#cecece'
             if isinstance(node, _Function):
