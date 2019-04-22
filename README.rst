@@ -43,5 +43,3 @@ gplearn supports regression through the SymbolicRegressor, binary classification
 
 gplearn is built on scikit-learn and a fairly recent copy (0.20.0+) is required for `installation <http://gplearn.readthedocs.io/en/stable/installation.html>`_. If you come across any issues in running or installing the package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
 
-I hope you get some excellent results from using gplearn! If you do, please `drop me a line on my blog <http://trevorstephens.com>`_ about how you used it.
-
