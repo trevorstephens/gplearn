@@ -79,7 +79,7 @@ was just about right as the average length of the programs fluctuated around a
 bit before settling on a pretty reasonable size. Let's look at what our
 solution was::
 
-    print est_gp._program
+    print(est_gp._program)
     
     sub(add(-0.999, X1), mul(sub(X1, X0), add(X0, X1)))
 
@@ -150,7 +150,7 @@ We can also inspect the program that the :class:`SymbolicRegressor` found::
 
 And check out who its parents were::
 
-    print est_gp._program.parents
+    print(est_gp._program.parents)
 
     {'method': 'Crossover',
      'parent_idx': 1555,
@@ -194,7 +194,7 @@ benchmark to beat is simply Ridge running on the dataset as-is::
 
     est = Ridge()
     est.fit(boston.data[:300, :], boston.target[:300])
-    print est.score(boston.data[300:, :], boston.target[300:])
+    print(est.score(boston.data[300:, :], boston.target[300:]))
     
     0.759145222183
 
@@ -230,7 +230,7 @@ dataset and see how it performs on the final 200 again::
 
     est = Ridge()
     est.fit(new_boston[:300, :], boston.target[:300])
-    print est.score(new_boston[300:, :], boston.target[300:])
+    print(est.score(new_boston[300:, :], boston.target[300:]))
     
     0.841750404385
 

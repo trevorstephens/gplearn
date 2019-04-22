@@ -15,18 +15,18 @@ solution, ``gplearn`` provides several means to examine the best programs and
 their parents. Most of these methods are illustrated
 :ref:`in the examples section <example>`.
 
-Both :class:`SymbolicRegressor` and :class:`SymbolicTransformer` overload the
-``print`` function to output a LISP-style flattened tree representation of the
-program. Simply ``print(est)`` the fitted estimator and the program will be
-output to your session.
+Each of :class:`SymbolicRegressor`, :class:`SymbolicClassifier` and
+:class:`SymbolicTransformer` overload the ``print`` function to output a
+LISP-style flattened tree representation of the program. Simply ``print(est)``
+the fitted estimator and the program will be output to your session.
 
 If you would like to see more details about the final programs, you can access
 the underlying ``_Program`` objects which contains several attributes and
 methods that can yield more information about them.
 
-:class:`SymbolicRegressor` has a private attribute ``_program`` which is a
-single ``_Program`` object that was the fittest program found in the final
-generation of the evolution.
+:class:`SymbolicRegressor` and :class:`SymbolicClassifier` have a private
+attribute ``_program`` which is a single ``_Program`` object that was the
+fittest program found in the final generation of the evolution.
 
 :class:`SymbolicTransformer` on the other hand has a private attribute
 ``_best_programs`` which is a list of ``_Program`` objects of length

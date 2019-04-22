@@ -208,6 +208,9 @@ target; they are better used as a value-added feature to a second-stage
 estimator. Both will equally prefer strongly positively or negatively
 correlated predictions.
 
+The :class:`SymbolicClassifier` currently uses the 'log loss' aka binary
+cross-entropy loss as its default metric to optimise.
+
 .. currentmodule:: gplearn
 
 You can also set up your own fitness measures by using the
@@ -510,6 +513,23 @@ of the best program in the verbose reporter (activated by setting
 also reported.
 
 .. currentmodule:: gplearn.genetic
+
+.. _classification:
+
+Classification
+--------------
+
+The :class:`SymbolicClassifier` works in exactly the same way as the
+:class:`SymbolicRegressor` in how the evolution takes place. The only
+difference is that the output of the program is transformed through a
+`sigmoid function <https://en.wikipedia.org/wiki/Sigmoid_function>`_ in order
+to transform the numeric output into probabilities of each class. In essence
+this means that a negative output of a function means that the program is
+predicting one class, and a positive output predicts the other.
+
+Note that the sigmoid function is not considered when evaluating the depth or
+length of the program, ie. the size of the programs and thus the behaviour of
+bloat reduction measures are equivalent to those in the regressor.
 
 .. _transformer:
 

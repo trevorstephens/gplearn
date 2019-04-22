@@ -59,12 +59,11 @@ functionality into a scikit-learn-style API. While there are a lot of
 parameters to tweak, reading the documentation here should make the more
 relevant ones clear for your problem.
 
-``gplearn`` currently supports regression through the :class:`SymbolicRegressor`
-as well as transformation for automated feature engineering with the
-:class:`SymbolicTransformer`, which is designed to support regression problems,
-but should also work for binary classification. Future versions of the package
-will expand this class to support more complicated multi-target classification
-problems, and much more is planned too.
+``gplearn`` supports regression through the :class:`SymbolicRegressor`, binary
+classification with the :class:`SymbolicClassifier`, as well as transformation
+for automated feature engineering with the :class:`SymbolicTransformer`, which
+is designed to support regression problems, but should also work for binary
+classification.
 
 ``gplearn`` is built on scikit-learn and a fairly recent copy (0.20.0+) is required
 for installation. If you come across any issues in running or installing the
