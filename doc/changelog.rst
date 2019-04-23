@@ -32,7 +32,8 @@ Version 0.4.0
   `wulfihm <https://github.com/wulfihm>`_.
 - Drop support for Python 2.7 and Python 3.4 to ensure compatibility with
   ``scikit-learn``. ``scikit-learn`` 0.20.0 or newer will also be required due
-  to recent changes in their testing suite.
+  to recent changes in their testing suite. Additionally joblib 0.11 or newer
+  will be required due to scikit-learn devendoring it.
 
 Version 0.3.0 - 23 Nov 2017
 ---------------------------
