@@ -12,7 +12,6 @@ import numbers
 
 import numpy as np
 from scipy.stats import rankdata
-from sklearn.externals import six
 
 __all__ = ['make_fitness']
 
@@ -76,10 +75,9 @@ def make_fitness(function, greater_is_better):
     if not isinstance(greater_is_better, bool):
         raise ValueError('greater_is_better must be bool, got %s'
                          % type(greater_is_better))
-    if six.get_function_code(function).co_argcount != 3:
+    if function.__code__.co_argcount != 3:
         raise ValueError('function requires 3 arguments (y, y_pred, w),'
-                         ' got %d.'
-                         % six.get_function_code(function).co_argcount)
+                         ' got %d.' % function.__code__.co_argcount)
     if not isinstance(function(np.array([1, 1]),
                       np.array([2, 2]),
                       np.array([1, 1])), numbers.Number):
