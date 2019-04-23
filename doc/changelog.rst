@@ -4,6 +4,11 @@
 Release History
 ===============
 
+Version 0.5.0
+-------------
+
+- Nothing yet!
+
 Version 0.4.0 - 23 Apr 2019
 ---------------------------
 
