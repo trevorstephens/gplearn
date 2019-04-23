@@ -45,7 +45,7 @@ then evolved from the one that came before it by selecting the fittest
 individuals from the population to undergo genetic operations.
 
 ``gplearn`` retains the familiar scikit-learn ``fit``/``predict`` API and
-works with the existing scikit-learn `pipeline <http://scikit-learn.org/stable/modules/pipeline.html>`_
+works with the existing scikit-learn `pipeline <https://scikit-learn.org/stable/modules/compose.html>`_
 and `grid search <http://scikit-learn.org/stable/modules/grid_search.html>`_
 modules. You can get started with ``gplearn`` as simply as::
 

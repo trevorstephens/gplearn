@@ -22,8 +22,8 @@ class _Program(object):
 
     """A program-like representation of the evolved program.
 
-    This is the underlying data-structure used by the public classes in this
-    module. It should not be used directly by the user.
+    This is the underlying data-structure used by the public classes in the
+    :mod:`gplearn.genetic` module. It should not be used directly by the user.
 
     Parameters
     ----------
