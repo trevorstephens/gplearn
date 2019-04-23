@@ -10,6 +10,13 @@ Symbolic Regressor
    :members:
    :inherited-members:
 
+Symbolic Classifier
+-------------------
+
+.. autoclass:: gplearn.genetic.SymbolicClassifier
+   :members:
+   :inherited-members:
+
 Symbolic Transformer
 --------------------
 

@@ -129,6 +129,12 @@ def _protected_inverse(x1):
         return np.where(np.abs(x1) > 0.001, 1. / x1, 0.)
 
 
+def _sigmoid(x1):
+    """Special case of logistic function to transform to probabilities."""
+    with np.errstate(over='ignore', under='ignore'):
+        return 1 / (1 + np.exp(-x1))
+
+
 add2 = make_function(function=np.add, name='add', arity=2)
 sub2 = make_function(function=np.subtract, name='sub', arity=2)
 mul2 = make_function(function=np.multiply, name='mul', arity=2)
@@ -143,6 +149,7 @@ min2 = make_function(function=np.minimum, name='min', arity=2)
 sin1 = make_function(function=np.sin, name='sin', arity=1)
 cos1 = make_function(function=np.cos, name='cos', arity=1)
 tan1 = make_function(function=np.tan, name='tan', arity=1)
+sig1 = make_function(function=_sigmoid, name='sig', arity=1)
 
 _function_map = {'add': add2,
                  'sub': sub2,

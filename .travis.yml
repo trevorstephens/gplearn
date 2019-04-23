@@ -3,7 +3,7 @@ language: python
 env:
   matrix:
     - PYTHON="3.5" SKLEARN="LATEST" COVERAGE="true"
-    - PYTHON="3.6" SKLEARN="0.18.1"
+    - PYTHON="3.6" SKLEARN="0.20.0"
     - PYTHON="3.6" SKLEARN="LATEST"
     - PYTHON="3.7" SKLEARN="LATEST"
 

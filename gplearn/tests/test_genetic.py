@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from sklearn.externals.six.moves import StringIO
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
@@ -28,13 +28,16 @@ from sklearn.utils.testing import assert_raises
 from sklearn.utils.testing import assert_warns
 from sklearn.utils.validation import check_random_state
 
-from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
+from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
+from gplearn.genetic import SymbolicTransformer
 from gplearn.fitness import weighted_pearson, weighted_spearman
 from gplearn._program import _Program
 from gplearn.fitness import _fitness_map
 from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2)
 from gplearn.functions import _Function
+from gplearn.tests.check_estimator import custom_check_estimator
+from gplearn.tests.check_estimator import rewritten_check_estimator
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -43,11 +46,30 @@ perm = rng.permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
 
+# load the breast cancer dataset and randomly permute it
+rng = check_random_state(0)
+cancer = load_breast_cancer()
+perm = rng.permutation(cancer.target.size)
+cancer.data = cancer.data[perm]
+cancer.target = cancer.target[perm]
+
 
 def test_sklearn_estimator_checks_regressor():
     """Run the sklearn estimator validation checks on SymbolicRegressor"""
 
     check_estimator(SymbolicRegressor)
+
+
+def test_sklearn_estimator_checks_classifier():
+    """Run the sklearn estimator validation checks on SymbolicClassifier"""
+
+    custom_check_estimator(SymbolicClassifier)
+
+
+def test_sklearn_estimator_checks_classifier_binary():
+    """Run custom binary estimator validation checks on SymbolicClassifier"""
+
+    rewritten_check_estimator(SymbolicClassifier)
 
 
 def test_sklearn_estimator_checks_transformer():
@@ -179,17 +201,17 @@ def test_validate_program():
     # This one should be fine
     _ = _Program(function_set, arities, init_depth, init_method, n_features,
                  const_range, metric, p_point_replace, parsimony_coefficient,
-                 random_state, None, test_gp)
+                 random_state, program=test_gp)
 
     # Now try a couple that shouldn't be
     assert_raises(ValueError, _Program, function_set, arities, init_depth,
                   init_method, n_features, const_range, metric,
                   p_point_replace, parsimony_coefficient, random_state,
-                  None, test_gp[:-1])
+                  program=test_gp[:-1])
     assert_raises(ValueError, _Program, function_set, arities, init_depth,
                   init_method, n_features, const_range, metric,
                   p_point_replace, parsimony_coefficient, random_state,
-                  None, test_gp + [1])
+                  program=test_gp + [1])
 
 
 def test_print_overloading():
@@ -258,7 +280,8 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="mul", fillcolor="#136ed4"] ;\n' \
+           'node [style=filled]\n' \
+           '0 [label="mul", fillcolor="#136ed4"] ;\n' \
            '1 [label="div", fillcolor="#136ed4"] ;\n' \
            '2 [label="X8", fillcolor="#60a6f6"] ;\n' \
            '3 [label="X1", fillcolor="#60a6f6"] ;\n' \
@@ -281,7 +304,8 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz(fade_nodes=[0, 1, 2, 3])
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="mul", fillcolor="#cecece"] ;\n' \
+           'node [style=filled]\n' \
+           '0 [label="mul", fillcolor="#cecece"] ;\n' \
            '1 [label="div", fillcolor="#cecece"] ;\n' \
            '2 [label="X8", fillcolor="#cecece"] ;\n' \
            '3 [label="X1", fillcolor="#cecece"] ;\n' \
@@ -297,7 +321,8 @@ def test_export_graphviz():
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = 'digraph program {\n' \
-           'node [style=filled]0 [label="X1", fillcolor="#60a6f6"] ;\n}'
+           'node [style=filled]\n' \
+           '0 [label="X1", fillcolor="#60a6f6"] ;\n}'
     assert_true(output == tree)
 
 
@@ -508,6 +533,71 @@ def test_program_input_validation():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
 
 
+def test_program_input_validation_classifier():
+    """Check that guarded input validation raises errors"""
+
+    # Check too much proba
+    est = SymbolicClassifier(p_point_mutation=.5)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+    # Check invalid init_method
+    est = SymbolicClassifier(init_method='ni')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+    # Check invalid const_ranges
+    est = SymbolicClassifier(const_range=2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(const_range=[2, 2])
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(const_range=(2, 2, 2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(const_range='ni')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    # And check acceptable, but strange, representations of const_range
+    est = SymbolicClassifier(generations=2, const_range=(2, 2))
+    est.fit(cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, const_range=None)
+    est.fit(cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, const_range=(4, 2))
+    est.fit(cancer.data, cancer.target)
+
+    # Check invalid init_depth
+    est = SymbolicClassifier(init_depth=2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=[2, 2])
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=(2, 2, 2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth='ni')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(init_depth=(4, 2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    # And check acceptable, but strange, representations of init_depth
+    est = SymbolicClassifier(generations=2, init_depth=(2, 2))
+    est.fit(cancer.data, cancer.target)
+
+    # Check classifier metrics
+    for m in ['log loss']:
+        est = SymbolicClassifier(generations=2, metric=m)
+        est.fit(cancer.data, cancer.target)
+    # And check a fake one
+    est = SymbolicClassifier(generations=2, metric='the larch')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+    # Check classifier transformers
+    for t in ['sigmoid']:
+        est = SymbolicClassifier(generations=2, transformer=t)
+        est.fit(cancer.data, cancer.target)
+    # And check an incompatible one with wrong arity
+    est = SymbolicClassifier(generations=2, transformer=sub2)
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    # And check a fake one
+    est = SymbolicClassifier(generations=2, transformer='the larch')
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+
+
 def test_none_const_range():
     """Check that const_range=None produces no constants"""
 
@@ -550,6 +640,19 @@ def test_sample_weight():
     # And again with a scaled sample_weight
     est3 = SymbolicRegressor(generations=2, random_state=0)
     est3.fit(boston.data, boston.target, sample_weight=sample_weight * 1.1)
+
+    assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
+    assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
+
+    # And again for the classifier
+    sample_weight = np.ones(cancer.target.shape[0])
+    est1 = SymbolicClassifier(generations=2, random_state=0)
+    est1.fit(cancer.data, cancer.target)
+    est2 = SymbolicClassifier(generations=2, random_state=0)
+    est2.fit(cancer.data, cancer.target, sample_weight=sample_weight)
+    # And again with a scaled sample_weight
+    est3 = SymbolicClassifier(generations=2, random_state=0)
+    est3.fit(cancer.data, cancer.target, sample_weight=sample_weight * 1.1)
 
     assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
     assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
@@ -631,6 +734,10 @@ def test_early_stopping():
 
     est1 = SymbolicTransformer(stopping_criteria=0.5, random_state=0)
     est1.fit(boston.data[:400, :], boston.target[:400])
+    assert_true(len(est1._programs) == 1)
+
+    est1 = SymbolicClassifier(stopping_criteria=.9, random_state=0)
+    est1.fit(cancer.data[:400, :], cancer.target[:400])
     assert_true(len(est1._programs) == 1)
 
 
@@ -751,6 +858,21 @@ def test_parallel_train():
     for len1, len2 in zip(lengths, lengths[1:]):
         assert_array_almost_equal(len1, len2)
 
+    # Check the classifier
+    ests = [
+        SymbolicClassifier(population_size=100, generations=4, n_jobs=n_jobs,
+                           random_state=0).fit(cancer.data[:100, :],
+                                               cancer.target[:100])
+        for n_jobs in [1, 2, 3, 8, 16]
+    ]
+
+    preds = [e.predict(cancer.data[500:, :]) for e in ests]
+    for pred1, pred2 in zip(preds, preds[1:]):
+        assert_array_almost_equal(pred1, pred2)
+    lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
+    for len1, len2 in zip(lengths, lengths[1:]):
+        assert_array_almost_equal(len1, len2)
+
 
 def test_pickle():
     """Check pickability"""
@@ -776,6 +898,17 @@ def test_pickle():
     assert_equal(type(est2), est.__class__)
     X_new2 = est2.transform(boston.data[500:, :])
     assert_array_almost_equal(X_new, X_new2)
+
+    # Check the classifier
+    est = SymbolicClassifier(generations=2, random_state=0)
+    est.fit(cancer.data[:100, :], cancer.target[:100])
+    score = est.score(cancer.data[500:, :], cancer.target[500:])
+    pickle_object = pickle.dumps(est)
+
+    est2 = pickle.loads(pickle_object)
+    assert_equal(type(est2), est.__class__)
+    score2 = est2.score(cancer.data[500:, :], cancer.target[500:])
+    assert_equal(score, score2)
 
 
 def test_memory_layout():
@@ -817,6 +950,7 @@ def test_input_shape():
     random_state = check_random_state(415)
     X = np.reshape(random_state.uniform(size=50), (5, 10))
     y = random_state.uniform(size=5)
+    yc = np.asarray(['foo', 'bar', 'foo', 'foo', 'bar'])
     X2 = np.reshape(random_state.uniform(size=45), (5, 9))
 
     # Check the regressor
@@ -828,6 +962,11 @@ def test_input_shape():
     est = SymbolicTransformer(generations=2, random_state=0)
     est.fit(X, y)
     assert_raises(ValueError, est.transform, X2)
+
+    # Check the classifier
+    est = SymbolicClassifier(generations=2, random_state=0)
+    est.fit(X, yc)
+    assert_raises(ValueError, est.predict, X2)
 
 
 def test_output_shape():
@@ -868,6 +1007,15 @@ def test_pipeline():
                                           random_state=0))
     est.fit(boston.data, boston.target)
     assert_almost_equal(est.score(boston.data, boston.target), -4.00270923)
+
+    # Check the classifier
+    est = make_pipeline(StandardScaler(),
+                        SymbolicClassifier(population_size=50,
+                                           generations=5,
+                                           tournament_size=5,
+                                           random_state=0))
+    est.fit(cancer.data, cancer.target)
+    assert_almost_equal(est.score(cancer.data, cancer.target), 0.934973637961)
 
     # Check the transformer
     est = make_pipeline(SymbolicTransformer(population_size=50,
@@ -994,6 +1142,44 @@ def test_print_overloading_estimator():
     assert_true(output_unfitted == est.__repr__())
     assert_true(output_fitted == output_program)
 
+    # Check the classifier
+    y = (y > .5).astype(int)
+    est = SymbolicClassifier(generations=2, random_state=0)
+
+    # Unfitted
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_unfitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    # Fitted
+    est.fit(X, y)
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est)
+        output_fitted = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    orig_stdout = sys.stdout
+    try:
+        out = StringIO()
+        sys.stdout = out
+        print(est._program)
+        output_program = out.getvalue().strip()
+    finally:
+        sys.stdout = orig_stdout
+
+    assert_true(output_unfitted != output_fitted)
+    assert_true(output_unfitted == est.__repr__())
+    assert_true(output_fitted == output_program)
+
 
 def test_validate_functions():
     """Check that valid functions are accepted & invalid ones raise error"""
@@ -1016,6 +1202,24 @@ def test_validate_functions():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
         assert_raises(ValueError, est.fit, boston.data, boston.target)
+
+    # Now for the classifier... These should be fine
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=(add2, sub2, mul2, div2))
+    est.fit(cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=('add', 'sub', 'mul', div2))
+    est.fit(cancer.data, cancer.target)
+
+    # These should fail
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=('ni', 'sub', 'mul', div2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, random_state=0,
+                             function_set=(7, 'sub', 'mul', div2))
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    est = SymbolicClassifier(generations=2, random_state=0, function_set=())
+    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
 
 
 def test_indices():

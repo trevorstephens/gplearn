@@ -35,6 +35,6 @@ setup(name='gplearn',
       zip_safe=False,
       package_data={'': ['LICENSE'],
                     'gplearn': ['tests/*.py']},
-      install_requires=['scikit-learn>=0.18.1'],
+      install_requires=['scikit-learn>=0.20.0'],
       extras_require={'testing': ['nose'],
                       'docs': ['Sphinx']})
