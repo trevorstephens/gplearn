@@ -3,7 +3,7 @@ language: python
 env:
   matrix:
     - PYTHON="3.5" SKLEARN="LATEST" COVERAGE="true"
-    - PYTHON="3.6" SKLEARN="0.20.0"
+    - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
     - PYTHON="3.6" SKLEARN="LATEST"
     - PYTHON="3.7" SKLEARN="LATEST"
 
@@ -19,9 +19,9 @@ install:
   - conda update -q conda
   - conda info -a
   - if [[ "$SKLEARN" == "LATEST" ]]; then
-      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn pandas cython;
+      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn joblib pandas cython;
     else
-      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn=$SKLEARN pandas cython;
+      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn=$SKLEARN joblib=$JOBLIB pandas cython;
     fi
   - source activate testenv
   - if [[ "$COVERAGE" == "true" ]]; then
@@ -30,6 +30,7 @@ install:
   - python --version
   - python -c "import numpy; print('numpy %s' % numpy.__version__)"
   - python -c "import scipy; print('scipy %s' % scipy.__version__)"
+  - python -c "import joblib; print('joblib %s' % joblib.__version__)"
   - python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
   - python setup.py install
 

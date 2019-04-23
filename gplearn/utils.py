@@ -9,7 +9,7 @@ order to maintain compatibility across different versions of scikit-learn.
 import numbers
 
 import numpy as np
-from sklearn.externals.joblib import cpu_count
+from joblib import cpu_count
 
 
 class NotFittedError(ValueError, AttributeError):

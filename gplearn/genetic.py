@@ -15,10 +15,10 @@ from time import time
 from warnings import warn
 
 import numpy as np
+from joblib import Parallel, delayed
 from scipy.stats import rankdata
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, TransformerMixin, ClassifierMixin
-from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
 
