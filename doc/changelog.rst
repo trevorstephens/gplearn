@@ -4,8 +4,8 @@
 Release History
 ===============
 
-Version 0.4.0
--------------
+Version 0.4.0 - 23 Apr 2019
+---------------------------
 
 - Added the :class:`genetic.SymbolicClassifier` to use symbolic regression to
   solve binary classification problems. This passes the outputs of a program
