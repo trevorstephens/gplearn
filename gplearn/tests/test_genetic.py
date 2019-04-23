@@ -8,10 +8,10 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 
 import pickle
 import sys
+from io import StringIO
 
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
-from sklearn.externals.six.moves import StringIO
 from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import GridSearchCV

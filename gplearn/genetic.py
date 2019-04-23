@@ -18,7 +18,6 @@ import numpy as np
 from scipy.stats import rankdata
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, TransformerMixin, ClassifierMixin
-from sklearn.externals import six
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
@@ -153,7 +152,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     return programs
 
 
-class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
+class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
 
     """Base class for symbolic regression / classification estimators.
 
@@ -315,7 +314,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
 
         self._function_set = []
         for function in self.function_set:
-            if isinstance(function, six.string_types):
+            if isinstance(function, str):
                 if function not in _function_map:
                     raise ValueError('invalid function name %s found in '
                                      '`function_set`.' % function)
@@ -385,7 +384,7 @@ class BaseSymbolic(six.with_metaclass(ABCMeta, BaseEstimator)):
                                  'length to n_features. Expected %d, got %d.'
                                  % (self.n_features_, len(self.feature_names)))
             for feature_name in self.feature_names:
-                if not isinstance(feature_name, six.string_types):
+                if not isinstance(feature_name, str):
                     raise ValueError('invalid type %s found in '
                                      '`feature_names`.' % type(feature_name))
 

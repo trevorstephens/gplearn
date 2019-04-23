@@ -10,7 +10,6 @@ own custom functions.
 # License: BSD 3 clause
 
 import numpy as np
-from sklearn.externals import six
 
 __all__ = ['make_function']
 
@@ -71,12 +70,11 @@ def make_function(function, name, arity):
     if not isinstance(arity, int):
         raise ValueError('arity must be an int, got %s' % type(arity))
     if not isinstance(function, np.ufunc):
-        if six.get_function_code(function).co_argcount != arity:
+        if function.__code__.co_argcount != arity:
             raise ValueError('arity %d does not match required number of '
                              'function arguments of %d.'
-                             % (arity,
-                                six.get_function_code(function).co_argcount))
-    if not isinstance(name, six.string_types):
+                             % (arity, function.__code__.co_argcount))
+    if not isinstance(name, str):
         raise ValueError('name must be a string, got %s' % type(name))
 
     # Check output shape
