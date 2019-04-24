@@ -7,6 +7,10 @@ assignees: ''
 
 ---
 
+<!-- Thanks for contributing to gplearn!
+Please ensure you have taken a look at the contribution guidelines:
+https://gplearn.readthedocs.io/en/stable/contributing.html -->
+
 **Describe the bug**
 <!-- A clear and concise description of what the bug is.-->
 
@@ -19,12 +23,9 @@ assignees: ''
 **Steps to reproduce the behavior**
 <!-- 
 ```python
-from gplearn.genetic import SymbolicClassifier
-from sklearn.datasets import load_breast_cancer
-[...]
+from gplearn.genetic import [...]
 ```
-If the code is too long, feel free to put it in a public gist and link it in
-the issue: https://gist.github.com
+If the code is too long, feel free use a public gist : https://gist.github.com
 -->
 
 **System information**
@@ -38,5 +39,3 @@ import sklearn; print("Scikit-Learn", sklearn.__version__)
 import joblib; print("Joblib", joblib.__version__)
 import gplearn; print("gplearn", gplearn.__version__)
 -->
-
-<!-- Thanks for contributing! -->

@@ -1,7 +1,6 @@
-<!--
-Thanks for contributing a pull request! Please ensure you have taken a look at
-the contribution guidelines: https://gplearn.readthedocs.io/en/stable/contributing.html
--->
+<!-- Thanks for contributing to gplearn!
+Please ensure you have taken a look at the contribution guidelines:
+https://gplearn.readthedocs.io/en/stable/contributing.html -->
 
 **Reference Issues/PRs**
 <!--
@@ -12,5 +11,3 @@ is merged. See https://github.com/blog/1506-closing-issues-via-pull-requests
 -->
 
 **What does this implement/fix? Explain your changes.**
-
-<!-- Thanks for contributing! -->
