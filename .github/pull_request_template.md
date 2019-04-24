@@ -12,6 +12,5 @@ is merged. See https://github.com/blog/1506-closing-issues-via-pull-requests
 -->
 
 **What does this implement/fix? Explain your changes.**
-<!-- Please open an issue for discussion before beginning any work.-->
 
 <!-- Thanks for contributing! -->
