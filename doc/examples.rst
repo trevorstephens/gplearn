@@ -142,8 +142,9 @@ done worse on out-of-sample data.
 
 We can also inspect the program that the :class:`SymbolicRegressor` found::
 
-    graph = pydotplus.graphviz.graph_from_dot_data(est_gp._program.export_graphviz())
-    Image(graph.create_png())
+    dot_data = est_gp._program.export_graphviz()
+    graph = graphviz.Source(dot_data)
+    graph
 
 .. image:: images/ex1_child.png
     :align: center
@@ -167,9 +168,9 @@ our winning program::
 
     idx = est_gp._program.parents['donor_idx']
     fade_nodes = est_gp._program.parents['donor_nodes']
-    graph = est_gp._programs[-2][idx].export_graphviz(fade_nodes=fade_nodes)
-    graph = pydotplus.graphviz.graph_from_dot_data(graph)
-    Image(graph.create_png())
+    dot_data = est_gp._programs[-2][idx].export_graphviz(fade_nodes=fade_nodes)
+    graph = graphviz.Source(dot_data)
+    graph
 
 .. image:: images/ex1_fig3.png
     :align: center
@@ -267,7 +268,7 @@ a small solution to the problem, and fit to the first 400 samples::
 
     est = SymbolicClassifier(parsimony_coefficient=.01,
                              feature_names=cancer.feature_names,
-                             random_state=0)
+                             random_state=1)
     est.fit(cancer.data[:400], cancer.target[:400])
 
 Testing the estimator on the remaining samples shows that it found a very good
@@ -277,12 +278,13 @@ solution::
     y_score = est.predict_proba(cancer.data[400:])[:,1]
     roc_auc_score(y_true, y_score)
 
-    0.9927514792899409
+    0.96937869822485212
 
 We can then also visualise the solution with Graphviz::
 
-    graph = pydotplus.graphviz.graph_from_dot_data(est._program.export_graphviz())
-    Image(graph.create_png())
+    dot_data = est._program.export_graphviz()
+    graph = graphviz.Source(dot_data)
+    graph
 
 .. image:: images/ex4_tree.png
     :align: center
