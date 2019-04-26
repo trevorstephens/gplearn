@@ -121,19 +121,19 @@ def test_program_init_method():
               'parsimony_coefficient': 0.1}
     random_state = check_random_state(415)
     programs = []
-    for i in range(20):
+    for _ in range(20):
         programs.append(_Program(init_method='full',
                                  random_state=random_state, **params))
     full_length = np.mean([gp.length_ for gp in programs])
     full_depth = np.mean([gp.depth_ for gp in programs])
     programs = []
-    for i in range(20):
+    for _ in range(20):
         programs.append(_Program(init_method='half and half',
                                  random_state=random_state, **params))
     hnh_length = np.mean([gp.length_ for gp in programs])
     hnh_depth = np.mean([gp.depth_ for gp in programs])
     programs = []
-    for i in range(20):
+    for _ in range(20):
         programs.append(_Program(init_method='grow',
                                  random_state=random_state, **params))
     grow_length = np.mean([gp.length_ for gp in programs])
@@ -170,7 +170,7 @@ def test_program_init_depth():
                                  random_state=random_state, **params))
     hnh_depth = np.bincount([gp.depth_ for gp in programs])
     programs = []
-    for i in range(20):
+    for _ in range(20):
         programs.append(_Program(init_method='grow',
                                  random_state=random_state, **params))
     grow_depth = np.bincount([gp.depth_ for gp in programs])
