@@ -160,7 +160,7 @@ def test_program_init_depth():
               'parsimony_coefficient': 0.1}
     random_state = check_random_state(415)
     programs = []
-    for i in range(20):
+    for _ in range(20):
         programs.append(_Program(init_method='full',
                                  random_state=random_state, **params))
     full_depth = np.bincount([gp.depth_ for gp in programs])
@@ -610,7 +610,7 @@ def test_none_const_range():
             if program is None:
                 continue
             for element in program.program:
-                if type(element) == float:
+                if isinstance(element, float):
                     float_count += 1
     assert_true(float_count == 0)
 

@@ -51,7 +51,7 @@ modules. You can get started with ``gplearn`` as simply as::
 
     est = SymbolicRegressor()
     est.fit(X_train, y_train)
-    y_pred = est_gp.predict(X_test, y_test)
+    y_pred = est.predict(X_test)
 
 However, don't let that stop you from exploring all the ways that the evolution
 can be tailored to your problem. The package attempts to squeeze a lot of
