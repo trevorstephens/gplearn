@@ -19,6 +19,7 @@ from joblib import Parallel, delayed
 from scipy.stats import rankdata
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, TransformerMixin, ClassifierMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
 
@@ -26,7 +27,7 @@ from ._program import _Program
 from .fitness import _fitness_map, _Fitness
 from .functions import _function_map, _Function, sig1 as sigmoid
 from .utils import _partition_estimators
-from .utils import check_random_state, NotFittedError
+from .utils import check_random_state
 
 __all__ = ['SymbolicRegressor', 'SymbolicClassifier', 'SymbolicTransformer']
 
@@ -1104,6 +1105,9 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
         if not hasattr(self, '_program'):
             return self.__repr__()
         return self._program.__str__()
+
+    def _more_tags(self):
+        return {'binary_only': True}
 
     def predict_proba(self, X):
         """Predict probabilities on test vectors X.
