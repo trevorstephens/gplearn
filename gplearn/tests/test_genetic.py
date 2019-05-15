@@ -717,7 +717,7 @@ def test_subsample():
                                boston.target[400:])
 
     est2 = SymbolicRegressor(population_size=100, generations=2,
-                             max_samples=0.7, random_state=0)
+                             max_samples=0.5, random_state=0)
     est2.fit(boston.data[:400, :], boston.target[:400])
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
@@ -735,20 +735,12 @@ def test_parsimony_coefficient():
                                boston.target[400:])
 
     est2 = SymbolicRegressor(population_size=100, generations=2,
-                             parsimony_coefficient=0.1, random_state=0)
+                             parsimony_coefficient='auto', random_state=0)
     est2.fit(boston.data[:400, :], boston.target[:400])
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    est3 = SymbolicRegressor(population_size=100, generations=2,
-                             parsimony_coefficient='auto', random_state=0)
-    est3.fit(boston.data[:400, :], boston.target[:400])
-    est3 = mean_absolute_error(est3.predict(boston.data[400:, :]),
-                               boston.target[400:])
-
     assert_true(abs(est1 - est2) > 0.01)
-    assert_true(abs(est1 - est3) > 0.01)
-    assert_true(abs(est2 - est3) > 0.01)
 
 
 def test_early_stopping():
@@ -944,65 +936,6 @@ def test_pickle():
     assert_equal(type(est2), est.__class__)
     score2 = est2.score(cancer.data[500:, :], cancer.target[500:])
     assert_equal(score, score2)
-
-
-def test_memory_layout():
-    """Check that it works no matter the memory layout"""
-
-    for Symbolic in [SymbolicTransformer, SymbolicRegressor]:
-        for dtype in [np.float64, np.float32]:
-            est = Symbolic(population_size=100, generations=2, random_state=0)
-
-            # Nothing
-            X = np.asarray(boston.data, dtype=dtype)
-            y = boston.target
-            est.fit(X, y)
-
-            # C-order
-            X = np.asarray(boston.data, order="C", dtype=dtype)
-            y = boston.target
-            est.fit(X, y)
-
-            # F-order
-            X = np.asarray(boston.data, order="F", dtype=dtype)
-            y = boston.target
-            est.fit(X, y)
-
-            # Contiguous
-            X = np.ascontiguousarray(boston.data, dtype=dtype)
-            y = boston.target
-            est.fit(X, y)
-
-            # Strided
-            X = np.asarray(boston.data[::3], dtype=dtype)
-            y = boston.target[::3]
-            est.fit(X, y)
-
-
-def test_input_shape():
-    """Check changed dimensions cause failure"""
-
-    random_state = check_random_state(415)
-    X = np.reshape(random_state.uniform(size=50), (5, 10))
-    y = random_state.uniform(size=5)
-    yc = np.asarray(['foo', 'bar', 'foo', 'foo', 'bar'])
-    X2 = np.reshape(random_state.uniform(size=45), (5, 9))
-
-    # Check the regressor
-    est = SymbolicRegressor(population_size=100, generations=2, random_state=0)
-    est.fit(X, y)
-    assert_raises(ValueError, est.predict, X2)
-
-    # Check the transformer
-    est = SymbolicTransformer(population_size=100, generations=2,
-                              random_state=0)
-    est.fit(X, y)
-    assert_raises(ValueError, est.transform, X2)
-
-    # Check the classifier
-    est = SymbolicClassifier(population_size=100, generations=2, random_state=0)
-    est.fit(X, yc)
-    assert_raises(ValueError, est.predict, X2)
 
 
 def test_output_shape():
