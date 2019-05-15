@@ -57,25 +57,30 @@ cancer.target = cancer.target[perm]
 def test_sklearn_estimator_checks_regressor():
     """Run the sklearn estimator validation checks on SymbolicRegressor"""
 
-    check_estimator(SymbolicRegressor)
+    check_estimator(SymbolicRegressor(population_size=1000,
+                                      generations=5))
 
 
 def test_sklearn_estimator_checks_classifier():
     """Run the sklearn estimator validation checks on SymbolicClassifier"""
 
-    custom_check_estimator(SymbolicClassifier)
+    custom_check_estimator(SymbolicClassifier(population_size=50,
+                                              generations=5))
 
 
 def test_sklearn_estimator_checks_classifier_binary():
     """Run custom binary estimator validation checks on SymbolicClassifier"""
 
-    rewritten_check_estimator(SymbolicClassifier)
+    rewritten_check_estimator(SymbolicClassifier(population_size=50,
+                                                 generations=5))
 
 
 def test_sklearn_estimator_checks_transformer():
     """Run the sklearn estimator validation checks on SymbolicTransformer"""
 
-    check_estimator(SymbolicTransformer)
+    check_estimator(SymbolicTransformer(population_size=50,
+                                        hall_of_fame=10,
+                                        generations=5))
 
 
 def test_weighted_correlations():
