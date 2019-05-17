@@ -27,7 +27,6 @@ def test_symbolic_regressor():
     x0 = np.arange(-1, 1, .1)
     x1 = np.arange(-1, 1, .1)
     x0, x1 = np.meshgrid(x0, x1)
-    y_truth = x0 ** 2 - x1 ** 2 + x1 - 1
 
     rng = check_random_state(0)
 
