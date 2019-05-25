@@ -10,7 +10,6 @@ from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.linear_model import Ridge
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.testing import assert_equal, assert_almost_equal
 from sklearn.utils.validation import check_random_state
@@ -158,31 +157,6 @@ def test_custom_functions():
                 ';\n1 -> 7 ;\n1 -> 6 ;\n1 -> 3 ;\n1 -> 2 ;\n8 [label="X5", '
                 'fillcolor="#60a6f6"] ;\n0 -> 8 ;\n0 -> 1 ;\n}')
     assert_equal(dot_data, expected)
-
-
-def test_symbolic_classifier_comparison():
-    """Test the classifier comparison example works"""
-
-    X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
-                               random_state=1, n_clusters_per_class=1)
-    rng = np.random.RandomState(2)
-    X += 2 * rng.uniform(size=X.shape)
-    linearly_separable = (X, y)
-    datasets = [make_moons(noise=0.3, random_state=0),
-                make_circles(noise=0.2, factor=0.5, random_state=1),
-                linearly_separable]
-    scores = []
-    for ds in datasets:
-        X, y = ds
-        X = StandardScaler().fit_transform(X)
-        X_train, X_test, y_train, y_test = \
-            train_test_split(X, y, test_size=.4, random_state=42)
-        clf = SymbolicClassifier(random_state=0)
-        clf.fit(X_train, y_train)
-        score = clf.score(X_test, y_test)
-        scores.append(('%.2f' % score).lstrip('0'))
-
-    assert_equal(scores, ['.95', '.93', '.95'])
 
 
 def test_symbolic_classifier():
