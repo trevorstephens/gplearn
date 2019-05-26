@@ -159,10 +159,10 @@ You could plot its parent with the affected nodes indicated using::
 Exporting
 ---------
 
-If you want to save your program for later use, you can use the ``pickle`` or
-``cPickle`` libraries to achieve this::
+If you want to save your program for later use, you can use the ``pickle``
+library to achieve this::
 
-    import cPickle as pickle
+    import pickle
 
     est = SymbolicRegressor()
     est.fit(X_train, y_train)
