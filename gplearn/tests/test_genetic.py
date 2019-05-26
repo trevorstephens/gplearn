@@ -1304,8 +1304,3 @@ def test_low_memory_warm_start():
     warm_program = est._program.__str__()
     assert_almost_equal(cold_fitness, warm_fitness)
     assert_equal(cold_program, warm_program)
-
-
-if __name__ == "__main__":
-    import nose
-    nose.runmodule()

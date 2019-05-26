@@ -19,13 +19,13 @@ install:
   - conda update -q conda
   - conda info -a
   - if [[ "$SKLEARN" == "LATEST" ]]; then
-      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn joblib pandas cython;
+      conda create -q -n testenv -y python=$PYTHON pip pytest scikit-learn joblib pandas cython;
     else
-      conda create -q -n testenv -y python=$PYTHON pip nose scikit-learn=$SKLEARN joblib=$JOBLIB pandas cython;
+      conda create -q -n testenv -y python=$PYTHON pip pytest scikit-learn=$SKLEARN joblib=$JOBLIB pandas cython;
     fi
   - source activate testenv
   - if [[ "$COVERAGE" == "true" ]]; then
-      pip install coverage coveralls;
+      pip install pytest-cov coveralls;
     fi
   - python --version
   - python -c "import numpy; print('numpy %s' % numpy.__version__)"
@@ -37,9 +37,9 @@ install:
 script:
   - set -e
   - if [[ "$COVERAGE" == "true" ]]; then
-      nosetests -s -v --with-coverage --cover-package=gplearn;
+      pytest -v --cov gplearn;
     else
-      nosetests -s -v gplearn;
+      pytest -v gplearn;
     fi
 
 after_success:

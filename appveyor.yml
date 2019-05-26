@@ -9,10 +9,10 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n testenv -y nose scikit-learn pandas cython joblib
+  - conda create -q -n testenv -y pytest scikit-learn pandas cython joblib
   - activate testenv
   - python --version
   - python setup.py install
 
 test_script:
-  - nosetests -s -v gplearn
+  - pytest -v gplearn
