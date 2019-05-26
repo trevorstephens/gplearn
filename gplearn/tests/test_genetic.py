@@ -19,13 +19,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.estimator_checks import check_estimator
-from sklearn.utils.testing import assert_false, assert_true
 from sklearn.utils.testing import assert_greater
 from sklearn.utils.testing import assert_equal, assert_almost_equal
-from sklearn.utils.testing import assert_array_equal
-from sklearn.utils.testing import assert_array_almost_equal
-from sklearn.utils.testing import assert_raises
-from sklearn.utils.testing import assert_warns
+from sklearn.utils.testing import assert_array_equal, assert_array_almost_equal
+from sklearn.utils.testing import assert_raises, assert_warns
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
@@ -54,28 +51,28 @@ cancer.data = cancer.data[perm]
 cancer.target = cancer.target[perm]
 
 
-def test_sklearn_estimator_checks_regressor():
+def test_sklearn_regressor_checks():
     """Run the sklearn estimator validation checks on SymbolicRegressor"""
 
     check_estimator(SymbolicRegressor(population_size=1000,
                                       generations=5))
 
 
-def test_sklearn_estimator_checks_classifier():
+def test_sklearn_classifier_checks():
     """Run the sklearn estimator validation checks on SymbolicClassifier"""
 
     custom_check_estimator(SymbolicClassifier(population_size=50,
                                               generations=5))
 
 
-def test_sklearn_estimator_checks_classifier_binary():
+def test_sklearn_customized_checks():
     """Run custom binary estimator validation checks on SymbolicClassifier"""
 
     rewritten_check_estimator(SymbolicClassifier(population_size=50,
                                                  generations=5))
 
 
-def test_sklearn_estimator_checks_transformer():
+def test_sklearn_transformer_checks():
     """Run the sklearn estimator validation checks on SymbolicTransformer"""
 
     check_estimator(SymbolicTransformer(population_size=50,
@@ -99,7 +96,7 @@ def test_weighted_correlations():
     assert_almost_equal(scipy_pearson, gplearn_pearson)
     # Check with irregular weights (should be different)
     gplearn_pearson = weighted_pearson(x1, x2, w2)
-    assert_true(abs(scipy_pearson - gplearn_pearson) > 0.01)
+    assert(abs(scipy_pearson - gplearn_pearson) > 0.01)
 
     # Spearman's correlation coefficient
     scipy_spearman = spearmanr(x1, x2)[0]
@@ -108,7 +105,7 @@ def test_weighted_correlations():
     assert_almost_equal(scipy_spearman, gplearn_spearman)
     # Check with irregular weights (should be different)
     gplearn_spearman = weighted_pearson(x1, x2, w2)
-    assert_true(abs(scipy_spearman - gplearn_spearman) > 0.01)
+    assert(abs(scipy_spearman - gplearn_spearman) > 0.01)
 
 
 def test_program_init_method():
@@ -180,9 +177,9 @@ def test_program_init_depth():
                                  random_state=random_state, **params))
     grow_depth = np.bincount([gp.depth_ for gp in programs])
 
-    assert_true(full_depth[-1] == 20)
-    assert_false(hnh_depth[-1] == 20)
-    assert_false(grow_depth[-1] == 20)
+    assert(full_depth[-1] == 20)
+    assert(hnh_depth[-1] != 20)
+    assert(grow_depth[-1] != 20)
 
 
 def test_validate_program():
@@ -247,7 +244,7 @@ def test_print_overloading():
         sys.stdout = orig_stdout
 
     lisp = "mul(div(X8, X1), sub(X9, 0.500))"
-    assert_true(output == lisp)
+    assert(output == lisp)
 
     # Test with feature names
     params['feature_names'] = [str(n) for n in range(10)]
@@ -263,7 +260,7 @@ def test_print_overloading():
         sys.stdout = orig_stdout
 
     lisp = "mul(div(8, 1), sub(9, 0.500))"
-    assert_true(output == lisp)
+    assert(output == lisp)
 
 
 def test_export_graphviz():
@@ -295,14 +292,14 @@ def test_export_graphviz():
            '5 [label="X9", fillcolor="#60a6f6"] ;\n' \
            '6 [label="0.500", fillcolor="#60a6f6"] ;\n' \
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
-    assert_true(output == tree)
+    assert(output == tree)
 
     # Test with feature names
     params['feature_names'] = [str(n) for n in range(10)]
     gp = _Program(random_state=random_state, program=test_gp, **params)
     output = gp.export_graphviz()
     tree = tree.replace('X', '')
-    assert_true(output == tree)
+    assert(output == tree)
 
     # Test with fade_nodes
     params['feature_names'] = None
@@ -319,7 +316,7 @@ def test_export_graphviz():
            '5 [label="X9", fillcolor="#60a6f6"] ;\n' \
            '6 [label="0.500", fillcolor="#60a6f6"] ;\n' \
            '4 -> 6 ;\n4 -> 5 ;\n0 -> 4 ;\n0 -> 1 ;\n}'
-    assert_true(output == tree)
+    assert(output == tree)
 
     # Test a degenerative single-node program
     test_gp = [1]
@@ -328,7 +325,7 @@ def test_export_graphviz():
     tree = 'digraph program {\n' \
            'node [style=filled]\n' \
            '0 [label="X1", fillcolor="#60a6f6"] ;\n}'
-    assert_true(output == tree)
+    assert(output == tree)
 
 
 def test_invalid_feature_names():
@@ -465,7 +462,7 @@ def test_genetic_operations():
     assert_equal(gp.program, test_gp)
 
 
-def test_program_input_validation():
+def test_input_validation():
     """Check that guarded input validation raises errors"""
 
     for Symbolic in (SymbolicRegressor, SymbolicTransformer):
@@ -538,7 +535,7 @@ def test_program_input_validation():
         assert_raises(ValueError, est.fit, boston.data, boston.target)
 
 
-def test_program_input_validation_classifier():
+def test_input_validation_classifier():
     """Check that guarded input validation raises errors"""
 
     # Check too much proba
@@ -623,7 +620,7 @@ def test_none_const_range():
             for element in program.program:
                 if isinstance(element, float):
                     float_count += 1
-    assert_true(float_count == 0)
+    assert(float_count == 0)
 
     # Check with default const_range
     est = SymbolicRegressor(population_size=100, generations=2)
@@ -636,7 +633,7 @@ def test_none_const_range():
             for element in program.program:
                 if isinstance(element, float):
                     float_count += 1
-    assert_true(float_count > 1)
+    assert(float_count > 1)
 
 
 def test_sample_weight():
@@ -704,7 +701,7 @@ def test_trigonometric():
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    assert_true(abs(est1 - est2) > 0.01)
+    assert(abs(est1 - est2) > 0.01)
 
 
 def test_subsample():
@@ -722,7 +719,7 @@ def test_subsample():
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    assert_true(abs(est1 - est2) > 0.01)
+    assert(abs(est1 - est2) > 0.01)
 
 
 def test_parsimony_coefficient():
@@ -740,7 +737,7 @@ def test_parsimony_coefficient():
     est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
                                boston.target[400:])
 
-    assert_true(abs(est1 - est2) > 0.01)
+    assert(abs(est1 - est2) > 0.01)
 
 
 def test_early_stopping():
@@ -749,17 +746,17 @@ def test_early_stopping():
     est1 = SymbolicRegressor(population_size=100, generations=2,
                              stopping_criteria=10, random_state=0)
     est1.fit(boston.data[:400, :], boston.target[:400])
-    assert_true(len(est1._programs) == 1)
+    assert(len(est1._programs) == 1)
 
     est1 = SymbolicTransformer(population_size=100, generations=2,
                                stopping_criteria=0.5, random_state=0)
     est1.fit(boston.data[:400, :], boston.target[:400])
-    assert_true(len(est1._programs) == 1)
+    assert(len(est1._programs) == 1)
 
     est1 = SymbolicClassifier(population_size=100, generations=2,
                               stopping_criteria=.9, random_state=0)
     est1.fit(cancer.data[:400, :], cancer.target[:400])
-    assert_true(len(est1._programs) == 1)
+    assert(len(est1._programs) == 1)
 
 
 def test_verbose_output():
@@ -949,7 +946,7 @@ def test_output_shape():
     est = SymbolicTransformer(population_size=100, generations=2,
                               n_components=5, random_state=0)
     est.fit(X, y)
-    assert_true(est.transform(X).shape == (5, 5))
+    assert(est.transform(X).shape == (5, 5))
 
 
 def test_gridsearch():
@@ -1014,8 +1011,8 @@ def test_transformer_iterable():
     unfitted_iter = [gp.length_ for gp in est]
     expected_iter = []
 
-    assert_true(unfitted_len == 0)
-    assert_true(unfitted_iter == expected_iter)
+    assert(unfitted_len == 0)
+    assert(unfitted_iter == expected_iter)
 
     # Check fitted
     est.fit(X, y)
@@ -1023,8 +1020,8 @@ def test_transformer_iterable():
     fitted_iter = [gp.length_ for gp in est]
     expected_iter = [8, 12, 2, 29, 9, 33, 9, 8, 4, 22]
 
-    assert_true(fitted_len == 10)
-    assert_true(fitted_iter == expected_iter)
+    assert(fitted_len == 10)
+    assert(fitted_iter == expected_iter)
 
     # Check IndexError
     assert_raises(IndexError, est.__getitem__, 10)
@@ -1070,9 +1067,9 @@ def test_print_overloading_estimator():
     finally:
         sys.stdout = orig_stdout
 
-    assert_true(output_unfitted != output_fitted)
-    assert_true(output_unfitted == est.__repr__())
-    assert_true(output_fitted == output_program)
+    assert(output_unfitted != output_fitted)
+    assert(output_unfitted == est.__repr__())
+    assert(output_fitted == output_program)
 
     # Check the transformer
     est = SymbolicTransformer(population_size=100, generations=2,
@@ -1109,9 +1106,9 @@ def test_print_overloading_estimator():
     finally:
         sys.stdout = orig_stdout
 
-    assert_true(output_unfitted != output_fitted)
-    assert_true(output_unfitted == est.__repr__())
-    assert_true(output_fitted == output_program)
+    assert(output_unfitted != output_fitted)
+    assert(output_unfitted == est.__repr__())
+    assert(output_fitted == output_program)
 
     # Check the classifier
     y = (y > .5).astype(int)
@@ -1147,9 +1144,9 @@ def test_print_overloading_estimator():
     finally:
         sys.stdout = orig_stdout
 
-    assert_true(output_unfitted != output_fitted)
-    assert_true(output_unfitted == est.__repr__())
-    assert_true(output_fitted == output_program)
+    assert(output_unfitted != output_fitted)
+    assert(output_unfitted == est.__repr__())
+    assert(output_fitted == output_program)
 
 
 def test_validate_functions():
@@ -1278,7 +1275,7 @@ def test_low_memory():
                             low_memory=True)
     # Check there are no parents
     est.fit(boston.data, boston.target)
-    assert_true(est._programs[-2] is None)
+    assert(est._programs[-2] is None)
 
 
 def test_low_memory_warm_start():

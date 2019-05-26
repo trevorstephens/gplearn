@@ -2,28 +2,29 @@ language: python
 
 env:
   matrix:
-    - PYTHON="3.5" SKLEARN="LATEST" COVERAGE="true"
-    - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
+    - PYTHON="3.5" SKLEARN="LATEST"
     - PYTHON="3.6" SKLEARN="LATEST"
-    - PYTHON="3.7" SKLEARN="LATEST"
+    - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
+    - PYTHON="3.7" SKLEARN="LATEST" COVERAGE="true"
 
 install:
   - set -e
   - deactivate
   - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - if [[ "$SKLEARN" == "LATEST" ]]; then
-      conda create -q -n testenv -y python=$PYTHON pip pytest scikit-learn joblib pandas cython;
-    else
-      conda create -q -n testenv -y python=$PYTHON pip pytest scikit-learn=$SKLEARN joblib=$JOBLIB pandas cython;
-    fi
+  - conda create -q -n testenv -y python=$PYTHON pip pytest pandas cython
   - source activate testenv
+  - if [[ "$SKLEARN" == "LATEST" ]]; then
+      conda install scikit-learn joblib;
+    else
+      conda install scikit-learn=$SKLEARN joblib=$JOBLIB;
+    fi
   - if [[ "$COVERAGE" == "true" ]]; then
       pip install pytest-cov coveralls;
     fi

@@ -59,7 +59,7 @@ def test_validate_fitness():
         est.fit(boston.data, boston.target)
 
 
-def test_customized_regressor_metrics():
+def test_custom_regressor_metrics():
     """Check whether greater_is_better works for SymbolicRegressor."""
 
     x_data = check_random_state(0).uniform(-1, 1, 100).reshape(50, 2)
@@ -88,7 +88,7 @@ def test_customized_regressor_metrics():
     assert_equal('add(mul(X0, X0), mul(X1, X1))', c_formula, True)
 
 
-def test_customized_transformer_metrics():
+def test_custom_transformer_metrics():
     """Check whether greater_is_better works for SymbolicTransformer."""
 
     est_gp = SymbolicTransformer(generations=2, population_size=100,
@@ -128,7 +128,7 @@ def test_customized_transformer_metrics():
     assert_equal(expected_formula, c_formula, True)
 
 
-def test_customized_classifier_metrics():
+def test_custom_classifier_metrics():
     """Check whether greater_is_better works for SymbolicClassifier."""
 
     x_data = check_random_state(0).uniform(-1, 1, 100).reshape(50, 2)

@@ -160,7 +160,7 @@ def test_custom_functions():
     assert_equal(dot_data, expected)
 
 
-def test_symbolic_classifier_comparison():
+def test_classifier_comparison():
     """Test the classifier comparison example works"""
 
     X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
