@@ -7,10 +7,11 @@
 import numpy as np
 from numpy import maximum
 from sklearn.datasets import load_boston
-from sklearn.utils.testing import assert_equal, assert_raises
+from sklearn.utils.testing import assert_equal, assert_raises, assert_true
 from sklearn.utils.validation import check_random_state
 
-from gplearn.functions import _protected_sqrt, make_function
+from gplearn.functions import make_function, _protected_sqrt, _protected_log
+from gplearn.functions import _protected_division, _protected_inverse
 from gplearn.genetic import SymbolicTransformer
 
 # load the boston dataset and randomly permute it
@@ -79,3 +80,32 @@ def test_function_in_program():
     formula = est._programs[0][906].__str__()
     expected_formula = 'sub(logical(X6, add(X11, 0.898), X10, X2), X5)'
     assert_equal(expected_formula, formula, True)
+
+def test_protected_functions():
+    """Check that protected functions return expected values"""
+
+    x = np.array([1e-5, -1e-4, 1e-1, -1, 10, -100])
+    assert_true(np.allclose(_protected_division(x, x), 1.0))
+
+    # Zero division by zero == 0 / eps -> 0
+    assert_true(_protected_division(0, 0) == 0)
+
+    x = np.array([1e-5, 1e-4, 1e-1, 1, 10, 100])
+    ex = np.exp(x)
+    assert_true(np.allclose(_protected_log(ex), x))
+
+    # Protected log takes logarithm of absolute value of args
+    assert_true(np.allclose(_protected_log(-x), _protected_log(x)))
+
+    x = np.array([1, -2, -3, 10, -100, 1000])
+    y = [1, -1/2, -1/3, 1e-1, -1e-2, 1e-3]
+    assert_true(np.allclose(_protected_inverse(x), y))
+
+    # Protected sqrt takes sqrt of absolute value of args
+    x = np.array([0, -0, 1, -4, 9, -16, 25])
+    y = [0, 0, 1, 2, 3, 4, 5]
+    assert_true(np.allclose(_protected_sqrt(x), y))
+
+if __name__ == "__main__":
+    import nose
+    nose.runmodule()
