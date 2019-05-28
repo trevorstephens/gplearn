@@ -2,7 +2,7 @@ language: python
 
 env:
   matrix:
-    - PYTHON="3.5" SKLEARN="LATEST"
+    - PYTHON="3.5" SKLEARN="0.21.2" JOBLIB="0.13.2"
     - PYTHON="3.6" SKLEARN="LATEST"
     - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
     - PYTHON="3.7" SKLEARN="LATEST" COVERAGE="true"
@@ -21,7 +21,7 @@ install:
   - conda create -q -n testenv -y python=$PYTHON pip pytest pandas cython
   - source activate testenv
   - if [[ "$SKLEARN" == "LATEST" ]]; then
-      pip install scikit-learn==0.21.2 joblib==0.13.2;
+      conda install scikit-learn joblib;
     else
       conda install scikit-learn=$SKLEARN joblib=$JOBLIB;
     fi
