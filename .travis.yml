@@ -2,8 +2,7 @@ language: python
 
 env:
   matrix:
-    # For some reason, unspecified installs for Py3.5 are using old packages
-    - PYTHON="3.5" SKLEARN="0.21.2" JOBLIB="0.13.2"
+    - PYTHON="3.5" SKLEARN="LATEST"
     - PYTHON="3.6" SKLEARN="LATEST"
     - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
     - PYTHON="3.7" SKLEARN="LATEST" COVERAGE="true"
@@ -21,13 +20,14 @@ install:
   - conda info -a
   - conda create -q -n testenv -y python=$PYTHON pip pytest pandas cython
   - source activate testenv
-  - if [[ "$PYTHON" == "3.5" ]]; then
-      conda config --append channels conda-forge;
-    fi
   - if [[ "$SKLEARN" == "LATEST" ]]; then
       conda install scikit-learn joblib;
     else
       conda install scikit-learn=$SKLEARN joblib=$JOBLIB;
+    fi
+  - if [[ "$PYTHON" == "3.5" ]]; then
+      # For some reason, unspecified installs for Py3.5 are using old packages
+      pip install --upgrade scikit-learn joblib;
     fi
   - if [[ "$COVERAGE" == "true" ]]; then
       pip install pytest-cov coveralls;
