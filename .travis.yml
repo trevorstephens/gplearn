@@ -21,7 +21,7 @@ install:
   - conda create -q -n testenv -y python=$PYTHON pip pytest pandas cython
   - source activate testenv
   - if [[ "$SKLEARN" == "LATEST" ]]; then
-      conda install scikit-learn joblib;
+      pip install scikit-learn==0.21.2 joblib==0.13.2;
     else
       conda install scikit-learn=$SKLEARN joblib=$JOBLIB;
     fi
