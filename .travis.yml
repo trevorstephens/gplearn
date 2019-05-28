@@ -26,7 +26,6 @@ install:
       conda install scikit-learn=$SKLEARN joblib=$JOBLIB;
     fi
   - if [[ "$PYTHON" == "3.5" ]]; then
-      # For some reason, unspecified installs for Py3.5 use old packages
       pip install --upgrade scikit-learn joblib;
     fi
   - if [[ "$COVERAGE" == "true" ]]; then
