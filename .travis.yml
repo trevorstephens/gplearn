@@ -21,6 +21,9 @@ install:
   - conda info -a
   - conda create -q -n testenv -y python=$PYTHON pip pytest pandas cython
   - source activate testenv
+  - if [[ "$PYTHON" == "3.5" ]]; then
+  -   conda config --append channels conda-forge;
+    fi
   - if [[ "$SKLEARN" == "LATEST" ]]; then
       conda install scikit-learn joblib;
     else
