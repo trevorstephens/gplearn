@@ -2,6 +2,7 @@ language: python
 
 env:
   matrix:
+    # For some reason, unspecified installs for Py3.5 are using old packages
     - PYTHON="3.5" SKLEARN="0.21.2" JOBLIB="0.13.2"
     - PYTHON="3.6" SKLEARN="LATEST"
     - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
@@ -11,8 +12,8 @@ install:
   - set -e
   - deactivate
   - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  - bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
