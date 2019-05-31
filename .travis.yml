@@ -26,6 +26,8 @@ install:
       conda install scikit-learn=$SKLEARN joblib=$JOBLIB;
     fi
   - if [[ "$PYTHON" == "3.5" ]]; then
+      python -c "import joblib; print('joblib %s' % joblib.__version__)";
+      python -c "import sklearn; print('sklearn %s' % sklearn.__version__)";
       pip install --upgrade scikit-learn joblib;
     fi
   - if [[ "$COVERAGE" == "true" ]]; then
