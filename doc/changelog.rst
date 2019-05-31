@@ -12,7 +12,8 @@ Version 0.5.0
 Version 0.4.1 - 1 Jun 2019
 ---------------------------
 
-- Fixed a long-standing bug with multi-processing and custom functions.
+- Fixed a bug with multi-processing and custom functions, allowing pickling of
+  models with custom functions, fitness metrics or classifier transformaers.
   ``joblib`` 0.13.0 or newer required in order to take advantage of this
   release in order to wrap functions for pickling saved models.
 
