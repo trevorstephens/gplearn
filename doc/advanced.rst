@@ -217,6 +217,13 @@ function which must match the number of arguments that your function expects::
                             name='logical',
                             arity=4)
 
+Due to the way that the default Python pickler works, by default ``gplearn``
+wraps your function to be serialised with cloudpickle. This can mean your
+evolution will run more slowly. If you have no need to export your model after
+the run, or you are running single-threaded in an interactive Python session
+you may achieve a faster evolution time by setting the optional parameter
+``wrap=False`` in :func:`functions.make_function()`.
+
 This can then be added to a ``gplearn`` estimator like so::
 
     gp = SymbolicTransformer(function_set=['add', 'sub', 'mul', 'div', logical])

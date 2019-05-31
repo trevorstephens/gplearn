@@ -120,6 +120,13 @@ def test_parallel_custom_function():
     est.fit(boston.data, boston.target)
     assert_raises(AttributeError, pickle.dumps, est)
 
+    # Single threaded will also fail in non-interactive sessions
+    est = SymbolicRegressor(generations=2,
+                            function_set=['add', 'sub', 'mul', 'div', logical],
+                            random_state=0)
+    est.fit(boston.data, boston.target)
+    assert_raises(AttributeError, pickle.dumps, est)
+
 
 def test_parallel_custom_transformer():
     """Regression test for running parallel training with custom transformer"""
@@ -147,5 +154,12 @@ def test_parallel_custom_transformer():
                              transformer=sigmoid,
                              random_state=0,
                              n_jobs=2)
+    est.fit(cancer.data, cancer.target)
+    assert_raises(AttributeError, pickle.dumps, est)
+
+    # Single threaded will also fail in non-interactive sessions
+    est = SymbolicClassifier(generations=2,
+                             transformer=sigmoid,
+                             random_state=0)
     est.fit(cancer.data, cancer.target)
     assert_raises(AttributeError, pickle.dumps, est)

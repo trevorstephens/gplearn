@@ -76,8 +76,9 @@ def make_fitness(function, greater_is_better, wrap=True):
         When running in parallel, pickling of custom metrics is not supported
         by Python's default pickler. This option will wrap the function using
         cloudpickle allowing you to pickle your solution, but the evolution may
-        run more slowly. If you are running single-threaded or have no need to
-        save the model, set to `False` for faster runs.
+        run more slowly. If you are running single-threaded in an interactive
+        Python session or have no need to save the model, set to `False` for
+        faster runs.
 
     """
     if not isinstance(greater_is_better, bool):

@@ -197,3 +197,10 @@ def test_parallel_custom_metric():
                             n_jobs=2)
     est.fit(boston.data, boston.target)
     assert_raises(AttributeError, pickle.dumps, est)
+
+    # Single threaded will also fail in non-interactive sessions
+    est = SymbolicRegressor(generations=2,
+                            metric=custom_metric,
+                            random_state=0)
+    est.fit(boston.data, boston.target)
+    assert_raises(AttributeError, pickle.dumps, est)
