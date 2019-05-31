@@ -152,6 +152,39 @@ You could plot its parent with the affected nodes indicated using::
     graph = pydotplus.graphviz.graph_from_dot_data(graph)
     Image(graph.create_png())
 
+.. _parallel:
+
+Running Evolution in Parallel
+-----------------------------
+
+It is easy to run your evolution parallel. All you need to do is to change
+the ``n_jobs`` parameter in :class:`SymbolicRegressor`,
+:class:`SymbolicClassifier` or :class:`SymbolicTransformer`. Whether this will
+reduce your run times depends a great deal upon the problem you are working on.
+
+Genetic programming is inherently an iterative process. One generation
+undergoes genetic operations with other members of the same generation in order
+to produce the next. When ran in parallel, the individuals of the next
+generation are created independently of the rest, but the generations
+themselves must be completed before the next step can begin. For example, with
+three threads and three generations the processing would look like this:
+
+.. image:: images/parallel.png
+    :align: center
+
+Until all of the computation in Threads 1, 2 & 3 have completed, the next
+generation is not yet complete, and the next step must wait for them all to
+complete.
+
+Spinning up all these extra processes in parallel is not free. There is a
+substantial overhead in running `gplearn` in parallel and because of the
+iterative nature of evolution one should test whether there is any advantage
+from doing so for your problem. In many cases the overhead of creating extra
+processes will exceed the savings of running in parallel. In general large
+populations or large populations can benefit from parallel processing. If you
+have small populations and keep your programs small however, you may actually
+have your runs go faster on a single thread!
+
 .. currentmodule:: gplearn
 
 .. _export:
