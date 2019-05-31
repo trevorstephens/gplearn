@@ -4,7 +4,7 @@ env:
   matrix:
     - PYTHON="3.5" SKLEARN="LATEST"
     - PYTHON="3.6" SKLEARN="LATEST"
-    - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.11"
+    - PYTHON="3.6" SKLEARN="0.20.0" JOBLIB="0.13.0"
     - PYTHON="3.7" SKLEARN="LATEST" COVERAGE="true"
 
 install:
