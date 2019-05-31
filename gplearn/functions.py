@@ -71,9 +71,9 @@ def make_function(function, name, arity, wrap=True):
         When running in parallel, pickling of custom functions is not supported
         by Python's default pickler. This option will wrap the function using
         cloudpickle allowing you to pickle your solution, but the evolution may
-        run more slowly. If you are running single-threaded in an interactive
-        Python session or have no need to save the model, set to `False` for
-        faster runs.
+        run slightly more slowly. If you are running single-threaded in an
+        interactive Python session or have no need to save the model, set to
+        `False` for faster runs.
 
     """
     if not isinstance(arity, int):
