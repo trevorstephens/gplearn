@@ -4,6 +4,8 @@
 #
 # License: BSD 3 clause
 
+import pickle
+
 import numpy as np
 from numpy import maximum
 from sklearn.datasets import load_boston
@@ -11,7 +13,7 @@ from sklearn.utils.testing import assert_equal, assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.functions import _protected_sqrt, make_function
-from gplearn.genetic import SymbolicTransformer
+from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -79,3 +81,32 @@ def test_function_in_program():
     formula = est._programs[0][906].__str__()
     expected_formula = 'sub(logical(X6, add(X11, 0.898), X10, X2), X5)'
     assert_equal(expected_formula, formula, True)
+
+
+def test_parallel_custom_function():
+    """Regression test for running parallel training with custom functions"""
+
+    def _logical(x1, x2, x3, x4):
+        return np.where(x1 > x2, x3, x4)
+
+    logical = make_function(function=_logical,
+                            name='logical',
+                            arity=4)
+    est = SymbolicRegressor(generations=2,
+                            function_set=['add', 'sub', 'mul', 'div', logical],
+                            random_state=0,
+                            n_jobs=2)
+    est.fit(boston.data, boston.target)
+    _ = pickle.dumps(est)
+
+    # Unwrapped functions should fail
+    logical = make_function(function=_logical,
+                            name='logical',
+                            arity=4,
+                            wrap=False)
+    est = SymbolicRegressor(generations=2,
+                            function_set=['add', 'sub', 'mul', 'div', logical],
+                            random_state=0,
+                            n_jobs=2)
+    est.fit(boston.data, boston.target)
+    assert_raises(AttributeError, pickle.dumps, est)
