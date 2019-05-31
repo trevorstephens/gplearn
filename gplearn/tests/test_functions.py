@@ -8,12 +8,13 @@ import pickle
 
 import numpy as np
 from numpy import maximum
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.utils.testing import assert_equal, assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.functions import _protected_sqrt, make_function
 from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
+from gplearn.genetic import SymbolicClassifier
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -21,6 +22,12 @@ boston = load_boston()
 perm = rng.permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
+
+# load the breast cancer dataset and randomly permute it
+cancer = load_breast_cancer()
+perm = check_random_state(0).permutation(cancer.target.size)
+cancer.data = cancer.data[perm]
+cancer.target = cancer.target[perm]
 
 
 def test_validate_function():
@@ -31,6 +38,8 @@ def test_validate_function():
     # non-integer arity
     assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', '1')
     assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 1.0)
+    # non-bool wrap
+    assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 1, 'f')
     # non-matching arity
     assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 2)
     assert_raises(ValueError, make_function, maximum, 'max', 1)
@@ -109,4 +118,34 @@ def test_parallel_custom_function():
                             random_state=0,
                             n_jobs=2)
     est.fit(boston.data, boston.target)
+    assert_raises(AttributeError, pickle.dumps, est)
+
+
+def test_parallel_custom_transformer():
+    """Regression test for running parallel training with custom transformer"""
+
+    def _sigmoid(x1):
+        with np.errstate(over='ignore', under='ignore'):
+            return 1 / (1 + np.exp(-x1))
+
+    sigmoid = make_function(function=_sigmoid,
+                            name='sig',
+                            arity=1)
+    est = SymbolicClassifier(generations=2,
+                             transformer=sigmoid,
+                             random_state=0,
+                             n_jobs=2)
+    est.fit(cancer.data, cancer.target)
+    _ = pickle.dumps(est)
+
+    # Unwrapped functions should fail
+    sigmoid = make_function(function=_sigmoid,
+                            name='sig',
+                            arity=1,
+                            wrap=False)
+    est = SymbolicClassifier(generations=2,
+                             transformer=sigmoid,
+                             random_state=0,
+                             n_jobs=2)
+    est.fit(cancer.data, cancer.target)
     assert_raises(AttributeError, pickle.dumps, est)

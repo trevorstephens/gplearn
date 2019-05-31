@@ -85,7 +85,7 @@ def make_function(function, name, arity, wrap=True):
     if not isinstance(name, str):
         raise ValueError('name must be a string, got %s' % type(name))
     if not isinstance(wrap, bool):
-        raise ValueError('wrap must be an bool, got %s' % type(arity))
+        raise ValueError('wrap must be an bool, got %s' % type(wrap))
 
     # Check output shape
     args = [np.ones(10) for _ in range(arity)]
@@ -112,8 +112,12 @@ def make_function(function, name, arity, wrap=True):
                          'negatives in argument vectors.' % name)
 
     if wrap:
-        return _Function(wrap_non_picklable_objects(function), name, arity)
-    return _Function(function, name, arity)
+        return _Function(function=wrap_non_picklable_objects(function),
+                         name=name,
+                         arity=arity)
+    return _Function(function=function,
+                     name=name,
+                     arity=arity)
 
 
 def _protected_division(x1, x2):

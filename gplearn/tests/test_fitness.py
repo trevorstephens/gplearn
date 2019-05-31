@@ -4,6 +4,8 @@
 #
 # License: BSD 3 clause
 
+import pickle
+
 import numpy as np
 from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
@@ -35,6 +37,8 @@ def test_validate_fitness():
     # non-bool greater_is_better
     assert_raises(ValueError, make_fitness, _mean_square_error, 'Sure')
     assert_raises(ValueError, make_fitness, _mean_square_error, 1)
+    # non-bool wrap
+    assert_raises(ValueError, make_fitness, _mean_square_error, True, 'f')
 
     # Check arg count tests
     def bad_fun1(x1, x2):
@@ -165,3 +169,31 @@ def test_custom_classifier_metrics():
     c_est_gp.fit(x_data, y_true)
     c_formula = c_est_gp.__str__()
     assert_equal(expected_formula, c_formula, True)
+
+
+def test_parallel_custom_metric():
+    """Regression test for running parallel training with custom transformer"""
+
+    def _custom_metric(y, y_pred, w):
+        """Calculate the root mean square error."""
+        return np.sqrt(np.average(((y_pred - y) ** 2), weights=w))
+
+    custom_metric = make_fitness(function=_custom_metric,
+                                 greater_is_better=True)
+    est = SymbolicRegressor(generations=2,
+                            metric=custom_metric,
+                            random_state=0,
+                            n_jobs=2)
+    est.fit(boston.data, boston.target)
+    _ = pickle.dumps(est)
+
+    # Unwrapped functions should fail
+    custom_metric = make_fitness(function=_custom_metric,
+                                 greater_is_better=True,
+                                 wrap=False)
+    est = SymbolicRegressor(generations=2,
+                            metric=custom_metric,
+                            random_state=0,
+                            n_jobs=2)
+    est.fit(boston.data, boston.target)
+    assert_raises(AttributeError, pickle.dumps, est)
