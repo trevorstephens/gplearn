@@ -7,34 +7,16 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 # License: BSD 3 clause
 
 import pickle
-import sys
-from io import StringIO
 
 import numpy as np
-from scipy.stats import pearsonr, spearmanr
-from sklearn.datasets import load_boston, load_breast_cancer
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.utils.estimator_checks import check_estimator
-from sklearn.utils.testing import assert_greater
-from sklearn.utils.testing import assert_equal, assert_almost_equal
-from sklearn.utils.testing import assert_array_equal, assert_array_almost_equal
-from sklearn.utils.testing import assert_raises, assert_warns
+from sklearn.datasets import load_boston
+from sklearn.utils.testing import assert_array_almost_equal
+from sklearn.utils.testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
 from gplearn.genetic import SymbolicTransformer
-from gplearn.fitness import weighted_pearson, weighted_spearman
-from gplearn._program import _Program
-from gplearn.fitness import _fitness_map
-from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
-                               min2)
-from gplearn.functions import _Function, make_function
-from gplearn.tests.check_estimator import custom_check_estimator
-from gplearn.tests.check_estimator import rewritten_check_estimator
+from gplearn.functions import make_function
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -42,13 +24,6 @@ boston = load_boston()
 perm = rng.permutation(boston.target.size)
 boston.data = boston.data[perm]
 boston.target = boston.target[perm]
-
-# load the breast cancer dataset and randomly permute it
-rng = check_random_state(0)
-cancer = load_breast_cancer()
-perm = rng.permutation(cancer.target.size)
-cancer.data = cancer.data[perm]
-cancer.target = cancer.target[perm]
 
 
 def test_parallel_train():
@@ -101,7 +76,7 @@ def test_parallel_train():
         assert_array_almost_equal(len1, len2)
 
 
-def test_parallel_custom_fun():
+def test_parallel_custom_function():
     """Regression test for running parallel training with custom functions"""
 
     def _logical(x1, x2, x3, x4):
@@ -110,9 +85,21 @@ def test_parallel_custom_fun():
     logical = make_function(function=_logical,
                             name='logical',
                             arity=4)
-
-    est = SymbolicRegressor(generations=5,
-                            function_set=('add', 'sub', 'mul', 'div', logical),
+    est = SymbolicRegressor(generations=2,
+                            function_set=['add', 'sub', 'mul', 'div', logical],
+                            random_state=0,
                             n_jobs=2)
     est.fit(boston.data, boston.target)
-    pickle_object = pickle.dumps(est)
+    _ = pickle.dumps(est)
+
+    # Unwrapped functions should fail
+    logical = make_function(function=_logical,
+                            name='logical',
+                            arity=4,
+                            wrap=False)
+    est = SymbolicRegressor(generations=2,
+                            function_set=['add', 'sub', 'mul', 'div', logical],
+                            random_state=0,
+                            n_jobs=2)
+    est.fit(boston.data, boston.target)
+    assert_raises(AttributeError, pickle.dumps, est)
