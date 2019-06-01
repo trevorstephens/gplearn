@@ -164,8 +164,8 @@ reduce your run times depends a great deal upon the problem you are working on.
 
 Genetic programming is inherently an iterative process. One generation
 undergoes genetic operations with other members of the same generation in order
-to produce the next. When ran in parallel, the individuals of the next
-generation are created independently of the rest, but the generations
+to produce the next. When ran in parallel, gplearn splits the genetic
+operations into equal-sized batches that run in parallel, but the generations
 themselves must be completed before the next step can begin. For example, with
 three threads and three generations the processing would look like this:
 
@@ -173,17 +173,17 @@ three threads and three generations the processing would look like this:
     :align: center
 
 Until all of the computation in Threads 1, 2 & 3 have completed, the next
-generation is not yet complete, and the next step must wait for them all to
-complete.
+generation must wait for them all to complete.
 
 Spinning up all these extra processes in parallel is not free. There is a
 substantial overhead in running `gplearn` in parallel and because of the
 iterative nature of evolution one should test whether there is any advantage
 from doing so for your problem. In many cases the overhead of creating extra
-processes will exceed the savings of running in parallel. In general large
-populations or large populations can benefit from parallel processing. If you
-have small populations and keep your programs small however, you may actually
-have your runs go faster on a single thread!
+processes will exceed the savings of running in parallel.
+
+In general large populations or large programs can benefit from parallel
+processing. If you have small populations and keep your programs small however,
+you may actually have your runs go faster on a single thread!
 
 .. currentmodule:: gplearn
 
@@ -332,6 +332,12 @@ your specific needs by passing the new fitness object to the ``metric`` paramete
 when creating an estimator::
 
     est = SymbolicRegressor(metric=mape, verbose=1)
+
+As with custom functions, by default ``gplearn`` wraps your fitness metric to
+be serialised with cloudpickle. If you have no need to export your model after
+the run, or you are running single-threaded in an interactive Python session
+you may achieve a faster evolution time by setting the optional parameter
+``wrap=False`` in :func:`fitness.make_fitness()`.
 
 .. currentmodule:: gplearn.genetic
 
