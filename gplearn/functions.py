@@ -10,6 +10,7 @@ own custom functions.
 # License: BSD 3 clause
 
 import numpy as np
+from joblib import wrap_non_picklable_objects
 
 __all__ = ['make_function']
 
@@ -45,7 +46,7 @@ class _Function(object):
         return self.function(*args)
 
 
-def make_function(function, name, arity):
+def make_function(function, name, arity, wrap=True):
     """Make a function node, a representation of a mathematical relationship.
 
     This factory function creates a function node, one of the core nodes in any
@@ -66,6 +67,14 @@ def make_function(function, name, arity):
     arity : int
         The number of arguments that the `function` takes.
 
+    wrap : bool, optional (default=True)
+        When running in parallel, pickling of custom functions is not supported
+        by Python's default pickler. This option will wrap the function using
+        cloudpickle allowing you to pickle your solution, but the evolution may
+        run slightly more slowly. If you are running single-threaded in an
+        interactive Python session or have no need to save the model, set to
+        `False` for faster runs.
+
     """
     if not isinstance(arity, int):
         raise ValueError('arity must be an int, got %s' % type(arity))
@@ -76,6 +85,8 @@ def make_function(function, name, arity):
                              % (arity, function.__code__.co_argcount))
     if not isinstance(name, str):
         raise ValueError('name must be a string, got %s' % type(name))
+    if not isinstance(wrap, bool):
+        raise ValueError('wrap must be an bool, got %s' % type(wrap))
 
     # Check output shape
     args = [np.ones(10) for _ in range(arity)]
@@ -101,7 +112,13 @@ def make_function(function, name, arity):
         raise ValueError('supplied function %s does not have closure against '
                          'negatives in argument vectors.' % name)
 
-    return _Function(function, name, arity)
+    if wrap:
+        return _Function(function=wrap_non_picklable_objects(function),
+                         name=name,
+                         arity=arity)
+    return _Function(function=function,
+                     name=name,
+                     arity=arity)
 
 
 def _protected_division(x1, x2):
@@ -133,21 +150,21 @@ def _sigmoid(x1):
         return 1 / (1 + np.exp(-x1))
 
 
-add2 = make_function(function=np.add, name='add', arity=2)
-sub2 = make_function(function=np.subtract, name='sub', arity=2)
-mul2 = make_function(function=np.multiply, name='mul', arity=2)
-div2 = make_function(function=_protected_division, name='div', arity=2)
-sqrt1 = make_function(function=_protected_sqrt, name='sqrt', arity=1)
-log1 = make_function(function=_protected_log, name='log', arity=1)
-neg1 = make_function(function=np.negative, name='neg', arity=1)
-inv1 = make_function(function=_protected_inverse, name='inv', arity=1)
-abs1 = make_function(function=np.abs, name='abs', arity=1)
-max2 = make_function(function=np.maximum, name='max', arity=2)
-min2 = make_function(function=np.minimum, name='min', arity=2)
-sin1 = make_function(function=np.sin, name='sin', arity=1)
-cos1 = make_function(function=np.cos, name='cos', arity=1)
-tan1 = make_function(function=np.tan, name='tan', arity=1)
-sig1 = make_function(function=_sigmoid, name='sig', arity=1)
+add2 = _Function(function=np.add, name='add', arity=2)
+sub2 = _Function(function=np.subtract, name='sub', arity=2)
+mul2 = _Function(function=np.multiply, name='mul', arity=2)
+div2 = _Function(function=_protected_division, name='div', arity=2)
+sqrt1 = _Function(function=_protected_sqrt, name='sqrt', arity=1)
+log1 = _Function(function=_protected_log, name='log', arity=1)
+neg1 = _Function(function=np.negative, name='neg', arity=1)
+inv1 = _Function(function=_protected_inverse, name='inv', arity=1)
+abs1 = _Function(function=np.abs, name='abs', arity=1)
+max2 = _Function(function=np.maximum, name='max', arity=2)
+min2 = _Function(function=np.minimum, name='min', arity=2)
+sin1 = _Function(function=np.sin, name='sin', arity=1)
+cos1 = _Function(function=np.cos, name='cos', arity=1)
+tan1 = _Function(function=np.tan, name='tan', arity=1)
+sig1 = _Function(function=_sigmoid, name='sig', arity=1)
 
 _function_map = {'add': add2,
                  'sub': sub2,

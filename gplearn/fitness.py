@@ -11,6 +11,7 @@ the computer programs created by the :mod:`gplearn.genetic` module.
 import numbers
 
 import numpy as np
+from joblib import wrap_non_picklable_objects
 from scipy.stats import rankdata
 
 __all__ = ['make_fitness']
@@ -48,7 +49,7 @@ class _Fitness(object):
         return self.function(*args)
 
 
-def make_fitness(function, greater_is_better):
+def make_fitness(function, greater_is_better, wrap=True):
     """Make a fitness measure, a metric scoring the quality of a program's fit.
 
     This factory function creates a fitness measure object which measures the
@@ -71,10 +72,20 @@ def make_fitness(function, greater_is_better):
         general this would be False for metrics indicating the magnitude of
         the error, and True for metrics indicating the quality of fit.
 
+    wrap : bool, optional (default=True)
+        When running in parallel, pickling of custom metrics is not supported
+        by Python's default pickler. This option will wrap the function using
+        cloudpickle allowing you to pickle your solution, but the evolution may
+        run slightly more slowly. If you are running single-threaded in an
+        interactive Python session or have no need to save the model, set to
+        `False` for faster runs.
+
     """
     if not isinstance(greater_is_better, bool):
         raise ValueError('greater_is_better must be bool, got %s'
                          % type(greater_is_better))
+    if not isinstance(wrap, bool):
+        raise ValueError('wrap must be an bool, got %s' % type(wrap))
     if function.__code__.co_argcount != 3:
         raise ValueError('function requires 3 arguments (y, y_pred, w),'
                          ' got %d.' % function.__code__.co_argcount)
@@ -83,7 +94,11 @@ def make_fitness(function, greater_is_better):
                       np.array([1, 1])), numbers.Number):
         raise ValueError('function must return a numeric.')
 
-    return _Fitness(function, greater_is_better)
+    if wrap:
+        return _Fitness(function=wrap_non_picklable_objects(function),
+                        greater_is_better=greater_is_better)
+    return _Fitness(function=function,
+                    greater_is_better=greater_is_better)
 
 
 def _weighted_pearson(y, y_pred, w):
@@ -131,17 +146,18 @@ def _log_loss(y, y_pred, w):
     return np.average(-score, weights=w)
 
 
-weighted_pearson = make_fitness(function=_weighted_pearson,
-                                greater_is_better=True)
-weighted_spearman = make_fitness(function=_weighted_spearman,
-                                 greater_is_better=True)
-mean_absolute_error = make_fitness(function=_mean_absolute_error,
-                                   greater_is_better=False)
-mean_square_error = make_fitness(function=_mean_square_error,
-                                 greater_is_better=False)
-root_mean_square_error = make_fitness(function=_root_mean_square_error,
-                                      greater_is_better=False)
-log_loss = make_fitness(function=_log_loss, greater_is_better=False)
+weighted_pearson = _Fitness(function=_weighted_pearson,
+                            greater_is_better=True)
+weighted_spearman = _Fitness(function=_weighted_spearman,
+                             greater_is_better=True)
+mean_absolute_error = _Fitness(function=_mean_absolute_error,
+                               greater_is_better=False)
+mean_square_error = _Fitness(function=_mean_square_error,
+                             greater_is_better=False)
+root_mean_square_error = _Fitness(function=_root_mean_square_error,
+                                  greater_is_better=False)
+log_loss = _Fitness(function=_log_loss,
+                    greater_is_better=False)
 
 _fitness_map = {'pearson': weighted_pearson,
                 'spearman': weighted_spearman,
