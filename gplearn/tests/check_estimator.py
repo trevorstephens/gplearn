@@ -28,7 +28,7 @@ from sklearn.utils.testing import create_memmap_backed_data
 from sklearn.base import clone
 
 from sklearn.metrics import accuracy_score
-
+from sklearn.model_selection import train_test_split
 from sklearn.exceptions import DataConversionWarning
 from sklearn.metrics.pairwise import rbf_kernel
 
@@ -72,6 +72,7 @@ def custom_check_estimator(Estimator):
                 check is estimator_checks.check_classifiers_classes or
                 check is estimator_checks.check_supervised_y_2d or
                 check is estimator_checks.check_fit2d_predict1d or
+                check is estimator_checks.check_class_weight_classifiers or
                 check is estimator_checks.check_methods_subset_invariance or
                 check is estimator_checks.check_dont_overwrite_parameters or
                 "check_estimators_fit_returns_self" in check.__repr__() or
@@ -119,6 +120,7 @@ def _yield_rewritten_checks(name, estimator):
     yield check_methods_subset_invariance
     yield check_dont_overwrite_parameters
     yield check_classifiers_train
+    yield check_class_weight_classifiers
     yield partial(check_classifiers_train, readonly_memmap=True)
     yield check_estimators_fit_returns_self
     yield partial(check_estimators_fit_returns_self, readonly_memmap=True)
@@ -517,3 +519,19 @@ def check_estimators_overwrite_params(name, estimator_orig):
                      "Estimator %s should not change or mutate "
                      " the parameter %s from %s to %s during fit."
                      % (name, param_name, original_value, new_value))
+
+
+def check_class_weight_classifiers(name, classifier_orig):
+    # create a very noisy dataset
+    X, y = make_blobs(centers=2, random_state=0, cluster_std=20)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.5,
+                                                        random_state=0)
+    class_weight = {0: 1000, 1: 0.0001}
+    classifier = clone(classifier_orig).set_params(
+        class_weight=class_weight)
+    set_random_state(classifier)
+    classifier.fit(X_train, y_train)
+    y_pred = classifier.predict(X_test)
+    # XXX: Generally can use 0.89 here. On Windows, LinearSVC gets
+    #      0.88 (Issue #9111)
+    assert_greater(np.mean(y_pred == 0), 0.87)
