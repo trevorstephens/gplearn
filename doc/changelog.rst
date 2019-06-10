@@ -7,7 +7,8 @@ Release History
 Version 0.5.0
 -------------
 
-- Nothing yet!
+- Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
+  allowing users to easily compensate for imbalanced datasets.
 
 Version 0.4.1 - 1 Jun 2019
 ---------------------------
