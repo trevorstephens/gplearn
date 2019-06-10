@@ -636,7 +636,7 @@ def test_none_const_range():
     assert(float_count > 1)
 
 
-def test_sample_weight():
+def test_sample_weight_and_class_weight():
     """Check sample_weight param works"""
 
     # Check constant sample_weight has no effect
@@ -667,9 +667,19 @@ def test_sample_weight():
     est3 = SymbolicClassifier(population_size=100, generations=2,
                               random_state=0)
     est3.fit(cancer.data, cancer.target, sample_weight=sample_weight * 1.1)
+    # And then using class weight to do the same thing
+    est4 = SymbolicClassifier(class_weight={0: 1, 1: 1}, population_size=100,
+                              generations=2, random_state=0)
+    est4.fit(cancer.data, cancer.target)
+    est5 = SymbolicClassifier(class_weight={0: 1.1, 1: 1.1},
+                              population_size=100, generations=2,
+                              random_state=0)
+    est5.fit(cancer.data, cancer.target)
 
     assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
     assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
+    assert_almost_equal(est1._program.fitness_, est4._program.fitness_)
+    assert_almost_equal(est1._program.fitness_, est5._program.fitness_)
 
     # And again for the transformer
     sample_weight = np.ones(boston.target.shape[0])

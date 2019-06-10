@@ -20,6 +20,7 @@ from scipy.stats import rankdata
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, TransformerMixin, ClassifierMixin
 from sklearn.exceptions import NotFittedError
+from sklearn.utils import compute_sample_weight
 from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
 
@@ -183,6 +184,7 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 class_weight=None,
                  feature_names=None,
                  warm_start=False,
                  low_memory=False,
@@ -209,6 +211,7 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
         self.p_point_mutation = p_point_mutation
         self.p_point_replace = p_point_replace
         self.max_samples = max_samples
+        self.class_weight = class_weight
         self.feature_names = feature_names
         self.warm_start = warm_start
         self.low_memory = low_memory
@@ -281,9 +284,20 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
         random_state = check_random_state(self.random_state)
 
         # Check arrays
+        if sample_weight is not None:
+            sample_weight = check_array(sample_weight, ensure_2d=False)
+
         if isinstance(self, ClassifierMixin):
             X, y = check_X_y(X, y, y_numeric=False)
             check_classification_targets(y)
+
+            if self.class_weight:
+                if sample_weight is None:
+                    sample_weight = 1.
+                # modify the sample weights with the corresponding class weight
+                sample_weight = (sample_weight *
+                                 compute_sample_weight(self.class_weight, y))
+
             self.classes_, y = np.unique(y, return_inverse=True)
             n_trim_classes = np.count_nonzero(np.bincount(y, sample_weight))
             if n_trim_classes != 2:
@@ -292,10 +306,10 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
                                  "classes are required."
                                  % n_trim_classes)
             self.n_classes_ = len(self.classes_)
+
         else:
             X, y = check_X_y(X, y, y_numeric=True)
-        if sample_weight is not None:
-            sample_weight = check_array(sample_weight, ensure_2d=False)
+
         _, self.n_features_ = X.shape
 
         hall_of_fame = self.hall_of_fame
@@ -997,6 +1011,14 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
     max_samples : float, optional (default=1.0)
         The fraction of samples to draw from X to evaluate each program on.
 
+    class_weight : dict, 'balanced' or None, optional (default=None)
+        Weights associated with classes in the form ``{class_label: weight}``.
+        If not given, all classes are supposed to have weight one.
+
+        The "balanced" mode uses the values of y to automatically adjust
+        weights inversely proportional to class frequencies in the input data
+        as ``n_samples / (n_classes * np.bincount(y))``
+
     feature_names : list, optional (default=None)
         Optional list of feature names, used purely for representations in
         the `print` operation or `export_graphviz`. If None, then X0, X1, etc
@@ -1069,6 +1091,7 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
                  p_point_mutation=0.01,
                  p_point_replace=0.05,
                  max_samples=1.0,
+                 class_weight=None,
                  feature_names=None,
                  warm_start=False,
                  low_memory=False,
@@ -1093,6 +1116,7 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
             p_point_mutation=p_point_mutation,
             p_point_replace=p_point_replace,
             max_samples=max_samples,
+            class_weight=class_weight,
             feature_names=feature_names,
             warm_start=warm_start,
             low_memory=low_memory,
