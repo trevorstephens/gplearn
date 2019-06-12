@@ -1130,6 +1130,9 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
             return self.__repr__()
         return self._program.__str__()
 
+    def _more_tags(self):
+        return {'binary_only': True}
+
     def predict_proba(self, X):
         """Predict probabilities on test vectors X.
 
