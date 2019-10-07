@@ -281,18 +281,15 @@ or 1. One example is the built-in protected division function where infinite
 values resulting by divide by zero are replaced by 1::
 
     def _protected_division(x1, x2):
-        with np.errstate(divide='ignore', invalid='ignore'):
-            return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
+        return np.where(np.abs(x2) > 0.001, np.divide(x1, x2), 1.)
 
 Or a custom function where floating-point overflow is protected in an
 exponential function::
 
     def _protected_exponent(x1):
-        with np.errstate(over='ignore'):
-            return np.where(np.abs(x1) < 100, np.exp(x), 0.)
+        return np.where(np.abs(x1) < 100, np.exp(x), 0.)
 
-For further information on the types of errors that numpy can encounter and
-what you will need to protect against in your own custom functions, see
+Note: gplearn ignores all floating-point errors within evolution; see
 `here <https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.seterr.html#numpy.seterr>`_.
 
 .. _custom_fitness:
