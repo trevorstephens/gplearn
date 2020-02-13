@@ -12,7 +12,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils.testing import assert_equal, assert_almost_equal
+from sklearn.utils._testing import assert_equal, assert_almost_equal
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
