@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 from numpy import maximum
 from sklearn.datasets import load_boston, load_breast_cancer
-from sklearn.utils.testing import assert_equal, assert_raises
+from sklearn.utils._testing import assert_equal, assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.functions import _protected_sqrt, make_function

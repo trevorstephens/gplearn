@@ -19,10 +19,11 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.estimator_checks import check_estimator
-from sklearn.utils.testing import assert_greater
-from sklearn.utils.testing import assert_equal, assert_almost_equal
-from sklearn.utils.testing import assert_array_equal, assert_array_almost_equal
-from sklearn.utils.testing import assert_raises, assert_warns
+from sklearn.utils._testing import assert_greater
+from sklearn.utils._testing import assert_equal, assert_almost_equal
+from sklearn.utils._testing import assert_array_equal
+from sklearn.utils._testing import  assert_array_almost_equal
+from sklearn.utils._testing import assert_raises, assert_warns
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
@@ -33,8 +34,6 @@ from gplearn.fitness import _fitness_map
 from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2)
 from gplearn.functions import _Function
-from gplearn.tests.check_estimator import custom_check_estimator
-from gplearn.tests.check_estimator import rewritten_check_estimator
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
@@ -61,15 +60,8 @@ def test_sklearn_regressor_checks():
 def test_sklearn_classifier_checks():
     """Run the sklearn estimator validation checks on SymbolicClassifier"""
 
-    custom_check_estimator(SymbolicClassifier(population_size=50,
-                                              generations=5))
-
-
-def test_sklearn_customized_checks():
-    """Run custom binary estimator validation checks on SymbolicClassifier"""
-
-    rewritten_check_estimator(SymbolicClassifier(population_size=50,
-                                                 generations=5))
+    check_estimator(SymbolicClassifier(population_size=50,
+                                       generations=5))
 
 
 def test_sklearn_transformer_checks():

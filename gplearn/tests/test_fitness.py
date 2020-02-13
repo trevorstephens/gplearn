@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
-from sklearn.utils.testing import assert_equal, assert_raises
+from sklearn.utils._testing import assert_equal, assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicRegressor, SymbolicClassifier
