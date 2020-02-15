@@ -9,6 +9,9 @@ Version 0.5.0
 
 - Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
   allowing users to easily compensate for imbalanced datasets.
+- Add support for Python 3.8 to ensure compatibility with ``scikit-learn``.
+  ``scikit-learn`` 0.22.1 or newer will also be required due to recent changes
+  in their testing suite.
 
 Version 0.4.1 - 1 Jun 2019
 ---------------------------

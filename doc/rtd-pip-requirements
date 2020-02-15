@@ -1,5 +1,5 @@
 numpy>=1.8.1
 numpydoc>=0.5
 scipy>=0.13
-scikit-learn>=0.20.0
+scikit-learn>=0.22.1
 joblib>=0.13.0
