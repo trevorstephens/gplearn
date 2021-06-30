@@ -298,7 +298,7 @@ Perhaps temporal variables have a seasonal effect?)
 
 If you think that the problem requires a very large formula to solve,
 start with a larger program depth. And if your dataset has many variables, 
-perhaps the “full” initialization method (intializing the population with
+perhaps the “full” initialization method (initializing the population with
 full-size programs) makes more sense than waiting for programs to grow
 large enough to make use of all variables.
 
