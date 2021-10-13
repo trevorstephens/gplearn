@@ -179,4 +179,5 @@ _function_map = {'add': add2,
                  'min': min2,
                  'sin': sin1,
                  'cos': cos1,
-                 'tan': tan1}
+                 'tan': tan1,
+                 'sig': sig1}
