@@ -434,6 +434,10 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
                                  'average_fitness': [],
                                  'best_length': [],
                                  'best_fitness': [],
+                                 'max_length': [],
+                                 'min_length': [],
+                                 'max_fitness': [], 
+                                 'min_fitness': [],
                                  'best_oob_fitness': [],
                                  'generation_time': []}
 
@@ -527,6 +531,10 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
             self.run_details_['average_fitness'].append(np.mean(fitness))
             self.run_details_['best_length'].append(best_program.length_)
             self.run_details_['best_fitness'].append(best_program.raw_fitness_)
+            self.run_details_['max_length'].append(np.max(length))
+            self.run_details_['min_length'].append(np.min(length))
+            self.run_details_['max_fitness'].append(np.max(fitness))
+            self.run_details_['min_fitness'].append(np.min(fitness))
             oob_fitness = np.nan
             if self.max_samples < 1.0:
                 oob_fitness = best_program.oob_fitness_
@@ -1368,6 +1376,10 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         - 'average_fitness' : The average program fitness of the generation.
         - 'best_length' : The length of the best program in the generation.
         - 'best_fitness' : The fitness of the best program in the generation.
+        - 'max_length': The program with maximum lenght in the generation. 
+        - 'min_length': The program with minimum lenght in the generation.
+        - 'max_fitness': The program with maximum fitness value in the generation. 
+        - 'min_fitness': The program with minimum fitness value in the generation. 
         - 'best_oob_fitness' : The out of bag fitness of the best program in
           the generation (requires `max_samples` < 1.0).
         - 'generation_time' : The time it took for the generation to evolve.
