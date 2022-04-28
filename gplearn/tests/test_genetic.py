@@ -19,8 +19,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.estimator_checks import check_estimator
-from sklearn.utils._testing import assert_greater
-from sklearn.utils._testing import assert_equal, assert_almost_equal
+from sklearn.utils._testing import assert_almost_equal
 from sklearn.utils._testing import assert_array_equal
 from sklearn.utils._testing import  assert_array_almost_equal
 from sklearn.utils._testing import assert_raises, assert_warns
@@ -133,10 +132,10 @@ def test_program_init_method():
     grow_length = np.mean([gp.length_ for gp in programs])
     grow_depth = np.mean([gp.depth_ for gp in programs])
 
-    assert_greater(full_length, hnh_length)
-    assert_greater(hnh_length, grow_length)
-    assert_greater(full_depth, hnh_depth)
-    assert_greater(hnh_depth, grow_depth)
+    assert(full_length > hnh_length)
+    assert(hnh_length > grow_length)
+    assert(full_depth > hnh_depth)
+    assert(hnh_depth > grow_depth)
 
 
 def test_program_init_depth():
@@ -409,7 +408,7 @@ def test_get_subtree():
     self_test = gp.get_subtree(check_random_state(0))
     external_test = gp.get_subtree(check_random_state(0), test_gp)
 
-    assert_equal(self_test, external_test)
+    assert(self_test == external_test)
 
 
 def test_genetic_operations():
@@ -432,26 +431,24 @@ def test_genetic_operations():
 
     gp = _Program(random_state=random_state, program=test_gp, **params)
 
-    assert_equal([f.name if isinstance(f, _Function) else f
-                  for f in gp.reproduce()],
-                 ['mul', 'div', 8, 1, 'sub', 9, 0.5])
-    assert_equal(gp.program, test_gp)
-    assert_equal([f.name if isinstance(f, _Function) else f
-                  for f in gp.crossover(donor, random_state)[0]],
-                 ['sub', 2, 7])
-    assert_equal(gp.program, test_gp)
-    assert_equal([f.name if isinstance(f, _Function) else f
-                  for f in gp.subtree_mutation(random_state)[0]],
-                 ['mul', 'div', 8, 1, 'sub', 'sub', 3, 5, 'add', 6, 3])
-    assert_equal(gp.program, test_gp)
-    assert_equal([f.name if isinstance(f, _Function) else f
-                  for f in gp.hoist_mutation(random_state)[0]],
-                 ['div', 8, 1])
-    assert_equal(gp.program, test_gp)
-    assert_equal([f.name if isinstance(f, _Function) else f
-                  for f in gp.point_mutation(random_state)[0]],
-                 ['mul', 'div', 8, 1, 'sub', 9, 0.5])
-    assert_equal(gp.program, test_gp)
+    expected = ['mul', 'div', 8, 1, 'sub', 9, 0.5]
+    assert([f.name if isinstance(f, _Function) else f
+            for f in gp.reproduce()] == expected)
+    assert(gp.program == test_gp)
+    assert([f.name if isinstance(f, _Function) else f
+            for f in gp.crossover(donor, random_state)[0]] == ['sub', 2, 7])
+    assert(gp.program == test_gp)
+    expected = ['mul', 'div', 8, 1, 'sub', 'sub', 3, 5, 'add', 6, 3]
+    assert([f.name if isinstance(f, _Function) else f
+            for f in gp.subtree_mutation(random_state)[0]] == expected)
+    assert(gp.program == test_gp)
+    assert([f.name if isinstance(f, _Function) else f
+            for f in gp.hoist_mutation(random_state)[0]] == ['div', 8, 1])
+    assert(gp.program == test_gp)
+    expected = ['mul', 'div', 8, 1, 'sub', 9, 0.5]
+    assert([f.name if isinstance(f, _Function) else f
+            for f in gp.point_mutation(random_state)[0]] == expected)
+    assert(gp.program == test_gp)
 
 
 def test_input_validation():
@@ -777,21 +774,21 @@ def test_verbose_output():
     header1 = verbose_output.readline().rstrip()
     true_header = '    |{:^25}|{:^42}|'.format('Population Average',
                                                'Best Individual')
-    assert_equal(true_header, header1)
+    assert(true_header == header1)
 
     header2 = verbose_output.readline().rstrip()
     true_header = '-' * 4 + ' ' + '-' * 25 + ' ' + '-' * 42 + ' ' + '-' * 10
-    assert_equal(true_header, header2)
+    assert(true_header == header2)
 
     header3 = verbose_output.readline().rstrip()
 
     line_format = '{:>4} {:>8} {:>16} {:>8} {:>16} {:>16} {:>10}'
     true_header = line_format.format('Gen', 'Length', 'Fitness', 'Length',
                                      'Fitness', 'OOB Fitness', 'Time Left')
-    assert_equal(true_header, header3)
+    assert(true_header == header3)
 
     n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
+    assert(10 == n_lines)
 
 
 def test_verbose_with_oob():
@@ -813,7 +810,7 @@ def test_verbose_with_oob():
     _ = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
+    assert(10 == n_lines)
 
 
 def test_more_verbose_output():
@@ -839,12 +836,12 @@ def test_more_verbose_output():
     _ = verbose_output.readline().rstrip()
 
     n_lines = sum(1 for l in verbose_output.readlines())
-    assert_equal(10, n_lines)
+    assert(10 == n_lines)
 
     joblib_output.seek(0)
     n_lines = sum(1 for l in joblib_output.readlines())
     # New version of joblib appears to output sys.stderr
-    assert_equal(0, n_lines % 10)
+    assert(0 == n_lines % 10)
 
 
 def test_parallel_train():
@@ -908,9 +905,9 @@ def test_pickle():
     pickle_object = pickle.dumps(est)
 
     est2 = pickle.loads(pickle_object)
-    assert_equal(type(est2), est.__class__)
+    assert(type(est2) == est.__class__)
     score2 = est2.score(boston.data[500:, :], boston.target[500:])
-    assert_equal(score, score2)
+    assert(score == score2)
 
     # Check the transformer
     est = SymbolicTransformer(population_size=100, generations=2,
@@ -920,7 +917,7 @@ def test_pickle():
     pickle_object = pickle.dumps(est)
 
     est2 = pickle.loads(pickle_object)
-    assert_equal(type(est2), est.__class__)
+    assert(type(est2) == est.__class__)
     X_new2 = est2.transform(boston.data[500:, :])
     assert_array_almost_equal(X_new, X_new2)
 
@@ -932,9 +929,9 @@ def test_pickle():
     pickle_object = pickle.dumps(est)
 
     est2 = pickle.loads(pickle_object)
-    assert_equal(type(est2), est.__class__)
+    assert(type(est2) == est.__class__)
     score2 = est2.score(cancer.data[500:, :], cancer.target[500:])
-    assert_equal(score, score2)
+    assert(score == score2)
 
 
 def test_output_shape():
@@ -962,7 +959,7 @@ def test_gridsearch():
                         scoring='neg_mean_absolute_error')
     grid.fit(boston.data, boston.target)
     expected = {'parsimony_coefficient': 0.001}
-    assert_equal(grid.best_params_, expected)
+    assert(grid.best_params_ == expected)
 
 
 def test_pipeline():
@@ -1231,14 +1228,14 @@ def test_run_details():
     est = SymbolicRegressor(population_size=100, generations=5, random_state=0)
     est.fit(boston.data, boston.target)
     # Check generations are indexed as expected without warm_start
-    assert_equal(est.run_details_['generation'], list(range(5)))
+    assert(est.run_details_['generation'] == list(range(5)))
     est.set_params(generations=10, warm_start=True)
     est.fit(boston.data, boston.target)
     # Check generations are indexed as expected with warm_start
-    assert_equal(est.run_details_['generation'], list(range(10)))
+    assert(est.run_details_['generation'] == list(range(10)))
     # Check all details have expected number of elements
     for detail in est.run_details_:
-        assert_equal(len(est.run_details_[detail]), 10)
+        assert(len(est.run_details_[detail]) == 10)
 
 
 def test_warm_start():
@@ -1265,7 +1262,7 @@ def test_warm_start():
     warm_fitness = est._program.fitness_
     warm_program = est._program.__str__()
     assert_almost_equal(cold_fitness, warm_fitness)
-    assert_equal(cold_program, warm_program)
+    assert(cold_program == warm_program)
 
 
 def test_low_memory():
@@ -1302,4 +1299,4 @@ def test_low_memory_warm_start():
     warm_fitness = est._program.fitness_
     warm_program = est._program.__str__()
     assert_almost_equal(cold_fitness, warm_fitness)
-    assert_equal(cold_program, warm_program)
+    assert(cold_program == warm_program)

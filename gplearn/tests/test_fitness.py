@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 from sklearn.datasets import load_boston, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
-from sklearn.utils._testing import assert_equal, assert_raises
+from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicRegressor, SymbolicClassifier
@@ -75,10 +75,11 @@ def test_custom_regressor_metrics():
                                init_depth=(2, 4))
     est_gp.fit(x_data, y_true)
     formula = est_gp.__str__()
-    assert_equal('add(mul(X0, X0), mul(X1, X1))', formula, True)
+    assert('add(mul(X0, X0), mul(X1, X1))' == formula)
 
     def neg_mean_absolute_error(y, y_pred, sample_weight):
-        return -1 * mean_absolute_error(y, y_pred, sample_weight)
+        return -1 * mean_absolute_error(y, y_pred,
+                                        sample_weight=sample_weight)
 
     customized_fitness = make_fitness(neg_mean_absolute_error,
                                       greater_is_better=True)
@@ -89,7 +90,7 @@ def test_custom_regressor_metrics():
                                  init_method='full', init_depth=(2, 4))
     c_est_gp.fit(x_data, y_true)
     c_formula = c_est_gp.__str__()
-    assert_equal('add(mul(X0, X0), mul(X1, X1))', c_formula, True)
+    assert('add(mul(X0, X0), mul(X1, X1))' == c_formula)
 
 
 def test_custom_transformer_metrics():
@@ -103,7 +104,7 @@ def test_custom_transformer_metrics():
         formula = program.__str__()
     expected_formula = ('sub(div(mul(X4, X12), div(X9, X9)), '
                         'sub(div(X11, X12), add(X12, X0)))')
-    assert_equal(expected_formula, formula, True)
+    assert(expected_formula == formula)
 
     def _neg_weighted_pearson(y, y_pred, w):
         """Calculate the weighted Pearson correlation coefficient."""
@@ -129,7 +130,7 @@ def test_custom_transformer_metrics():
     c_est_gp.fit(boston.data, boston.target)
     for program in c_est_gp:
         c_formula = program.__str__()
-    assert_equal(expected_formula, c_formula, True)
+    assert(expected_formula == c_formula)
 
 
 def test_custom_classifier_metrics():
@@ -148,7 +149,7 @@ def test_custom_classifier_metrics():
     est_gp.fit(x_data, y_true)
     formula = est_gp.__str__()
     expected_formula = 'sub(0.364, mul(add(X0, X0), add(X0, X0)))'
-    assert_equal(expected_formula, formula, True)
+    assert(expected_formula == formula)
 
     def negative_log_loss(y, y_pred, w):
         """Calculate the log loss."""
@@ -168,7 +169,7 @@ def test_custom_classifier_metrics():
                                   init_depth=(2, 4))
     c_est_gp.fit(x_data, y_true)
     c_formula = c_est_gp.__str__()
-    assert_equal(expected_formula, c_formula, True)
+    assert(expected_formula == c_formula)
 
 
 def test_parallel_custom_metric():
