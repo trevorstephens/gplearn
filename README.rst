@@ -16,8 +16,8 @@
 .. image:: https://coveralls.io/repos/trevorstephens/gplearn/badge.svg
     :target: https://coveralls.io/r/trevorstephens/gplearn
     :alt: Test Coverage
-.. image:: https://api.codacy.com/project/badge/Grade/19c43d7c42c44d15b1ec512656800d8d
-    :target: https://www.codacy.com/app/trevorstephens/gplearn
+.. image:: https://app.codacy.com/project/badge/Grade/02506317148e41a4b68a66e4c4e2b035
+    :target: https://www.codacy.com/gh/trevorstephens/gplearn/dashboard
     :alt: Code Health
 
 |
