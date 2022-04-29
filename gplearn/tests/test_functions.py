@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 from numpy import maximum
 from sklearn.datasets import load_boston, load_breast_cancer
-from sklearn.utils._testing import assert_equal, assert_raises
+from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.functions import _protected_sqrt, make_function
@@ -89,7 +89,7 @@ def test_function_in_program():
 
     formula = est._programs[0][906].__str__()
     expected_formula = 'sub(logical(X6, add(X11, 0.898), X10, X2), X5)'
-    assert_equal(expected_formula, formula, True)
+    assert(expected_formula == formula)
 
 
 def test_parallel_custom_function():
