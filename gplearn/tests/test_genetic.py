@@ -18,7 +18,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils._testing import assert_almost_equal
 from sklearn.utils._testing import assert_array_equal
 from sklearn.utils._testing import  assert_array_almost_equal
@@ -47,28 +46,6 @@ cancer = load_breast_cancer()
 perm = rng.permutation(cancer.target.size)
 cancer.data = cancer.data[perm]
 cancer.target = cancer.target[perm]
-
-
-def test_sklearn_regressor_checks():
-    """Run the sklearn estimator validation checks on SymbolicRegressor"""
-
-    check_estimator(SymbolicRegressor(population_size=1000,
-                                      generations=5))
-
-
-def test_sklearn_classifier_checks():
-    """Run the sklearn estimator validation checks on SymbolicClassifier"""
-
-    check_estimator(SymbolicClassifier(population_size=50,
-                                       generations=5))
-
-
-def test_sklearn_transformer_checks():
-    """Run the sklearn estimator validation checks on SymbolicTransformer"""
-
-    check_estimator(SymbolicTransformer(population_size=50,
-                                        hall_of_fame=10,
-                                        generations=5))
 
 
 def test_weighted_correlations():

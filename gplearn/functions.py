@@ -92,7 +92,7 @@ def make_function(function, name, arity, wrap=True):
     args = [np.ones(10) for _ in range(arity)]
     try:
         function(*args)
-    except ValueError:
+    except (ValueError, TypeError):
         raise ValueError('supplied function %s does not support arity of %d.'
                          % (name, arity))
     if not hasattr(function(*args), 'shape'):
