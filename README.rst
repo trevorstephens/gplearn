@@ -7,17 +7,14 @@
 .. image:: https://readthedocs.org/projects/gplearn/badge/?version=stable
     :target: http://gplearn.readthedocs.io/
     :alt: Documentation Status
-.. image:: https://travis-ci.org/trevorstephens/gplearn.svg?branch=master
-    :target: https://travis-ci.org/trevorstephens/gplearn
+.. image:: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml/badge.svg?branch=master
+    :target: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml
     :alt: Test Status
-.. image:: https://ci.appveyor.com/api/projects/status/wqq9xxaxuyyt7nya?svg=true
-    :target: https://ci.appveyor.com/project/trevorstephens/gplearn
-    :alt: Windows Test Status
 .. image:: https://coveralls.io/repos/trevorstephens/gplearn/badge.svg
     :target: https://coveralls.io/r/trevorstephens/gplearn
     :alt: Test Coverage
-.. image:: https://api.codacy.com/project/badge/Grade/19c43d7c42c44d15b1ec512656800d8d
-    :target: https://www.codacy.com/app/trevorstephens/gplearn
+.. image:: https://app.codacy.com/project/badge/Grade/02506317148e41a4b68a66e4c4e2b035
+    :target: https://www.codacy.com/gh/trevorstephens/gplearn/dashboard
     :alt: Code Health
 
 |
@@ -41,5 +38,5 @@ gplearn retains the familiar scikit-learn `fit/predict` API and works with the e
 
 gplearn supports regression through the SymbolicRegressor, binary classification with the SymbolicClassifier, as well as transformation for automated feature engineering with the SymbolicTransformer, which is designed to support regression problems, but should also work for binary classification.
 
-gplearn is built on scikit-learn and a fairly recent copy (0.22.1+) is required for `installation <http://gplearn.readthedocs.io/en/stable/installation.html>`_. If you come across any issues in running or installing the package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
+gplearn is built on scikit-learn and a fairly recent copy (1.0.2+) is required for `installation <http://gplearn.readthedocs.io/en/stable/installation.html>`_. If you come across any issues in running or installing the package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
 

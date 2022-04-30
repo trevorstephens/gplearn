@@ -1,0 +1,50 @@
+name: build
+
+on:
+  schedule:
+    # Every friday at 4am UTC
+    - cron:  '0 4 * * 5'
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        python_version:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+        include:
+          - os: windows-latest
+            python_version: '3.10'
+          - os: ubuntu-latest
+            python_version: '3.10'
+            coverage: true
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pytest pytest-cov coveralls
+        python -m pip install .
+    - name: Test with pytest
+      run: |
+        pytest -v --cov
+    - name: Coverage
+      if: ${{ matrix.coverage }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        coveralls --service=github
