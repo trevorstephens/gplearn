@@ -1,4 +1,4 @@
-name: builds
+name: build
 
 on:
   schedule:
@@ -38,9 +38,9 @@ jobs:
         python -m pip install .
     - name: Test with pytest
       run: |
-        pytest --cov
+        pytest -v --cov
     - name: Coverage
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        coveralls --service=github
+        coveralls -v --service=github

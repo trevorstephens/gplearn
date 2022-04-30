@@ -7,12 +7,9 @@
 .. image:: https://readthedocs.org/projects/gplearn/badge/?version=stable
     :target: http://gplearn.readthedocs.io/
     :alt: Documentation Status
-.. image:: https://travis-ci.org/trevorstephens/gplearn.svg?branch=master
-    :target: https://travis-ci.org/trevorstephens/gplearn
+.. image:: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml/badge.svg?branch=master
+    :target: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml
     :alt: Test Status
-.. image:: https://ci.appveyor.com/api/projects/status/wqq9xxaxuyyt7nya?svg=true
-    :target: https://ci.appveyor.com/project/trevorstephens/gplearn
-    :alt: Windows Test Status
 .. image:: https://coveralls.io/repos/trevorstephens/gplearn/badge.svg
     :target: https://coveralls.io/r/trevorstephens/gplearn
     :alt: Test Coverage
