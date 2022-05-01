@@ -160,7 +160,7 @@ include them in your programs.
     - 'cos' : cosine (radians), arity=1.
     - 'tan' : tangent (radians), arity=1.
 
-You should chose whether these functions are valid for your program.
+You should choose whether these functions are valid for your program.
 
 .. currentmodule:: gplearn
 
