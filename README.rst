@@ -14,7 +14,7 @@
     :target: https://coveralls.io/r/trevorstephens/gplearn
     :alt: Test Coverage
 .. image:: https://app.codacy.com/project/badge/Grade/02506317148e41a4b68a66e4c4e2b035
-    :target: https://www.codacy.com/gh/trevorstephens/gplearn/dashboard
+    :target: https://app.codacy.com/gh/trevorstephens/gplearn/dashboard
     :alt: Code Health
 
 |

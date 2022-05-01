@@ -39,9 +39,8 @@ Please ensure that:
 - Any bug fix has regression tests.
 - Comply with `PEP8 <https://pypi.python.org/pypi/pep8>`_.
 
-Currently ``gplearn`` uses `Travis CI <https://travis-ci.org/trevorstephens/gplearn>`_
-and `AppVeyor <https://ci.appveyor.com/project/trevorstephens/gplearn>`_
+Currently ``gplearn`` uses `GitHub workflows <https://github.com/trevorstephens/gplearn/actions/workflows/build.yml>`_
 for testing, `Coveralls <https://coveralls.io/github/trevorstephens/gplearn>`_
-for code coverage reports, and `Codacy <https://app.codacy.com/app/trevorstephens/gplearn>`_
+for code coverage reports, and `Codacy <https://app.codacy.com/gh/trevorstephens/gplearn/dashboard>`_
 for code quality checks. These applications should automatically run on your
 new pull request to give you guidance on any problems in the new code.
