@@ -7,12 +7,13 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 # License: BSD 3 clause
 
 import pickle
+import pytest
 import sys
 from io import StringIO
 
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
-from sklearn.datasets import load_boston, load_breast_cancer
+from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
@@ -20,8 +21,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._testing import assert_almost_equal
 from sklearn.utils._testing import assert_array_equal
-from sklearn.utils._testing import  assert_array_almost_equal
-from sklearn.utils._testing import assert_raises, assert_warns
+from sklearn.utils._testing import assert_array_almost_equal
+from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
@@ -33,12 +34,12 @@ from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2)
 from gplearn.functions import _Function
 
-# load the boston dataset and randomly permute it
+# load the diabetes dataset and randomly permute it
 rng = check_random_state(0)
-boston = load_boston()
-perm = rng.permutation(boston.target.size)
-boston.data = boston.data[perm]
-boston.target = boston.target[perm]
+diabetes = load_diabetes()
+perm = rng.permutation(diabetes.target.size)
+diabetes.data = diabetes.data[perm]
+diabetes.target = diabetes.target[perm]
 
 # load the breast cancer dataset and randomly permute it
 rng = check_random_state(0)
@@ -303,12 +304,12 @@ def test_invalid_feature_names():
 
         # Check invalid length feature_names
         est = Symbolic(feature_names=['foo', 'bar'])
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
         # Check invalid type feature_name
         feature_names = [str(n) for n in range(12)] + [0]
         est = Symbolic(feature_names=feature_names)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
 
 def test_execute():
@@ -434,71 +435,71 @@ def test_input_validation():
     for Symbolic in (SymbolicRegressor, SymbolicTransformer):
         # Check too much proba
         est = Symbolic(p_point_mutation=.5)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
         # Check invalid init_method
         est = Symbolic(init_method='ni')
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
         # Check invalid const_ranges
         est = Symbolic(const_range=2)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(const_range=[2, 2])
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(const_range=(2, 2, 2))
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(const_range='ni')
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         # And check acceptable, but strange, representations of const_range
         est = Symbolic(population_size=100, generations=1, const_range=(2, 2))
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
         est = Symbolic(population_size=100, generations=1, const_range=None)
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
         est = Symbolic(population_size=100, generations=1, const_range=(4, 2))
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
 
         # Check invalid init_depth
         est = Symbolic(init_depth=2)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(init_depth=2)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(init_depth=[2, 2])
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(init_depth=(2, 2, 2))
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(init_depth='ni')
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(init_depth=(4, 2))
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         # And check acceptable, but strange, representations of init_depth
         est = Symbolic(population_size=100, generations=1, init_depth=(2, 2))
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
 
     # Check hall_of_fame and n_components for transformer
     est = SymbolicTransformer(hall_of_fame=2000)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
     est = SymbolicTransformer(n_components=2000)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
     est = SymbolicTransformer(hall_of_fame=0)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
     est = SymbolicTransformer(n_components=0)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
     # Check regressor metrics
     for m in ['mean absolute error', 'mse', 'rmse', 'pearson', 'spearman']:
         est = SymbolicRegressor(population_size=100, generations=1, metric=m)
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
     # And check a fake one
     est = SymbolicRegressor(metric='the larch')
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
     # Check transformer metrics
     for m in ['pearson', 'spearman']:
         est = SymbolicTransformer(population_size=100, generations=1, metric=m)
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
     # And check the regressor metrics as well as a fake one
     for m in ['mean absolute error', 'mse', 'rmse', 'the larch']:
         est = SymbolicTransformer(metric=m)
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
 
 def test_input_validation_classifier():
@@ -577,7 +578,7 @@ def test_none_const_range():
     # Check with None as const_range
     est = SymbolicRegressor(population_size=100, generations=2,
                             const_range=None)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     float_count = 0
     for generation in est._programs:
         for program in generation:
@@ -590,7 +591,7 @@ def test_none_const_range():
 
     # Check with default const_range
     est = SymbolicRegressor(population_size=100, generations=2)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     float_count = 0
     for generation in est._programs:
         for program in generation:
@@ -606,17 +607,17 @@ def test_sample_weight_and_class_weight():
     """Check sample_weight param works"""
 
     # Check constant sample_weight has no effect
-    sample_weight = np.ones(boston.target.shape[0])
+    sample_weight = np.ones(diabetes.target.shape[0])
     est1 = SymbolicRegressor(population_size=100, generations=2,
                              random_state=0)
-    est1.fit(boston.data, boston.target)
+    est1.fit(diabetes.data, diabetes.target)
     est2 = SymbolicRegressor(population_size=100, generations=2,
                              random_state=0)
-    est2.fit(boston.data, boston.target, sample_weight=sample_weight)
+    est2.fit(diabetes.data, diabetes.target, sample_weight=sample_weight)
     # And again with a scaled sample_weight
     est3 = SymbolicRegressor(population_size=100, generations=2,
                              random_state=0)
-    est3.fit(boston.data, boston.target, sample_weight=sample_weight * 1.1)
+    est3.fit(diabetes.data, diabetes.target, sample_weight=sample_weight * 1.1)
 
     assert_almost_equal(est1._program.fitness_, est2._program.fitness_)
     assert_almost_equal(est1._program.fitness_, est3._program.fitness_)
@@ -648,13 +649,13 @@ def test_sample_weight_and_class_weight():
     assert_almost_equal(est1._program.fitness_, est5._program.fitness_)
 
     # And again for the transformer
-    sample_weight = np.ones(boston.target.shape[0])
+    sample_weight = np.ones(diabetes.target.shape[0])
     est1 = SymbolicTransformer(population_size=100, generations=2,
                                random_state=0)
-    est1 = est1.fit_transform(boston.data, boston.target)
+    est1 = est1.fit_transform(diabetes.data, diabetes.target)
     est2 = SymbolicTransformer(population_size=100, generations=2,
                                random_state=0)
-    est2 = est2.fit_transform(boston.data, boston.target,
+    est2 = est2.fit_transform(diabetes.data, diabetes.target,
                               sample_weight=sample_weight)
 
     assert_array_almost_equal(est1, est2)
@@ -665,17 +666,17 @@ def test_trigonometric():
 
     est1 = SymbolicRegressor(population_size=100, generations=2,
                              random_state=0)
-    est1.fit(boston.data[:400, :], boston.target[:400])
-    est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
-                               boston.target[400:])
+    est1.fit(diabetes.data[:400, :], diabetes.target[:400])
+    est1 = mean_absolute_error(est1.predict(diabetes.data[400:, :]),
+                               diabetes.target[400:])
 
     est2 = SymbolicRegressor(population_size=100, generations=2,
                              function_set=['add', 'sub', 'mul', 'div',
                                            'sin', 'cos', 'tan'],
                              random_state=0)
-    est2.fit(boston.data[:400, :], boston.target[:400])
-    est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
-                               boston.target[400:])
+    est2.fit(diabetes.data[:400, :], diabetes.target[:400])
+    est2 = mean_absolute_error(est2.predict(diabetes.data[400:, :]),
+                               diabetes.target[400:])
 
     assert(abs(est1 - est2) > 0.01)
 
@@ -685,15 +686,15 @@ def test_subsample():
 
     est1 = SymbolicRegressor(population_size=100, generations=2,
                              max_samples=1.0, random_state=0)
-    est1.fit(boston.data[:400, :], boston.target[:400])
-    est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
-                               boston.target[400:])
+    est1.fit(diabetes.data[:400, :], diabetes.target[:400])
+    est1 = mean_absolute_error(est1.predict(diabetes.data[400:, :]),
+                               diabetes.target[400:])
 
     est2 = SymbolicRegressor(population_size=100, generations=2,
-                             max_samples=0.5, random_state=0)
-    est2.fit(boston.data[:400, :], boston.target[:400])
-    est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
-                               boston.target[400:])
+                             max_samples=0.1, random_state=0)
+    est2.fit(diabetes.data[:400, :], diabetes.target[:400])
+    est2 = mean_absolute_error(est2.predict(diabetes.data[400:, :]),
+                               diabetes.target[400:])
 
     assert(abs(est1 - est2) > 0.01)
 
@@ -703,15 +704,15 @@ def test_parsimony_coefficient():
 
     est1 = SymbolicRegressor(population_size=100, generations=2,
                              parsimony_coefficient=0.001, random_state=0)
-    est1.fit(boston.data[:400, :], boston.target[:400])
-    est1 = mean_absolute_error(est1.predict(boston.data[400:, :]),
-                               boston.target[400:])
+    est1.fit(diabetes.data[:400, :], diabetes.target[:400])
+    est1 = mean_absolute_error(est1.predict(diabetes.data[400:, :]),
+                               diabetes.target[400:])
 
     est2 = SymbolicRegressor(population_size=100, generations=2,
                              parsimony_coefficient='auto', random_state=0)
-    est2.fit(boston.data[:400, :], boston.target[:400])
-    est2 = mean_absolute_error(est2.predict(boston.data[400:, :]),
-                               boston.target[400:])
+    est2.fit(diabetes.data[:400, :], diabetes.target[:400])
+    est2 = mean_absolute_error(est2.predict(diabetes.data[400:, :]),
+                               diabetes.target[400:])
 
     assert(abs(est1 - est2) > 0.01)
 
@@ -720,19 +721,14 @@ def test_early_stopping():
     """Check that early stopping works"""
 
     est1 = SymbolicRegressor(population_size=100, generations=2,
-                             stopping_criteria=10, random_state=0)
-    est1.fit(boston.data[:400, :], boston.target[:400])
+                             stopping_criteria=200, random_state=0)
+    est1.fit(diabetes.data[:400, :], diabetes.target[:400])
     assert(len(est1._programs) == 1)
 
     est1 = SymbolicTransformer(population_size=100, generations=2,
-                               stopping_criteria=0.5, random_state=0)
-    est1.fit(boston.data[:400, :], boston.target[:400])
-    assert(len(est1._programs) == 1)
-
-    est1 = SymbolicClassifier(population_size=100, generations=2,
-                              stopping_criteria=.9, random_state=0)
+                               stopping_criteria=100, random_state=0)
     est1.fit(cancer.data[:400, :], cancer.target[:400])
-    assert(len(est1._programs) == 1)
+    assert(len(est1._programs) == 2)
 
 
 def test_verbose_output():
@@ -742,7 +738,7 @@ def test_verbose_output():
     sys.stdout = StringIO()
     est = SymbolicRegressor(population_size=100, generations=10,
                             random_state=0, verbose=1)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
 
@@ -775,7 +771,7 @@ def test_verbose_with_oob():
     sys.stdout = StringIO()
     est = SymbolicRegressor(population_size=100, generations=10,
                             max_samples=0.9, random_state=0, verbose=1)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     verbose_output = sys.stdout
     sys.stdout = old_stdout
 
@@ -799,7 +795,7 @@ def test_more_verbose_output():
     sys.stderr = StringIO()
     est = SymbolicRegressor(population_size=100, generations=10,
                             random_state=0, verbose=2)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     verbose_output = sys.stdout
     joblib_output = sys.stderr
     sys.stdout = old_stdout
@@ -827,12 +823,12 @@ def test_parallel_train():
     # Check the regressor
     ests = [
         SymbolicRegressor(population_size=100, generations=4, n_jobs=n_jobs,
-                          random_state=0).fit(boston.data[:100, :],
-                                              boston.target[:100])
+                          random_state=0).fit(diabetes.data[:100, :],
+                                              diabetes.target[:100])
         for n_jobs in [1, 2, 3, 8, 16]
     ]
 
-    preds = [e.predict(boston.data[500:, :]) for e in ests]
+    preds = [e.predict(diabetes.data[400:, :]) for e in ests]
     for pred1, pred2 in zip(preds, preds[1:]):
         assert_array_almost_equal(pred1, pred2)
     lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
@@ -843,12 +839,12 @@ def test_parallel_train():
     ests = [
         SymbolicTransformer(population_size=100, hall_of_fame=50,
                             generations=4, n_jobs=n_jobs,
-                            random_state=0).fit(boston.data[:100, :],
-                                                boston.target[:100])
+                            random_state=0).fit(diabetes.data[:100, :],
+                                                diabetes.target[:100])
         for n_jobs in [1, 2, 3, 8, 16]
     ]
 
-    preds = [e.transform(boston.data[500:, :]) for e in ests]
+    preds = [e.transform(diabetes.data[400:, :]) for e in ests]
     for pred1, pred2 in zip(preds, preds[1:]):
         assert_array_almost_equal(pred1, pred2)
     lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
@@ -863,7 +859,7 @@ def test_parallel_train():
         for n_jobs in [1, 2, 3, 8, 16]
     ]
 
-    preds = [e.predict(cancer.data[500:, :]) for e in ests]
+    preds = [e.predict(cancer.data[400:, :]) for e in ests]
     for pred1, pred2 in zip(preds, preds[1:]):
         assert_array_almost_equal(pred1, pred2)
     lengths = np.array([[gp.length_ for gp in e._programs[-1]] for e in ests])
@@ -877,25 +873,25 @@ def test_pickle():
     # Check the regressor
     est = SymbolicRegressor(population_size=100, generations=2,
                             random_state=0)
-    est.fit(boston.data[:100, :], boston.target[:100])
-    score = est.score(boston.data[500:, :], boston.target[500:])
+    est.fit(diabetes.data[:100, :], diabetes.target[:100])
+    score = est.score(diabetes.data[400:, :], diabetes.target[400:])
     pickle_object = pickle.dumps(est)
 
     est2 = pickle.loads(pickle_object)
     assert(type(est2) == est.__class__)
-    score2 = est2.score(boston.data[500:, :], boston.target[500:])
+    score2 = est2.score(diabetes.data[400:, :], diabetes.target[400:])
     assert(score == score2)
 
     # Check the transformer
     est = SymbolicTransformer(population_size=100, generations=2,
                               random_state=0)
-    est.fit(boston.data[:100, :], boston.target[:100])
-    X_new = est.transform(boston.data[500:, :])
+    est.fit(diabetes.data[:100, :], diabetes.target[:100])
+    X_new = est.transform(diabetes.data[400:, :])
     pickle_object = pickle.dumps(est)
 
     est2 = pickle.loads(pickle_object)
     assert(type(est2) == est.__class__)
-    X_new2 = est2.transform(boston.data[500:, :])
+    X_new2 = est2.transform(diabetes.data[400:, :])
     assert_array_almost_equal(X_new, X_new2)
 
     # Check the classifier
@@ -934,7 +930,7 @@ def test_gridsearch():
                             tournament_size=5, random_state=0)
     grid = GridSearchCV(clf, parameters, cv=3,
                         scoring='neg_mean_absolute_error')
-    grid.fit(boston.data, boston.target)
+    grid.fit(diabetes.data, diabetes.target)
     expected = {'parsimony_coefficient': 0.001}
     assert(grid.best_params_ == expected)
 
@@ -945,11 +941,12 @@ def test_pipeline():
     # Check the regressor
     est = make_pipeline(StandardScaler(),
                         SymbolicRegressor(population_size=50,
-                                          generations=5,
+                                          generations=10,
                                           tournament_size=5,
                                           random_state=0))
-    est.fit(boston.data, boston.target)
-    assert_almost_equal(est.score(boston.data, boston.target), -4.00270923)
+    est.fit(diabetes.data, diabetes.target)
+    assert_almost_equal(est.score(diabetes.data, diabetes.target),
+                        -3.702070228336284, decimal=5)
 
     # Check the classifier
     est = make_pipeline(StandardScaler(),
@@ -967,8 +964,8 @@ def test_pipeline():
                                             tournament_size=5,
                                             random_state=0),
                         DecisionTreeRegressor())
-    est.fit(boston.data, boston.target)
-    assert_almost_equal(est.score(boston.data, boston.target), 1.0)
+    est.fit(diabetes.data, diabetes.target)
+    assert_almost_equal(est.score(diabetes.data, diabetes.target), 1.0)
 
 
 def test_transformer_iterable():
@@ -1132,20 +1129,20 @@ def test_validate_functions():
         # These should be fine
         est = Symbolic(population_size=100, generations=2, random_state=0,
                        function_set=(add2, sub2, mul2, div2))
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
         est = Symbolic(population_size=100, generations=2, random_state=0,
                        function_set=('add', 'sub', 'mul', div2))
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
 
         # These should fail
         est = Symbolic(generations=2, random_state=0,
                        function_set=('ni', 'sub', 'mul', div2))
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(generations=2, random_state=0,
                        function_set=(7, 'sub', 'mul', div2))
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
-        assert_raises(ValueError, est.fit, boston.data, boston.target)
+        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
     # Now for the classifier... These should be fine
     est = SymbolicClassifier(population_size=100, generations=2,
@@ -1203,11 +1200,11 @@ def test_run_details():
     """Check the run_details_ attribute works as expected."""
 
     est = SymbolicRegressor(population_size=100, generations=5, random_state=0)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     # Check generations are indexed as expected without warm_start
     assert(est.run_details_['generation'] == list(range(5)))
     est.set_params(generations=10, warm_start=True)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     # Check generations are indexed as expected with warm_start
     assert(est.run_details_['generation'] == list(range(10)))
     # Check all details have expected number of elements
@@ -1219,23 +1216,24 @@ def test_warm_start():
     """Check the warm_start functionality works as expected."""
 
     est = SymbolicRegressor(population_size=50, generations=10, random_state=0)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     cold_fitness = est._program.fitness_
     cold_program = est._program.__str__()
 
     # Check fitting fewer generations raises error
     est.set_params(generations=5, warm_start=True)
-    assert_raises(ValueError, est.fit, boston.data, boston.target)
+    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
 
     # Check fitting the same number of generations warns
     est.set_params(generations=10, warm_start=True)
-    assert_warns(UserWarning, est.fit, boston.data, boston.target)
+    with pytest.warns(UserWarning):
+        est.fit(diabetes.data, diabetes.target)
 
     # Check warm starts get the same result
     est = SymbolicRegressor(population_size=50, generations=5, random_state=0)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     est.set_params(generations=10, warm_start=True)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     warm_fitness = est._program.fitness_
     warm_program = est._program.__str__()
     assert_almost_equal(cold_fitness, warm_fitness)
@@ -1250,7 +1248,7 @@ def test_low_memory():
                             random_state=56,
                             low_memory=True)
     # Check there are no parents
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     assert(est._programs[-2] is None)
 
 
@@ -1261,7 +1259,7 @@ def test_low_memory_warm_start():
                             generations=20,
                             random_state=415,
                             low_memory=True)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     cold_fitness = est._program.fitness_
     cold_program = est._program.__str__()
 
@@ -1270,9 +1268,9 @@ def test_low_memory_warm_start():
                             generations=10,
                             random_state=415,
                             low_memory=True)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     est.set_params(generations=20, warm_start=True)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     warm_fitness = est._program.fitness_
     warm_program = est._program.__str__()
     assert_almost_equal(cold_fitness, warm_fitness)

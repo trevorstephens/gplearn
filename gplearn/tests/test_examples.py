@@ -6,7 +6,7 @@
 
 import numpy as np
 
-from sklearn.datasets import load_boston, load_breast_cancer
+from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.linear_model import Ridge
 from sklearn.metrics import roc_auc_score
@@ -90,15 +90,16 @@ def test_symbolic_transformer():
     """Check that SymbolicTransformer example works"""
 
     rng = check_random_state(0)
-    boston = load_boston()
-    perm = rng.permutation(boston.target.size)
-    boston.data = boston.data[perm]
-    boston.target = boston.target[perm]
+    diabetes = load_diabetes()
+    perm = rng.permutation(diabetes.target.size)
+    diabetes.data = diabetes.data[perm]
+    diabetes.target = diabetes.target[perm]
 
     est = Ridge()
-    est.fit(boston.data[:300, :], boston.target[:300])
-    assert_almost_equal(est.score(boston.data[300:, :], boston.target[300:]),
-                        0.759319453049884)
+    est.fit(diabetes.data[:300, :], diabetes.target[:300])
+    assert_almost_equal(est.score(diabetes.data[300:, :],
+                                  diabetes.target[300:]),
+                        desired=0.43406, decimal=5)
 
     function_set = ['add', 'sub', 'mul', 'div', 'sqrt', 'log',
                     'abs', 'neg', 'inv', 'max', 'min']
@@ -108,25 +109,26 @@ def test_symbolic_transformer():
                              parsimony_coefficient=0.0005,
                              max_samples=0.9,
                              random_state=0)
-    gp.fit(boston.data[:300, :], boston.target[:300])
+    gp.fit(diabetes.data[:300, :], diabetes.target[:300])
 
-    gp_features = gp.transform(boston.data)
-    new_boston = np.hstack((boston.data, gp_features))
+    gp_features = gp.transform(diabetes.data)
+    new_diabetes = np.hstack((diabetes.data, gp_features))
 
     est = Ridge()
-    est.fit(new_boston[:300, :], boston.target[:300])
-    assert_almost_equal(est.score(new_boston[300:, :], boston.target[300:]),
-                        0.8418372105182055)
+    est.fit(new_diabetes[:300, :], diabetes.target[:300])
+    assert_almost_equal(est.score(new_diabetes[300:, :],
+                                  diabetes.target[300:]),
+                        desired=0.53368, decimal=5)
 
 
 def test_custom_functions():
     """Test the custom programs example works"""
 
     rng = check_random_state(0)
-    boston = load_boston()
-    perm = rng.permutation(boston.target.size)
-    boston.data = boston.data[perm]
-    boston.target = boston.target[perm]
+    diabetes = load_diabetes()
+    perm = rng.permutation(diabetes.target.size)
+    diabetes.data = diabetes.data[perm]
+    diabetes.target = diabetes.target[perm]
 
     def logic(x1, x2, x3, x4):
         return np.where(x1 > x2, x3, x4)
@@ -142,21 +144,25 @@ def test_custom_functions():
                              parsimony_coefficient=0.0005,
                              max_samples=0.9, random_state=0)
 
-    gp.fit(boston.data[:300, :], boston.target[:300])
+    gp.fit(diabetes.data[:300, :], diabetes.target[:300])
 
-    expected = 'sub(logical(X6, add(X11, 0.898), X10, X2), X5)'
-    assert(gp._programs[0][906].__str__() == expected)
+    expected = ('add(X3, logical(div(X5, sub(X5, X5)), '
+                'add(X9, -0.621), X8, X4))')
+    assert(gp._programs[0][3].__str__() == expected)
 
-    dot_data = gp._programs[0][906].export_graphviz()
-    expected = ('digraph program {\nnode [style=filled]\n0 [label="sub", '
-                'fillcolor="#136ed4"] ;\n1 [label="logical", '
-                'fillcolor="#136ed4"] ;\n2 [label="X6", fillcolor="#60a6f6"] '
-                ';\n3 [label="add", fillcolor="#136ed4"] ;\n4 [label="X11", '
-                'fillcolor="#60a6f6"] ;\n5 [label="0.898", '
-                'fillcolor="#60a6f6"] ;\n3 -> 5 ;\n3 -> 4 ;\n6 [label="X10", '
-                'fillcolor="#60a6f6"] ;\n7 [label="X2", fillcolor="#60a6f6"] '
-                ';\n1 -> 7 ;\n1 -> 6 ;\n1 -> 3 ;\n1 -> 2 ;\n8 [label="X5", '
-                'fillcolor="#60a6f6"] ;\n0 -> 8 ;\n0 -> 1 ;\n}')
+    dot_data = gp._programs[0][3].export_graphviz()
+    expected = ('digraph program {\nnode [style=filled]\n0 [label="add", '
+                'fillcolor="#136ed4"] ;\n1 [label="X3", fillcolor="#60a6f6"] ;'
+                '\n2 [label="logical", fillcolor="#136ed4"] ;\n3 [label="div",'
+                ' fillcolor="#136ed4"] ;\n4 [label="X5", fillcolor="#60a6f6"] '
+                ';\n5 [label="sub", fillcolor="#136ed4"] ;\n6 [label="X5", '
+                'fillcolor="#60a6f6"] ;\n7 [label="X5", fillcolor="#60a6f6"] '
+                ';\n5 -> 7 ;\n5 -> 6 ;\n3 -> 5 ;\n3 -> 4 ;\n8 [label="add", '
+                'fillcolor="#136ed4"] ;\n9 [label="X9", fillcolor="#60a6f6"] '
+                ';\n10 [label="-0.621", fillcolor="#60a6f6"] ;\n8 -> 10 ;\n8 '
+                '-> 9 ;\n11 [label="X8", fillcolor="#60a6f6"] ;\n12 '
+                '[label="X4", fillcolor="#60a6f6"] ;\n2 -> 12 ;\n2 -> 11 ;\n2 '
+                '-> 8 ;\n2 -> 3 ;\n0 -> 2 ;\n0 -> 1 ;\n}')
     assert(dot_data == expected)
 
 

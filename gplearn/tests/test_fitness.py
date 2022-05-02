@@ -7,7 +7,7 @@
 import pickle
 
 import numpy as np
-from sklearn.datasets import load_boston, load_breast_cancer
+from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
 from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
@@ -22,11 +22,11 @@ perm = check_random_state(0).permutation(cancer.target.size)
 cancer.data = cancer.data[perm]
 cancer.target = cancer.target[perm]
 
-# load the boston dataset and randomly permute it
-boston = load_boston()
-perm = check_random_state(0).permutation(boston.target.size)
-boston.data = boston.data[perm]
-boston.target = boston.target[perm]
+# load the diabetes dataset and randomly permute it
+diabetes = load_diabetes()
+perm = check_random_state(0).permutation(diabetes.target.size)
+diabetes.data = diabetes.data[perm]
+diabetes.target = diabetes.target[perm]
 
 
 def test_validate_fitness():
@@ -75,7 +75,7 @@ def test_validate_fitness():
     for Symbolic in (SymbolicRegressor, SymbolicTransformer):
         # These should be fine
         est = Symbolic(generations=2, random_state=0, metric=custom_metric)
-        est.fit(boston.data, boston.target)
+        est.fit(diabetes.data, diabetes.target)
 
 
 def test_custom_regressor_metrics():
@@ -114,11 +114,10 @@ def test_custom_transformer_metrics():
     est_gp = SymbolicTransformer(generations=2, population_size=100,
                                  hall_of_fame=10, n_components=1,
                                  metric='pearson', random_state=415)
-    est_gp.fit(boston.data, boston.target)
+    est_gp.fit(diabetes.data, diabetes.target)
     for program in est_gp:
         formula = program.__str__()
-    expected_formula = ('sub(div(mul(X4, X12), div(X9, X9)), '
-                        'sub(div(X11, X12), add(X12, X0)))')
+    expected_formula = 'mul(-0.111, add(add(X9, sub(X2, 0.606)), X3))'
     assert(expected_formula == formula)
 
     def _neg_weighted_pearson(y, y_pred, w):
@@ -142,7 +141,7 @@ def test_custom_transformer_metrics():
                                    stopping_criteria=-1,
                                    metric=neg_weighted_pearson,
                                    random_state=415)
-    c_est_gp.fit(boston.data, boston.target)
+    c_est_gp.fit(diabetes.data, diabetes.target)
     for program in c_est_gp:
         c_formula = program.__str__()
     assert(expected_formula == c_formula)
@@ -200,7 +199,7 @@ def test_parallel_custom_metric():
                             metric=custom_metric,
                             random_state=0,
                             n_jobs=2)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     _ = pickle.dumps(est)
 
     # Unwrapped functions should fail
@@ -211,12 +210,12 @@ def test_parallel_custom_metric():
                             metric=custom_metric,
                             random_state=0,
                             n_jobs=2)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     assert_raises(AttributeError, pickle.dumps, est)
 
     # Single threaded will also fail in non-interactive sessions
     est = SymbolicRegressor(generations=2,
                             metric=custom_metric,
                             random_state=0)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     assert_raises(AttributeError, pickle.dumps, est)
