@@ -946,7 +946,7 @@ def test_pipeline():
                                           random_state=0))
     est.fit(diabetes.data, diabetes.target)
     assert_almost_equal(est.score(diabetes.data, diabetes.target),
-                        -3.702070228336284)
+                        -3.702070228336284, decimal=5)
 
     # Check the classifier
     est = make_pipeline(StandardScaler(),
