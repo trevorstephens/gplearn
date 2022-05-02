@@ -16,7 +16,7 @@ from gplearn.functions import _protected_sqrt, make_function
 from gplearn.genetic import SymbolicRegressor, SymbolicTransformer
 from gplearn.genetic import SymbolicClassifier
 
-# load the boston dataset and randomly permute it
+# load the diabetes dataset and randomly permute it
 rng = check_random_state(0)
 diabetes = load_diabetes()
 perm = rng.permutation(diabetes.target.size)
