@@ -941,11 +941,12 @@ def test_pipeline():
     # Check the regressor
     est = make_pipeline(StandardScaler(),
                         SymbolicRegressor(population_size=50,
-                                          generations=5,
+                                          generations=10,
                                           tournament_size=5,
                                           random_state=0))
     est.fit(diabetes.data, diabetes.target)
-    assert_almost_equal(est.score(diabetes.data, diabetes.target), -3.98801299)
+    assert_almost_equal(est.score(diabetes.data, diabetes.target),
+                        -3.702070228336284)
 
     # Check the classifier
     est = make_pipeline(StandardScaler(),
