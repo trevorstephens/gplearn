@@ -95,7 +95,7 @@ def test_symbolic_transformer():
     diabetes.data = diabetes.data[perm]
     diabetes.target = diabetes.target[perm]
 
-    est = Ridge()
+    est = Ridge(random_state=589)
     est.fit(diabetes.data[:300, :], diabetes.target[:300])
     assert_almost_equal(est.score(diabetes.data[300:, :],
                                   diabetes.target[300:]),
@@ -114,7 +114,7 @@ def test_symbolic_transformer():
     gp_features = gp.transform(diabetes.data)
     new_diabetes = np.hstack((diabetes.data, gp_features))
 
-    est = Ridge()
+    est = Ridge(random_state=589)
     est.fit(new_diabetes[:300, :], diabetes.target[:300])
     assert_almost_equal(est.score(new_diabetes[300:, :],
                                   diabetes.target[300:]),

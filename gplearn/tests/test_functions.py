@@ -8,7 +8,7 @@ import pickle
 
 import numpy as np
 from numpy import maximum
-from sklearn.datasets import load_boston, load_breast_cancer
+from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
@@ -18,10 +18,10 @@ from gplearn.genetic import SymbolicClassifier
 
 # load the boston dataset and randomly permute it
 rng = check_random_state(0)
-boston = load_boston()
-perm = rng.permutation(boston.target.size)
-boston.data = boston.data[perm]
-boston.target = boston.target[perm]
+diabetes = load_diabetes()
+perm = rng.permutation(diabetes.target.size)
+diabetes.data = diabetes.data[perm]
+diabetes.target = diabetes.target[perm]
 
 # load the breast cancer dataset and randomly permute it
 cancer = load_breast_cancer()
@@ -126,10 +126,11 @@ def test_function_in_program():
                               function_set=function_set,
                               parsimony_coefficient=0.0005,
                               max_samples=0.9, random_state=0)
-    est.fit(boston.data[:300, :], boston.target[:300])
+    est.fit(diabetes.data[:300, :], diabetes.target[:300])
 
-    formula = est._programs[0][906].__str__()
-    expected_formula = 'sub(logical(X6, add(X11, 0.898), X10, X2), X5)'
+    formula = est._programs[0][3].__str__()
+    expected_formula = ('add(X3, logical(div(X5, sub(X5, X5)), '
+                        'add(X9, -0.621), X8, X4))')
     assert(expected_formula == formula)
 
 
@@ -146,7 +147,7 @@ def test_parallel_custom_function():
                             function_set=['add', 'sub', 'mul', 'div', logical],
                             random_state=0,
                             n_jobs=2)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     _ = pickle.dumps(est)
 
     # Unwrapped functions should fail
@@ -158,14 +159,14 @@ def test_parallel_custom_function():
                             function_set=['add', 'sub', 'mul', 'div', logical],
                             random_state=0,
                             n_jobs=2)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     assert_raises(AttributeError, pickle.dumps, est)
 
     # Single threaded will also fail in non-interactive sessions
     est = SymbolicRegressor(generations=2,
                             function_set=['add', 'sub', 'mul', 'div', logical],
                             random_state=0)
-    est.fit(boston.data, boston.target)
+    est.fit(diabetes.data, diabetes.target)
     assert_raises(AttributeError, pickle.dumps, est)
 
 
