@@ -165,6 +165,7 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
 
     @abstractmethod
     def __init__(self,
+                 *,
                  population_size=1000,
                  hall_of_fame=None,
                  n_components=None,
@@ -786,6 +787,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
     """
 
     def __init__(self,
+                 *,
                  population_size=1000,
                  generations=20,
                  tournament_size=20,
@@ -1073,6 +1075,7 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
     """
 
     def __init__(self,
+                 *,
                  population_size=1000,
                  generations=20,
                  tournament_size=20,
@@ -1384,6 +1387,7 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
     """
 
     def __init__(self,
+                 *,
                  population_size=1000,
                  hall_of_fame=100,
                  n_components=10,

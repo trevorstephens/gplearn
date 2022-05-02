@@ -35,20 +35,35 @@ def test_validate_fitness():
     # Check arg count checks
     _ = make_fitness(function=_mean_square_error, greater_is_better=True)
     # non-bool greater_is_better
-    assert_raises(ValueError, make_fitness, _mean_square_error, 'Sure')
-    assert_raises(ValueError, make_fitness, _mean_square_error, 1)
+    assert_raises(ValueError,
+                  make_fitness,
+                  function=_mean_square_error,
+                  greater_is_better='Sure')
+    assert_raises(ValueError,
+                  make_fitness,
+                  function=_mean_square_error,
+                  greater_is_better=1)
     # non-bool wrap
-    assert_raises(ValueError, make_fitness, _mean_square_error, True, 'f')
+    assert_raises(ValueError,
+                  make_fitness,
+                  function=_mean_square_error,
+                  greater_is_better=True, wrap='f')
 
     # Check arg count tests
     def bad_fun1(x1, x2):
         return 1.0
-    assert_raises(ValueError, make_fitness, bad_fun1, True)
+    assert_raises(ValueError,
+                  make_fitness,
+                  function=bad_fun1,
+                  greater_is_better=True)
 
     # Check return type tests
     def bad_fun2(x1, x2, w):
         return 'ni'
-    assert_raises(ValueError, make_fitness, bad_fun2, True)
+    assert_raises(ValueError,
+                  make_fitness,
+                  function=bad_fun2,
+                  greater_is_better=True)
 
     def _custom_metric(y, y_pred, w):
         """Calculate the root mean square error."""
@@ -81,7 +96,7 @@ def test_custom_regressor_metrics():
         return -1 * mean_absolute_error(y, y_pred,
                                         sample_weight=sample_weight)
 
-    customized_fitness = make_fitness(neg_mean_absolute_error,
+    customized_fitness = make_fitness(function=neg_mean_absolute_error,
                                       greater_is_better=True)
 
     c_est_gp = SymbolicRegressor(metric=customized_fitness,
@@ -158,7 +173,7 @@ def test_custom_classifier_metrics():
         score = y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred)
         return np.average(score, weights=w)
 
-    customized_fitness = make_fitness(negative_log_loss,
+    customized_fitness = make_fitness(function=negative_log_loss,
                                       greater_is_better=True)
 
     c_est_gp = SymbolicClassifier(metric=customized_fitness,

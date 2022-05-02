@@ -49,7 +49,7 @@ class _Fitness(object):
         return self.function(*args)
 
 
-def make_fitness(function, greater_is_better, wrap=True):
+def make_fitness(*, function, greater_is_better, wrap=True):
     """Make a fitness measure, a metric scoring the quality of a program's fit.
 
     This factory function creates a fitness measure object which measures the

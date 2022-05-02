@@ -7,11 +7,13 @@ Release History
 Version 0.4.2
 -------------
 
-- Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
-  allowing users to easily compensate for imbalanced datasets.
+- Require keyword only arguments for all public methods and functions to align
+  with ``scikit-learn`` SLEP009.
 - Update test suite to ensure compatibility with ``scikit-learn``.
   ``scikit-learn`` 1.0.2 or newer will be required due to recent changes in
   their testing suite.
+- Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
+  allowing users to easily compensate for imbalanced datasets.
 
 Version 0.4.1 - 1 Jun 2019
 ---------------------------

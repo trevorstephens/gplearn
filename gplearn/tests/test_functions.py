@@ -36,38 +36,79 @@ def test_validate_function():
     # Check arity tests
     _ = make_function(function=_protected_sqrt, name='sqrt', arity=1)
     # non-integer arity
-    assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', '1')
-    assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 1.0)
+    assert_raises(ValueError,
+                  make_function,
+                  function=_protected_sqrt,
+                  name='sqrt',
+                  arity='1')
+    assert_raises(ValueError,
+                  make_function,
+                  function=_protected_sqrt,
+                  name='sqrt',
+                  arity=1.0)
     # non-bool wrap
-    assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 1, 'f')
+    assert_raises(ValueError,
+                  make_function,
+                  function=_protected_sqrt,
+                  name='sqrt',
+                  arity=1,
+                  wrap='f')
     # non-matching arity
-    assert_raises(ValueError, make_function, _protected_sqrt, 'sqrt', 2)
-    assert_raises(ValueError, make_function, maximum, 'max', 1)
+    assert_raises(ValueError,
+                  make_function,
+                  function=_protected_sqrt,
+                  name='sqrt',
+                  arity=2)
+    assert_raises(ValueError,
+                  make_function,
+                  function=maximum,
+                  name='max',
+                  arity=1)
 
     # Check name test
-    assert_raises(ValueError, make_function, _protected_sqrt, 2, 1)
+    assert_raises(ValueError,
+                  make_function,
+                  function=_protected_sqrt,
+                  name=2,
+                  arity=1)
 
     # Check return type tests
     def bad_fun1(x1, x2):
         return 'ni'
-    assert_raises(ValueError, make_function, bad_fun1, 'ni', 2)
+    assert_raises(ValueError,
+                  make_function,
+                  function=bad_fun1,
+                  name='ni',
+                  arity=2)
 
     # Check return shape tests
     def bad_fun2(x1):
         return np.ones((2, 1))
-    assert_raises(ValueError, make_function, bad_fun2, 'ni', 1)
+    assert_raises(ValueError,
+                  make_function,
+                  function=bad_fun2,
+                  name='ni',
+                  arity=1)
 
     # Check closure for negatives test
     def _unprotected_sqrt(x1):
         with np.errstate(divide='ignore', invalid='ignore'):
             return np.sqrt(x1)
-    assert_raises(ValueError, make_function, _unprotected_sqrt, 'sqrt', 1)
+    assert_raises(ValueError,
+                  make_function,
+                  function=_unprotected_sqrt,
+                  name='sqrt',
+                  arity=1)
 
     # Check closure for zeros test
     def _unprotected_div(x1, x2):
         with np.errstate(divide='ignore', invalid='ignore'):
             return np.divide(x1, x2)
-    assert_raises(ValueError, make_function, _unprotected_div, 'div', 2)
+    assert_raises(ValueError,
+                  make_function,
+                  function=_unprotected_div,
+                  name='div',
+                  arity=2)
 
 
 def test_function_in_program():

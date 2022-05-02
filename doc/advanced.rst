@@ -325,7 +325,8 @@ depending on your specific use case.
 We then create a fitness measure for use in our evolution by using the
 :func:`fitness.make_fitness()` factory function as follows::
 
-    mape = make_fitness(_mape, greater_is_better=False)
+    mape = make_fitness(function=_mape,
+                        greater_is_better=False)
 
 This fitness measure can now be used to evolve a program that optimizes for
 your specific needs by passing the new fitness object to the ``metric`` parameter

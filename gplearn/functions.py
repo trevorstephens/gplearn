@@ -46,7 +46,7 @@ class _Function(object):
         return self.function(*args)
 
 
-def make_function(function, name, arity, wrap=True):
+def make_function(*, function, name, arity, wrap=True):
     """Make a function node, a representation of a mathematical relationship.
 
     This factory function creates a function node, one of the core nodes in any
