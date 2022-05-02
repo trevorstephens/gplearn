@@ -99,7 +99,7 @@ def test_symbolic_transformer():
     est.fit(diabetes.data[:300, :], diabetes.target[:300])
     assert_almost_equal(est.score(diabetes.data[300:, :],
                                   diabetes.target[300:]),
-                        0.434057)
+                        desired=0.43405742105789413, decimal=6)
 
     function_set = ['add', 'sub', 'mul', 'div', 'sqrt', 'log',
                     'abs', 'neg', 'inv', 'max', 'min']
@@ -118,7 +118,7 @@ def test_symbolic_transformer():
     est.fit(new_diabetes[:300, :], diabetes.target[:300])
     assert_almost_equal(est.score(new_diabetes[300:, :],
                                   diabetes.target[300:]),
-                        0.533679)
+                        desired=0.5336788517320445, decimal=6)
 
 
 def test_custom_functions():
