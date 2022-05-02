@@ -1,7 +1,6 @@
 [run]
 branch = True
 source = gplearn
-include = */gplearn/*
 omit =
     */gplearn/tests/*
     */gplearn/doc/*

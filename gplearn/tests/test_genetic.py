@@ -7,6 +7,7 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 # License: BSD 3 clause
 
 import pickle
+import pytest
 import sys
 from io import StringIO
 
@@ -20,8 +21,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._testing import assert_almost_equal
 from sklearn.utils._testing import assert_array_equal
-from sklearn.utils._testing import  assert_array_almost_equal
-from sklearn.utils._testing import assert_raises, assert_warns
+from sklearn.utils._testing import assert_array_almost_equal
+from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
@@ -1229,7 +1230,8 @@ def test_warm_start():
 
     # Check fitting the same number of generations warns
     est.set_params(generations=10, warm_start=True)
-    assert_warns(UserWarning, est.fit, boston.data, boston.target)
+    with pytest.warns(UserWarning):
+        est.fit(boston.data, boston.target)
 
     # Check warm starts get the same result
     est = SymbolicRegressor(population_size=50, generations=5, random_state=0)
