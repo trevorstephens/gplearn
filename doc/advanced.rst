@@ -268,7 +268,7 @@ a string.**
 After fitting, you will see some of your programs will have used your own
 customized functions, for example::
 
-    sub(logical(X6, add(X11, 0.898), X10, X2), X5)
+    add(X3, logical(div(X5, sub(X5, X5)), add(X9, -0.621), X8, X4))
 
 .. image:: images/ex3_fig1.png
     :align: center

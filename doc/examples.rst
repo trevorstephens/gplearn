@@ -23,7 +23,7 @@ Let's create some synthetic data based on the relationship
     x0, x1 = np.meshgrid(x0, x1)
     y_truth = x0**2 - x1**2 + x1 - 1
 
-    ax = plt.figure().gca(projection='3d')
+    ax = plt.figure().add_subplot(projection='3d')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     surf = ax.plot_surface(x0, x1, y_truth, rstride=1, cstride=1,
@@ -181,23 +181,23 @@ Symbolic Transformer
 This example demonstrates using the :class:`SymbolicTransformer` to generate
 new non-linear features automatically.
 
-Let's load up the Boston housing dataset and randomly shuffle it::
+Let's load up the Diabetes housing dataset and randomly shuffle it::
 
     rng = check_random_state(0)
-    boston = load_boston()
-    perm = rng.permutation(boston.target.size)
-    boston.data = boston.data[perm]
-    boston.target = boston.target[perm]
+    diabetes = load_diabetes()
+    perm = rng.permutation(diabetes.target.size)
+    diabetes.data = diabetes.data[perm]
+    diabetes.target = diabetes.target[perm]
 
 We'll use Ridge Regression for this example and train our regressor on the
 first 300 samples, and see how it performs on the unseen final 200 samples. The
 benchmark to beat is simply Ridge running on the dataset as-is::
 
     est = Ridge()
-    est.fit(boston.data[:300, :], boston.target[:300])
-    print(est.score(boston.data[300:, :], boston.target[300:]))
+    est.fit(diabetes.data[:300, :], diabetes.target[:300])
+    print(est.score(diabetes.data[300:, :], diabetes.target[300:]))
     
-    0.759145222183
+    0.43405742105789413
 
 So now we'll train our transformer on the same first 300 samples to generate
 some new features. Let's use a large population of 2000 individuals over 20
@@ -217,23 +217,23 @@ estimator, the Spearman correlation might be interesting to try out too::
                              parsimony_coefficient=0.0005,
                              max_samples=0.9, verbose=1,
                              random_state=0, n_jobs=3)
-    gp.fit(boston.data[:300, :], boston.target[:300])
+    gp.fit(diabetes.data[:300, :], diabetes.target[:300])
 
-We will then apply our trained transformer to the entire Boston dataset
+We will then apply our trained transformer to the entire Diabetes dataset
 (remember, it still hasn't seen the final 200 samples) and concatenate this to
 the original data::
 
-    gp_features = gp.transform(boston.data)
-    new_boston = np.hstack((boston.data, gp_features))
+    gp_features = gp.transform(diabetes.data)
+    new_diabetes = np.hstack((diabetes.data, gp_features))
 
 Now we train the Ridge regressor on the first 300 samples of the transformed
 dataset and see how it performs on the final 200 again::
 
     est = Ridge()
-    est.fit(new_boston[:300, :], boston.target[:300])
-    print(est.score(new_boston[300:, :], boston.target[300:]))
+    est.fit(new_diabetes[:300, :], diabetes.target[:300])
+    print(est.score(new_diabetes[300:, :], diabetes.target[300:]))
     
-    0.841750404385
+    0.5336788517320445
 
 Great! We have improved the :math:`R^{2}` score by a significant margin. It
 looks like the linear model was able to take advantage of some new non-linear
