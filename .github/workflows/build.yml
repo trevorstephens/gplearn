@@ -35,13 +35,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         python -m pip install pytest pytest-cov coveralls
         python -m pip install pandas
         if [[ ${{ matrix.python_version }} == '3.8']]; then
-          python -m pip install sklearn==1.0.2
-          python -m pip install joblib==1.0.0
+          python -m pip install sklearn==1.0.2;
+          python -m pip install joblib==1.0.0;
         fi
         python -m pip install .
     - name: Describe  Python environment
@@ -52,11 +53,9 @@ jobs:
         python -c "import numpy; print('numpy %s' % numpy.__version__)"
         python -c "import scipy; print('scipy %s' % scipy.__version__)"
     - name: Test with pytest
-      run: |
-        pytest -v --cov
+      run: pytest -v --cov
     - name: Coverage
       if: ${{ matrix.coverage }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        coveralls --service=github
+      run: coveralls --service=github
