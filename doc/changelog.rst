@@ -7,19 +7,22 @@ Release History
 Version 0.4.2
 -------------
 
-- Require keyword only arguments for all public methods and functions to align
+- Require keyword only arguments for all public methods and functions to comply
   with ``scikit-learn`` SLEP009.
+- Replace ``n_features_`` attribute with ``n_features_in_`` to comply with
+  ``scikit-learn`` SLEP010.
 - Update test suite to ensure compatibility with ``scikit-learn``.
   ``scikit-learn`` 1.0.2 or newer will be required due to recent changes in
-  their testing suite.
-- Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
+  their testing requirements. Also requiring ``joblib`` to 1.0.0 or newer to
+  align with next release of scikit-learn.
+- Added the `class_weight` parameter to :class:`genetic.SymbolicClassifier`
   allowing users to easily compensate for imbalanced datasets.
 
 Version 0.4.1 - 1 Jun 2019
 ---------------------------
 
 - Fixed a bug with multi-processing and custom functions, allowing pickling of
-  models with custom functions, fitness metrics or classifier transformaers.
+  models with custom functions, fitness metrics or classifier transformers.
   ``joblib`` 0.13.0 or newer required in order to take advantage of this
   release in order to wrap functions for pickling saved models.
 

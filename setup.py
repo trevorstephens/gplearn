@@ -35,4 +35,4 @@ setup(name='gplearn',
       zip_safe=False,
       package_data={'': ['LICENSE']},
       install_requires=['scikit-learn>=1.0.2',
-                        'joblib>=0.13.0'])
+                        'joblib>=1.0.0'])
