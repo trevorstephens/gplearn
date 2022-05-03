@@ -7,8 +7,10 @@ Release History
 Version 0.4.2
 -------------
 
-- Require keyword only arguments for all public methods and functions to align
+- Require keyword only arguments for all public methods and functions to comply
   with ``scikit-learn`` SLEP009.
+- Replace ``n_features_`` attribute with ``n_features_in_`` to comply with
+  ``scikit-learn`` SLEP010.
 - Update test suite to ensure compatibility with ``scikit-learn``.
   ``scikit-learn`` 1.0.2 or newer will be required due to recent changes in
   their testing requirements. Also requiring ``joblib`` to 1.0.0 or newer to
