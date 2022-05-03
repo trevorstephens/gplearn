@@ -34,18 +34,17 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      shell: bash
+    - name: Install global dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install pytest pytest-cov coveralls
         python -m pip install pandas
-        if [[ ${{ matrix.python_version }} == '3.8']]; then
-          python -m pip install sklearn==1.0.2;
-          python -m pip install joblib==1.0.0;
-        fi
-        python -m pip install .
-    - name: Describe  Python environment
+    - name: Install minimal dependencies
+      if: ${{ matrix.python_version }} == '3.8'
+      run: python -m pip install sklearn==1.0.2 joblib==1.0.0
+    - name: Install gplearn
+      run: python -m pip install .
+    - name: Describe Python environment
       run: |
         python --version
         python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
