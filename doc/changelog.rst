@@ -4,8 +4,8 @@
 Release History
 ===============
 
-Version 0.4.2
--------------
+Version 0.4.2 - 3 May 2022
+--------------------------
 
 - Require keyword only arguments for all public methods and functions to comply
   with ``scikit-learn`` SLEP009.
