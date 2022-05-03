@@ -11,7 +11,8 @@ Version 0.4.2
   with ``scikit-learn`` SLEP009.
 - Update test suite to ensure compatibility with ``scikit-learn``.
   ``scikit-learn`` 1.0.2 or newer will be required due to recent changes in
-  their testing suite.
+  their testing suite. Also moving min ``joblib`` to 1.0.0 to align with next
+  release of scikit-learn and simplify future bug testing.
 - Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
   allowing users to easily compensate for imbalanced datasets.
 
@@ -19,7 +20,7 @@ Version 0.4.1 - 1 Jun 2019
 ---------------------------
 
 - Fixed a bug with multi-processing and custom functions, allowing pickling of
-  models with custom functions, fitness metrics or classifier transformaers.
+  models with custom functions, fitness metrics or classifier transformers.
   ``joblib`` 0.13.0 or newer required in order to take advantage of this
   release in order to wrap functions for pickling saved models.
 

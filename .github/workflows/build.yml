@@ -40,8 +40,8 @@ jobs:
         python -m pip install pytest pytest-cov coveralls
         python -m pip install pandas
         if [[ ${{ matrix.python_version }} == '3.8']]; then
-          python -m pip install sklearn==1.0.2;
-          python -m pip install joblib==1.0.0;
+          python -m pip install sklearn==1.0.2
+          python -m pip install joblib==1.0.0
         fi
         python -m pip install .
     - name: Describe  Python environment
