@@ -11,9 +11,9 @@ Version 0.4.2
   with ``scikit-learn`` SLEP009.
 - Update test suite to ensure compatibility with ``scikit-learn``.
   ``scikit-learn`` 1.0.2 or newer will be required due to recent changes in
-  their testing suite. Also moving min ``joblib`` to 1.0.0 to align with next
-  release of scikit-learn and simplify future bug testing.
-- Added the `class_weight` parameter :class:`genetic.SymbolicClassifier`
+  their testing requirements. Also requiring ``joblib`` to 1.0.0 or newer to
+  align with next release of scikit-learn.
+- Added the `class_weight` parameter to :class:`genetic.SymbolicClassifier`
   allowing users to easily compensate for imbalanced datasets.
 
 Version 0.4.1 - 1 Jun 2019
