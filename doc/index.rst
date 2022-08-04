@@ -65,7 +65,7 @@ for automated feature engineering with the :class:`SymbolicTransformer`, which
 is designed to support regression problems, but should also work for binary
 classification.
 
-``gplearn`` is built on scikit-learn and a fairly recent copy (0.22.1+) is required
+``gplearn`` is built on scikit-learn and a fairly recent copy is required
 for installation. If you come across any issues in running or installing the
 package, `please submit a bug report <https://github.com/trevorstephens/gplearn/issues>`_.
 
