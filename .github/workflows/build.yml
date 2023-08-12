@@ -5,9 +5,9 @@ on:
     # Every friday at 4am UTC
     - cron:  '0 4 * * 5'
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   test:
