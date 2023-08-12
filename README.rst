@@ -2,7 +2,7 @@
     :target: https://pypi.python.org/pypi/gplearn/
     :alt: Version
 .. image:: https://img.shields.io/pypi/l/gplearn.svg
-    :target: https://github.com/trevorstephens/gplearn/blob/master/LICENSE
+    :target: https://github.com/trevorstephens/gplearn/blob/main/LICENSE
     :alt: License
 .. image:: https://readthedocs.org/projects/gplearn/badge/?version=stable
     :target: http://gplearn.readthedocs.io/

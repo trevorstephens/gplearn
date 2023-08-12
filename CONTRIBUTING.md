@@ -32,7 +32,7 @@ Please ensure that:
 - No input validation occurs before fitting the estimator.
 - Any new feature has great test coverage.
 - Any new feature is well documented with
-  [numpy-style docstrings](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt)
+  [numpy-style docstrings](https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard)
   & an example, if appropriate and illustrative.
 - Any bug fix has regression tests.
 - Comply with [PEP8](https://pypi.python.org/pypi/pep8).
