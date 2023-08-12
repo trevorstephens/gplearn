@@ -4,7 +4,7 @@ Examples
 ========
 
 The code used to generate these examples can be
-`found here <https://github.com/trevorstephens/gplearn/blob/master/doc/gp_examples.ipynb>`_
+`found here <https://github.com/trevorstephens/gplearn/blob/main/doc/gp_examples.ipynb>`_
 as an iPython Notebook.
 
 .. currentmodule:: gplearn.genetic
