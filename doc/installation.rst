@@ -7,6 +7,8 @@ Installation
 scipy). So first you will need to `follow their installation instructions <http://scikit-learn.org/dev/install.html>`_
 to get the dependencies.
 
+Option 1: installation using pip
+---------------
 Now that you have scikit-learn installed, you can install ``gplearn`` using pip::
 
     pip install gplearn
@@ -26,5 +28,13 @@ Then navigate into the local ``gplearn`` directory and simply run::
 or::
 
     python setup.py install --user
+
+and you're done!
+
+Option 2: installation using conda
+---------------
+In case you want to install ``gplearn`` in an anaconda environment, you can run::
+
+    conda install -c conda-forge gplearn
 
 and you're done!
