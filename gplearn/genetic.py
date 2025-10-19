@@ -23,11 +23,13 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils import compute_sample_weight
 from sklearn.utils.validation import check_array, _check_sample_weight
 from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import type_of_target
 
 from ._program import _Program
 from .fitness import _fitness_map, _Fitness
 from .functions import _function_map, _Function, sig1 as sigmoid
 from .utils import _partition_estimators
+from .utils import _sklearn_version_ge
 from .utils import check_random_state
 
 __all__ = ['SymbolicRegressor', 'SymbolicClassifier', 'SymbolicTransformer']
@@ -301,6 +303,18 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
         if isinstance(self, ClassifierMixin):
             X, y = self._validate_data(X, y, y_numeric=False)
             check_classification_targets(y)
+            # Once we require scikit-learn >= 1.6, this should pass
+            # raise_unknown=True rather than checking for "unknown"
+            # manually.
+            y_type = type_of_target(y, input_name="y")
+            if y_type == "unknown":
+                raise ValueError("Unknown label type for y: %r" % y)
+            elif y_type != "binary":
+                raise ValueError(
+                    "Only binary classification is supported. The type of the "
+                    "target is %s."
+                    % y_type
+                )
 
             if self.class_weight:
                 if sample_weight is None:
@@ -599,7 +613,7 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
         return self
 
 
-class SymbolicRegressor(BaseSymbolic, RegressorMixin):
+class SymbolicRegressor(RegressorMixin, BaseSymbolic):
 
     """A Genetic Programming symbolic regressor.
 
@@ -868,7 +882,15 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         if not hasattr(self, '_program'):
             raise NotFittedError('SymbolicRegressor not fitted.')
 
-        X = check_array(X)
+        try:
+            # scikit-learn >= 1.6
+            from sklearn.utils.validation import validate_data
+
+            X = validate_data(self, X, reset=False)
+        except ImportError:
+            # scikit-learn < 1.6
+            X = check_array(X)
+
         _, n_features = X.shape
         if self.n_features_in_ != n_features:
             raise ValueError('Number of features of the model must match the '
@@ -881,7 +903,7 @@ class SymbolicRegressor(BaseSymbolic, RegressorMixin):
         return y
 
 
-class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
+class SymbolicClassifier(ClassifierMixin, BaseSymbolic):
 
     """A Genetic Programming symbolic classifier.
 
@@ -1142,6 +1164,11 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
             return self.__repr__()
         return self._program.__str__()
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.classifier_tags.multi_class = False
+        return tags
+
     def _more_tags(self):
         return {'binary_only': True}
 
@@ -1164,7 +1191,15 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
         if not hasattr(self, '_program'):
             raise NotFittedError('SymbolicClassifier not fitted.')
 
-        X = check_array(X)
+        try:
+            # scikit-learn >= 1.6
+            from sklearn.utils.validation import validate_data
+
+            X = validate_data(self, X, reset=False)
+        except ImportError:
+            # scikit-learn < 1.6
+            X = check_array(X)
+
         _, n_features = X.shape
         if self.n_features_in_ != n_features:
             raise ValueError('Number of features of the model must match the '
@@ -1196,7 +1231,7 @@ class SymbolicClassifier(BaseSymbolic, ClassifierMixin):
         return self.classes_.take(np.argmax(proba, axis=1), axis=0)
 
 
-class SymbolicTransformer(BaseSymbolic, TransformerMixin):
+class SymbolicTransformer(TransformerMixin, BaseSymbolic):
 
     """A Genetic Programming symbolic transformer.
 
@@ -1467,14 +1502,16 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         output = str([gp.__str__() for gp in self])
         return output.replace("',", ",\n").replace("'", "")
 
-    def _more_tags(self):
-        return {
-            "_xfail_checks": {
-                "check_sample_weights_invariance": (
-                    "zero sample_weight is not equivalent to removing samples"
-                ),
+    if not _sklearn_version_ge("1.6"):
+        def _more_tags(self):
+            return {
+                "_xfail_checks": {
+                    "check_sample_weights_invariance": (
+                        "zero sample_weight is not equivalent to removing "
+                        "samples"
+                    ),
+                }
             }
-        }
 
     def transform(self, X):
         """Transform X according to the fitted transformer.
@@ -1494,7 +1531,15 @@ class SymbolicTransformer(BaseSymbolic, TransformerMixin):
         if not hasattr(self, '_best_programs'):
             raise NotFittedError('SymbolicTransformer not fitted.')
 
-        X = check_array(X)
+        try:
+            # scikit-learn >= 1.6
+            from sklearn.utils.validation import validate_data
+
+            X = validate_data(self, X, reset=False)
+        except ImportError:
+            # scikit-learn < 1.6
+            X = check_array(X)
+
         _, n_features = X.shape
         if self.n_features_in_ != n_features:
             raise ValueError('Number of features of the model must match the '
