@@ -7,9 +7,9 @@
 import pickle
 
 import numpy as np
+import pytest
 from numpy import maximum
 from sklearn.datasets import load_diabetes, load_breast_cancer
-from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.functions import _protected_sqrt, make_function
@@ -36,79 +36,48 @@ def test_validate_function():
     # Check arity tests
     _ = make_function(function=_protected_sqrt, name='sqrt', arity=1)
     # non-integer arity
-    assert_raises(ValueError,
-                  make_function,
-                  function=_protected_sqrt,
-                  name='sqrt',
-                  arity='1')
-    assert_raises(ValueError,
-                  make_function,
-                  function=_protected_sqrt,
-                  name='sqrt',
-                  arity=1.0)
+    with pytest.raises(ValueError):
+        make_function(function=_protected_sqrt, name='sqrt', arity='1')
+    with pytest.raises(ValueError):
+        make_function(function=_protected_sqrt, name='sqrt', arity=1.0)
     # non-bool wrap
-    assert_raises(ValueError,
-                  make_function,
-                  function=_protected_sqrt,
-                  name='sqrt',
-                  arity=1,
-                  wrap='f')
+    with pytest.raises(ValueError):
+        make_function(function=_protected_sqrt, name='sqrt', arity=1, wrap='f')
     # non-matching arity
-    assert_raises(ValueError,
-                  make_function,
-                  function=_protected_sqrt,
-                  name='sqrt',
-                  arity=2)
-    assert_raises(ValueError,
-                  make_function,
-                  function=maximum,
-                  name='max',
-                  arity=1)
+    with pytest.raises(ValueError):
+        make_function(function=_protected_sqrt, name='sqrt', arity=2)
+    with pytest.raises(ValueError):
+        make_function(function=maximum, name='max', arity=1)
 
     # Check name test
-    assert_raises(ValueError,
-                  make_function,
-                  function=_protected_sqrt,
-                  name=2,
-                  arity=1)
+    with pytest.raises(ValueError):
+        make_function(function=_protected_sqrt, name=2, arity=1)
 
     # Check return type tests
     def bad_fun1(x1, x2):
         return 'ni'
-    assert_raises(ValueError,
-                  make_function,
-                  function=bad_fun1,
-                  name='ni',
-                  arity=2)
+    with pytest.raises(ValueError):
+        make_function(function=bad_fun1, name='ni', arity=2)
 
     # Check return shape tests
     def bad_fun2(x1):
         return np.ones((2, 1))
-    assert_raises(ValueError,
-                  make_function,
-                  function=bad_fun2,
-                  name='ni',
-                  arity=1)
+    with pytest.raises(ValueError):
+        make_function(function=bad_fun2, name='ni', arity=1)
 
     # Check closure for negatives test
     def _unprotected_sqrt(x1):
         with np.errstate(divide='ignore', invalid='ignore'):
             return np.sqrt(x1)
-    assert_raises(ValueError,
-                  make_function,
-                  function=_unprotected_sqrt,
-                  name='sqrt',
-                  arity=1)
+    with pytest.raises(ValueError):
+        make_function(function=_unprotected_sqrt, name='sqrt', arity=1)
 
     # Check closure for zeros test
     def _unprotected_div(x1, x2):
         with np.errstate(divide='ignore', invalid='ignore'):
             return np.divide(x1, x2)
-    assert_raises(ValueError,
-                  make_function,
-                  function=_unprotected_div,
-                  name='div',
-                  arity=2)
+    with pytest.raises(ValueError):
+        make_function(function=_unprotected_div, name='div', arity=2)
 
 
 def test_function_in_program():
@@ -160,14 +129,16 @@ def test_parallel_custom_function():
                             random_state=0,
                             n_jobs=2)
     est.fit(diabetes.data, diabetes.target)
-    assert_raises(AttributeError, pickle.dumps, est)
+    with pytest.raises(AttributeError):
+        pickle.dumps(est)
 
     # Single threaded will also fail in non-interactive sessions
     est = SymbolicRegressor(generations=2,
                             function_set=['add', 'sub', 'mul', 'div', logical],
                             random_state=0)
     est.fit(diabetes.data, diabetes.target)
-    assert_raises(AttributeError, pickle.dumps, est)
+    with pytest.raises(AttributeError):
+        pickle.dumps(est)
 
 
 def test_parallel_custom_transformer():
@@ -197,11 +168,13 @@ def test_parallel_custom_transformer():
                              random_state=0,
                              n_jobs=2)
     est.fit(cancer.data, cancer.target)
-    assert_raises(AttributeError, pickle.dumps, est)
+    with pytest.raises(AttributeError):
+        pickle.dumps(est)
 
     # Single threaded will also fail in non-interactive sessions
     est = SymbolicClassifier(generations=2,
                              transformer=sigmoid,
                              random_state=0)
     est.fit(cancer.data, cancer.target)
-    assert_raises(AttributeError, pickle.dumps, est)
+    with pytest.raises(AttributeError):
+        pickle.dumps(est)
