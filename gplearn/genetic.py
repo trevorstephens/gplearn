@@ -261,6 +261,16 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
                                      oob_fitness,
                                      remaining_time))
 
+    def _validate_data(self, *args, **kwargs):
+        try:
+            # scikit-learn >= 1.6
+            from sklearn.utils.validation import validate_data
+
+            return validate_data(self, *args, **kwargs)
+        except ImportError:
+            # scikit-learn < 1.6
+            return super()._validate_data(*args, **kwargs)
+
     def fit(self, X, y, sample_weight=None):
         """Fit the Genetic Program according to X, y.
 
