@@ -7,11 +7,14 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 # License: BSD 3 clause
 
 import pickle
-import pytest
 import sys
 from io import StringIO
 
 import numpy as np
+import pytest
+from numpy.testing import assert_almost_equal
+from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal
 from scipy.stats import pearsonr, spearmanr
 from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.metrics import mean_absolute_error
@@ -19,10 +22,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.utils._testing import assert_almost_equal
-from sklearn.utils._testing import assert_array_equal
-from sklearn.utils._testing import assert_array_almost_equal
-from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
@@ -175,14 +174,16 @@ def test_validate_program():
                  random_state, program=test_gp)
 
     # Now try a couple that shouldn't be
-    assert_raises(ValueError, _Program, function_set, arities, init_depth,
-                  init_method, n_features, const_range, metric,
-                  p_point_replace, parsimony_coefficient, random_state,
-                  program=test_gp[:-1])
-    assert_raises(ValueError, _Program, function_set, arities, init_depth,
-                  init_method, n_features, const_range, metric,
-                  p_point_replace, parsimony_coefficient, random_state,
-                  program=test_gp + [1])
+    with pytest.raises(ValueError):
+        _Program(function_set, arities, init_depth,
+                 init_method, n_features, const_range, metric,
+                 p_point_replace, parsimony_coefficient, random_state,
+                 program=test_gp[:-1])
+    with pytest.raises(ValueError):
+        _Program(function_set, arities, init_depth,
+                 init_method, n_features, const_range, metric,
+                 p_point_replace, parsimony_coefficient, random_state,
+                 program=test_gp + [1])
 
 
 def test_print_overloading():
@@ -304,12 +305,14 @@ def test_invalid_feature_names():
 
         # Check invalid length feature_names
         est = Symbolic(feature_names=['foo', 'bar'])
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
 
         # Check invalid type feature_name
         feature_names = [str(n) for n in range(12)] + [0]
         est = Symbolic(feature_names=feature_names)
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
 
 
 def test_execute():
@@ -435,21 +438,27 @@ def test_input_validation():
     for Symbolic in (SymbolicRegressor, SymbolicTransformer):
         # Check too much proba
         est = Symbolic(p_point_mutation=.5)
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
 
         # Check invalid init_method
         est = Symbolic(init_method='ni')
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
 
         # Check invalid const_ranges
         est = Symbolic(const_range=2)
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(const_range=[2, 2])
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(const_range=(2, 2, 2))
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(const_range='ni')
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         # And check acceptable, but strange, representations of const_range
         est = Symbolic(population_size=100, generations=1, const_range=(2, 2))
         est.fit(diabetes.data, diabetes.target)
@@ -460,30 +469,40 @@ def test_input_validation():
 
         # Check invalid init_depth
         est = Symbolic(init_depth=2)
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(init_depth=2)
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(init_depth=[2, 2])
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(init_depth=(2, 2, 2))
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(init_depth='ni')
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(init_depth=(4, 2))
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         # And check acceptable, but strange, representations of init_depth
         est = Symbolic(population_size=100, generations=1, init_depth=(2, 2))
         est.fit(diabetes.data, diabetes.target)
 
     # Check hall_of_fame and n_components for transformer
     est = SymbolicTransformer(hall_of_fame=2000)
-    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+    with pytest.raises(ValueError):
+        est.fit(diabetes.data, diabetes.target)
     est = SymbolicTransformer(n_components=2000)
-    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+    with pytest.raises(ValueError):
+        est.fit(diabetes.data, diabetes.target)
     est = SymbolicTransformer(hall_of_fame=0)
-    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+    with pytest.raises(ValueError):
+        est.fit(diabetes.data, diabetes.target)
     est = SymbolicTransformer(n_components=0)
-    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+    with pytest.raises(ValueError):
+        est.fit(diabetes.data, diabetes.target)
 
     # Check regressor metrics
     for m in ['mean absolute error', 'mse', 'rmse', 'pearson', 'spearman']:
@@ -491,7 +510,8 @@ def test_input_validation():
         est.fit(diabetes.data, diabetes.target)
     # And check a fake one
     est = SymbolicRegressor(metric='the larch')
-    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+    with pytest.raises(ValueError):
+        est.fit(diabetes.data, diabetes.target)
     # Check transformer metrics
     for m in ['pearson', 'spearman']:
         est = SymbolicTransformer(population_size=100, generations=1, metric=m)
@@ -499,7 +519,8 @@ def test_input_validation():
     # And check the regressor metrics as well as a fake one
     for m in ['mean absolute error', 'mse', 'rmse', 'the larch']:
         est = SymbolicTransformer(metric=m)
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
 
 
 def test_input_validation_classifier():
@@ -507,21 +528,27 @@ def test_input_validation_classifier():
 
     # Check too much proba
     est = SymbolicClassifier(p_point_mutation=.5)
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
 
     # Check invalid init_method
     est = SymbolicClassifier(init_method='ni')
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
 
     # Check invalid const_ranges
     est = SymbolicClassifier(const_range=2)
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(const_range=[2, 2])
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(const_range=(2, 2, 2))
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(const_range='ni')
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     # And check acceptable, but strange, representations of const_range
     est = SymbolicClassifier(population_size=100, generations=1,
                              const_range=(2, 2))
@@ -535,17 +562,23 @@ def test_input_validation_classifier():
 
     # Check invalid init_depth
     est = SymbolicClassifier(init_depth=2)
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(init_depth=2)
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(init_depth=[2, 2])
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(init_depth=(2, 2, 2))
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(init_depth='ni')
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(init_depth=(4, 2))
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     # And check acceptable, but strange, representations of init_depth
     est = SymbolicClassifier(population_size=100, generations=1,
                              init_depth=(2, 2))
@@ -557,7 +590,8 @@ def test_input_validation_classifier():
         est.fit(cancer.data, cancer.target)
     # And check a fake one
     est = SymbolicClassifier(metric='the larch')
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
 
     # Check classifier transformers
     for t in ['sigmoid']:
@@ -566,10 +600,12 @@ def test_input_validation_classifier():
         est.fit(cancer.data, cancer.target)
     # And check an incompatible one with wrong arity
     est = SymbolicClassifier(transformer=sub2)
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     # And check a fake one
     est = SymbolicClassifier(transformer='the larch')
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
 
 
 def test_none_const_range():
@@ -997,7 +1033,8 @@ def test_transformer_iterable():
     assert(fitted_iter == expected_iter)
 
     # Check IndexError
-    assert_raises(IndexError, est.__getitem__, 10)
+    with pytest.raises(IndexError):
+        est[10]
 
 
 def test_print_overloading_estimator():
@@ -1137,12 +1174,15 @@ def test_validate_functions():
         # These should fail
         est = Symbolic(generations=2, random_state=0,
                        function_set=('ni', 'sub', 'mul', div2))
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(generations=2, random_state=0,
                        function_set=(7, 'sub', 'mul', div2))
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
         est = Symbolic(generations=2, random_state=0, function_set=())
-        assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+        with pytest.raises(ValueError):
+            est.fit(diabetes.data, diabetes.target)
 
     # Now for the classifier... These should be fine
     est = SymbolicClassifier(population_size=100, generations=2,
@@ -1157,12 +1197,15 @@ def test_validate_functions():
     # These should fail
     est = SymbolicClassifier(generations=2, random_state=0,
                              function_set=('ni', 'sub', 'mul', div2))
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(generations=2, random_state=0,
                              function_set=(7, 'sub', 'mul', div2))
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
     est = SymbolicClassifier(generations=2, random_state=0, function_set=())
-    assert_raises(ValueError, est.fit, cancer.data, cancer.target)
+    with pytest.raises(ValueError):
+        est.fit(cancer.data, cancer.target)
 
 
 def test_indices():
@@ -1181,13 +1224,16 @@ def test_indices():
     test_gp = [mul2, div2, 8, 1, sub2, 9, .5]
     gp = _Program(random_state=random_state, program=test_gp, **params)
 
-    assert_raises(ValueError, gp.get_all_indices)
-    assert_raises(ValueError, gp._indices)
+    with pytest.raises(ValueError):
+        gp.get_all_indices()
+    with pytest.raises(ValueError):
+        gp._indices()
 
     def get_indices_property():
         return gp.indices_
 
-    assert_raises(ValueError, get_indices_property)
+    with pytest.raises(ValueError):
+        get_indices_property()
 
     indices, _ = gp.get_all_indices(10, 7, random_state)
 
@@ -1222,7 +1268,8 @@ def test_warm_start():
 
     # Check fitting fewer generations raises error
     est.set_params(generations=5, warm_start=True)
-    assert_raises(ValueError, est.fit, diabetes.data, diabetes.target)
+    with pytest.raises(ValueError):
+        est.fit(diabetes.data, diabetes.target)
 
     # Check fitting the same number of generations warns
     est.set_params(generations=10, warm_start=True)

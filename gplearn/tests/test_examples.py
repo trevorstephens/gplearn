@@ -6,13 +6,13 @@
 
 import numpy as np
 
+from numpy.testing import assert_almost_equal
 from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.linear_model import Ridge
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils._testing import assert_almost_equal
 from sklearn.utils.validation import check_random_state
 
 from gplearn.genetic import SymbolicClassifier, SymbolicRegressor

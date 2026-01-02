@@ -5,7 +5,7 @@
 # License: BSD 3 clause
 
 import numpy as np
-from sklearn.utils._testing import assert_raises
+import pytest
 
 from gplearn.utils import _get_n_jobs, check_random_state, cpu_count
 
@@ -25,7 +25,8 @@ def test_check_random_state():
     rng_42 = np.random.RandomState(42)
     assert(check_random_state(43).randint(100) != rng_42.randint(100))
 
-    assert_raises(ValueError, check_random_state, "some invalid seed")
+    with pytest.raises(ValueError):
+        check_random_state("some invalid seed")
 
 
 def test_get_n_jobs():
@@ -39,4 +40,5 @@ def test_get_n_jobs():
     jobs = _get_n_jobs(jobs)
     assert(jobs == expected)
 
-    assert_raises(ValueError, _get_n_jobs, 0)
+    with pytest.raises(ValueError):
+        _get_n_jobs(0)
