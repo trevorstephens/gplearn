@@ -9,6 +9,7 @@ import pickle
 import numpy as np
 import pytest
 from numpy import maximum
+from pickle import PicklingError
 from sklearn.datasets import load_diabetes, load_breast_cancer
 from sklearn.utils.validation import check_random_state
 
@@ -129,7 +130,7 @@ def test_parallel_custom_function():
                             random_state=0,
                             n_jobs=2)
     est.fit(diabetes.data, diabetes.target)
-    with pytest.raises(AttributeError):
+    with pytest.raises((PicklingError, AttributeError)):
         pickle.dumps(est)
 
     # Single threaded will also fail in non-interactive sessions
@@ -137,7 +138,7 @@ def test_parallel_custom_function():
                             function_set=['add', 'sub', 'mul', 'div', logical],
                             random_state=0)
     est.fit(diabetes.data, diabetes.target)
-    with pytest.raises(AttributeError):
+    with pytest.raises((PicklingError, AttributeError)):
         pickle.dumps(est)
 
 
@@ -168,7 +169,7 @@ def test_parallel_custom_transformer():
                              random_state=0,
                              n_jobs=2)
     est.fit(cancer.data, cancer.target)
-    with pytest.raises(AttributeError):
+    with pytest.raises((PicklingError, AttributeError)):
         pickle.dumps(est)
 
     # Single threaded will also fail in non-interactive sessions
@@ -176,5 +177,5 @@ def test_parallel_custom_transformer():
                              transformer=sigmoid,
                              random_state=0)
     est.fit(cancer.data, cancer.target)
-    with pytest.raises(AttributeError):
+    with pytest.raises((PicklingError, AttributeError)):
         pickle.dumps(est)

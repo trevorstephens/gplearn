@@ -6,18 +6,10 @@ order to maintain compatibility across different versions of scikit-learn.
 
 """
 
-import importlib.metadata
 import numbers
 
 import numpy as np
 from joblib import cpu_count
-from packaging.version import Version
-
-
-def _sklearn_version_ge(min_version):
-    """Check whether we have at least min_version of scikit-learn."""
-    sklearn_version = importlib.metadata.version("scikit-learn")
-    return Version(sklearn_version) >= Version(min_version)
 
 
 def check_random_state(seed):
