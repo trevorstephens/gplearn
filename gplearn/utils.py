@@ -6,12 +6,10 @@ order to maintain compatibility across different versions of scikit-learn.
 
 """
 
-import importlib.metadata
 import numbers
 
 import numpy as np
 from joblib import cpu_count
-from packaging.version import Version
 
 
 def check_random_state(seed):
