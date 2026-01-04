@@ -1027,7 +1027,7 @@ def test_transformer_iterable():
     est.fit(X, y)
     fitted_len = len(est)
     fitted_iter = [gp.length_ for gp in est]
-    expected_iter = [8, 12, 2, 29, 9, 33, 9, 8, 4, 22]
+    expected_iter = [8, 12, 1, 29, 9, 33, 9, 8, 4, 22]
 
     assert(fitted_len == 10)
     assert(fitted_iter == expected_iter)

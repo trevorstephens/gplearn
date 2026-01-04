@@ -29,6 +29,7 @@ var/
 setup.cfg
 *.egg
 .ipynb_checkpoints/
+.vscode/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
