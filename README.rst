@@ -7,7 +7,7 @@
 .. image:: https://readthedocs.org/projects/gplearn/badge/?version=stable
     :target: http://gplearn.readthedocs.io/
     :alt: Documentation Status
-.. image:: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml/badge.svg?branch=master
+.. image:: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml/badge.svg
     :target: https://github.com/trevorstephens/gplearn/actions/workflows/build.yml
     :alt: Test Status
 .. image:: https://coveralls.io/repos/trevorstephens/gplearn/badge.svg
