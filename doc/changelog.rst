@@ -4,8 +4,13 @@
 Release History
 ===============
 
-Version 0.5.0
--------------
+Version 0.4.3 - 6 Jan 2026
+--------------------------
+
+- Update dependencies to ensure compatibility with ``scikit-learn`` and newer
+  versions of Python. ``scikit-learn`` 1.8.0 or newer will be required as
+  well as Python 3.11 or newer. Also migrated packaging to ``hatch`` through
+  this is unlikely to affect most users.
 
 Version 0.4.2 - 3 May 2022
 --------------------------
