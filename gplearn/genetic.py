@@ -21,10 +21,9 @@ from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin, TransformerMixin, ClassifierMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.utils import compute_sample_weight
-from sklearn.utils.validation import check_array, _check_sample_weight
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import validate_data
+from sklearn.utils.validation import validate_data, _check_sample_weight
 
 from ._program import _Program
 from .fitness import _fitness_map, _Fitness
