@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'numpydoc',
+    'sphinx_rtd_theme',
 ]
 
 numpydoc_show_class_members = False
@@ -120,14 +121,7 @@ html_theme = 'default'
 # on_rtd is whether we are on readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
-# only import and set the theme if we're building docs locally
-if not on_rtd:
-    try:
-        import sphinx_rtd_theme
-        html_theme = 'sphinx_rtd_theme'
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    except:
-        pass
+html_theme = 'sphinx_rtd_theme'
 
 # Hide the "Edit on GitHub" or "View page source" links
 html_context = {
